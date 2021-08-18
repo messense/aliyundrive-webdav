@@ -5,7 +5,7 @@ use anyhow::Result;
 use log::{error, info};
 use serde::Deserialize;
 use tokio::{
-    sync::{oneshot, Mutex},
+    sync::{oneshot, RwLock},
     time,
 };
 
@@ -21,7 +21,7 @@ struct Credentials {
 #[derive(Debug, Clone)]
 pub struct AliyunDrive {
     client: reqwest::Client,
-    credentials: Arc<Mutex<Credentials>>,
+    credentials: Arc<RwLock<Credentials>>,
     drive_id: Option<String>,
 }
 
@@ -33,7 +33,7 @@ impl AliyunDrive {
         };
         let mut drive = Self {
             client: reqwest::Client::new(),
-            credentials: Arc::new(Mutex::new(credentials)),
+            credentials: Arc::new(RwLock::new(credentials)),
             drive_id: None,
         };
 
@@ -72,9 +72,9 @@ impl AliyunDrive {
     }
 
     async fn do_refresh_token(&self) -> Result<RefreshTokenResponse> {
-        let mut cred = self.credentials.lock().await;
+        let mut cred = self.credentials.write().await;
         let mut data = HashMap::new();
-        data.insert("refresh_token", cred.refresh_token.clone());
+        data.insert("refresh_token", &cred.refresh_token);
         let res = self
             .client
             .post("https://websv.aliyundrive.com/token/refresh")
