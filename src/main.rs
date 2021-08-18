@@ -5,6 +5,8 @@ use log::info;
 use webdav_handler::actix::*;
 use webdav_handler::{fakels::FakeLs, localfs::LocalFs, DavConfig, DavHandler};
 
+mod aliyundrive;
+
 pub async fn dav_handler(req: DavRequest, davhandler: web::Data<DavHandler>) -> DavResponse {
     if let Some(prefix) = req.prefix() {
         let config = DavConfig::new().strip_prefix(prefix);

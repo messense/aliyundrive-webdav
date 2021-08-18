@@ -7,6 +7,10 @@ edition = "2018"
 
 [dependencies]
 actix-web = "4.0.0-beta.6"
+anyhow = "1.0.43"
 log = "0.4.14"
 pretty_env_logger = "0.4.0"
+reqwest = { version = "0.11.4", features = ["json"] }
+serde = { version = "1.0.127", features = ["derive"] }
+tokio = { version = "1.10.0", features = ["full"] }
 webdav-handler = { version = "0.2.0", features = ["actix-compat"] }
