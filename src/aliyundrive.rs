@@ -9,8 +9,8 @@ use tokio::{
     time,
 };
 
-const API_BASE_URL: &'static str = "https://api.aliyundrive.com/v2/";
-const UA: &'static str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
+const API_BASE_URL: &str = "https://api.aliyundrive.com/v2/";
+const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
 
 #[derive(Debug, Clone)]
 struct Credentials {
@@ -46,7 +46,7 @@ impl AliyunDrive {
                 Ok(res) => {
                     // token usually expires in 7200s, refresh earlier
                     delay_seconds = res.expires_in - 200;
-                    if let Err(_) = tx.send(res.default_drive_id) {
+                    if tx.send(res.default_drive_id).is_err() {
                         error!("the receiver dropped");
                     }
                 }
