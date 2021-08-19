@@ -14,7 +14,7 @@ use webdav_handler::{
     },
 };
 
-use crate::aliyundrive::{AliyunDrive, AliyunFile};
+use crate::drive::{AliyunDrive, AliyunFile};
 
 #[derive(Clone)]
 pub struct AliyunDriveFileSystem {
