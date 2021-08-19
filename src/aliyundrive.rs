@@ -98,7 +98,25 @@ impl AliyunDrive {
         Ok(res)
     }
 
-    pub async fn list(&self, parent_file_id: &str) -> Result<ListFileResponse> {
+    pub async fn list_all(&self, parent_file_id: &str) -> Result<Vec<AliyunFile>> {
+        let mut files = Vec::new();
+        let mut marker = None;
+        loop {
+            let res = self.list(parent_file_id, marker.as_deref()).await?;
+            files.extend(res.items.into_iter());
+            if res.next_marker.is_empty() {
+                break;
+            }
+            marker = Some(res.next_marker);
+        }
+        Ok(files)
+    }
+
+    pub async fn list(
+        &self,
+        parent_file_id: &str,
+        marker: Option<&str>,
+    ) -> Result<ListFileResponse> {
         let drive_id = self.drive_id.as_deref().context("missing drive_id")?;
         let req = ListFileRequest {
             drive_id,
@@ -111,6 +129,7 @@ impl AliyunDrive {
             fields: "*",
             order_by: "updated_at",
             order_direction: "DESC",
+            marker,
         };
 
         let cred = self.credentials.read().await;
@@ -156,6 +175,7 @@ struct ListFileRequest<'a> {
     fields: &'a str,
     order_by: &'a str,
     order_direction: &'a str,
+    marker: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

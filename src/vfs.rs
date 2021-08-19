@@ -38,13 +38,13 @@ impl DavFileSystem for AliyunDriveFileSystem {
         // FIXME: get parent_file_id by path
         let parent_file_id = "root";
         async move {
-            let res = self
+            let files = self
                 .drive
-                .list(parent_file_id)
+                .list_all(parent_file_id)
                 .await
                 .map_err(|_| FsError::NotFound)?;
-            let mut v: Vec<Box<dyn DavDirEntry>> = Vec::with_capacity(res.items.len());
-            for file in res.items {
+            let mut v: Vec<Box<dyn DavDirEntry>> = Vec::with_capacity(files.len());
+            for file in files {
                 v.push(Box::new(file));
             }
             let stream = futures::stream::iter(v);
