@@ -1,15 +1,21 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::SystemTime;
 
-use anyhow::Result;
+use ::time::{Format, OffsetDateTime};
+use anyhow::{Context, Result};
+use futures::FutureExt;
 use log::{error, info};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::{
     sync::{oneshot, RwLock},
     time,
 };
+use webdav_handler::fs::{DavDirEntry, DavMetaData, FsError, FsFuture, FsResult};
 
-const API_BASE_URL: &str = "https://api.aliyundrive.com/v2/";
+const API_BASE_URL: &str = "https://api.aliyundrive.com/adrive/v3";
+const ORIGIN: &str = "https://www.aliyundrive.com";
+const REFERER: &str = "https://www.aliyundrive.com/";
 const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
 
 #[derive(Debug, Clone)]
@@ -22,7 +28,7 @@ struct Credentials {
 pub struct AliyunDrive {
     client: reqwest::Client,
     credentials: Arc<RwLock<Credentials>>,
-    drive_id: Option<String>,
+    pub drive_id: Option<String>,
 }
 
 impl AliyunDrive {
@@ -78,9 +84,8 @@ impl AliyunDrive {
         let res = self
             .client
             .post("https://websv.aliyundrive.com/token/refresh")
-            .header("Content-Type", "application/json")
-            .header("Origin", "https://www.aliyundrive.com")
-            .header("Referer", "https://www.aliyundrive.com")
+            .header("Origin", ORIGIN)
+            .header("Referer", REFERER)
             .header("User-Agent", UA)
             .json(&data)
             .send()
@@ -90,6 +95,40 @@ impl AliyunDrive {
         cred.refresh_token = res.refresh_token.clone();
         cred.access_token = Some(res.access_token.clone());
         info!("refresh token succeed for {}", res.nick_name);
+        Ok(res)
+    }
+
+    pub async fn list(&self, parent_file_id: &str) -> Result<ListFileResponse> {
+        let drive_id = self.drive_id.as_deref().context("missing drive_id")?;
+        let req = ListFileRequest {
+            drive_id,
+            parent_file_id,
+            limit: 100,
+            all: false,
+            image_thumbnail_process: "image/resize,w_400/format,jpeg",
+            image_url_process: "image/resize,w_1920/format,jpeg",
+            video_thumbnail_process: "video/snapshot,t_0,f_jpg,ar_auto,w_300",
+            fields: "*",
+            order_by: "updated_at",
+            order_direction: "DESC",
+        };
+
+        let cred = self.credentials.read().await;
+        let access_token = cred.access_token.clone().context("missing access_token")?;
+        drop(cred);
+
+        let res = self
+            .client
+            .post(format!("{}/file/list", API_BASE_URL))
+            .header("Origin", ORIGIN)
+            .header("Referer", REFERER)
+            .header("User-Agent", UA)
+            .bearer_auth(&access_token)
+            .json(&req)
+            .send()
+            .await?
+            .error_for_status()?;
+        let res = res.json::<ListFileResponse>().await?;
         Ok(res)
     }
 }
@@ -103,4 +142,69 @@ struct RefreshTokenResponse {
     user_id: String,
     nick_name: String,
     default_drive_id: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct ListFileRequest<'a> {
+    drive_id: &'a str,
+    parent_file_id: &'a str,
+    limit: u64,
+    all: bool,
+    image_thumbnail_process: &'a str,
+    image_url_process: &'a str,
+    video_thumbnail_process: &'a str,
+    fields: &'a str,
+    order_by: &'a str,
+    order_direction: &'a str,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ListFileResponse {
+    pub items: Vec<AliyunFile>,
+    pub next_marker: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AliyunFile {
+    pub drive_id: String,
+    pub name: String,
+    #[serde(rename = "file_id")]
+    pub id: String,
+    pub r#type: String,
+    pub created_at: String,
+    pub updated_at: String,
+    #[serde(default)]
+    pub size: u64,
+}
+
+impl DavMetaData for AliyunFile {
+    fn len(&self) -> u64 {
+        self.size
+    }
+
+    fn modified(&self) -> FsResult<SystemTime> {
+        Ok(OffsetDateTime::parse(&self.updated_at, Format::Rfc3339)
+            .map_err(|_| FsError::GeneralFailure)?
+            .into())
+    }
+
+    fn is_dir(&self) -> bool {
+        self.r#type == "folder"
+    }
+
+    fn created(&self) -> FsResult<SystemTime> {
+        Ok(OffsetDateTime::parse(&self.created_at, Format::Rfc3339)
+            .map_err(|_| FsError::GeneralFailure)?
+            .into())
+    }
+}
+
+impl DavDirEntry for AliyunFile {
+    fn name(&self) -> Vec<u8> {
+        self.name.as_bytes().to_vec()
+    }
+
+    fn metadata<'a>(&'a self) -> FsFuture<Box<dyn DavMetaData>> {
+        async move { Ok(Box::new(self.clone()) as Box<dyn DavMetaData>) }.boxed()
+    }
 }
