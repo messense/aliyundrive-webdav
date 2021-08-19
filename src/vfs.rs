@@ -48,8 +48,8 @@ impl AliyunDriveFileSystem {
         })
     }
 
-    async fn get_file_id(&self, path: &DavPath) -> Option<String> {
-        let path = path.as_rel_ospath();
+    async fn get_file_id(&self, dav_path: &DavPath) -> Option<String> {
+        let path = dav_path.as_rel_ospath();
         if path.parent().is_none() {
             Some("root".to_string())
         } else {
@@ -207,8 +207,8 @@ impl DavFile for AliyunDavFile {
 
     fn read_bytes<'a>(&'a mut self, count: usize) -> FsFuture<'_, Bytes> {
         debug!(
-            "file: read_bytes {}, pos {} size {}",
-            self.file.name, self.current_pos, count
+            "file: read_bytes {}, pos {} count {}, size {}",
+            self.file.name, self.current_pos, count, self.file.size
         );
         async move {
             let download_url = self.file.download_url.as_ref().ok_or(FsError::NotFound)?;
