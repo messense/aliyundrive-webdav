@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::SystemTime;
 
 use ::time::{Format, OffsetDateTime};
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use futures::FutureExt;
 use log::{error, info, trace};
@@ -33,7 +33,7 @@ pub struct AliyunDrive {
 }
 
 impl AliyunDrive {
-    pub async fn new(refresh_token: String) -> Self {
+    pub async fn new(refresh_token: String) -> Result<Self> {
         let credentials = Credentials {
             refresh_token,
             access_token: None,
@@ -54,10 +54,13 @@ impl AliyunDrive {
                     // token usually expires in 7200s, refresh earlier
                     delay_seconds = res.expires_in - 200;
                     if tx.send(res.default_drive_id).is_err() {
-                        error!("the receiver dropped");
+                        error!("send default drive id failed");
                     }
                 }
-                Err(err) => error!("refresh token failed: {}", err),
+                Err(err) => {
+                    error!("refresh token failed: {}", err);
+                    tx.send(String::new()).unwrap();
+                }
             }
             loop {
                 time::sleep(time::Duration::from_secs(delay_seconds)).await;
@@ -67,15 +70,14 @@ impl AliyunDrive {
             }
         });
 
-        match rx.await {
-            Ok(drive_id) => {
-                info!("default drive id is {}", drive_id);
-                drive.drive_id = Some(drive_id);
-            }
-            Err(_) => error!("the sender dropped"),
+        let drive_id = rx.await?;
+        if drive_id.is_empty() {
+            bail!("get default drive id failed");
         }
+        info!("default drive id is {}", drive_id);
+        drive.drive_id = Some(drive_id);
 
-        drive
+        Ok(drive)
     }
 
     async fn do_refresh_token(&self) -> Result<RefreshTokenResponse> {
@@ -99,9 +101,13 @@ impl AliyunDrive {
         Ok(res)
     }
 
-    async fn get_access_token(&self) -> Result<String> {
+    async fn access_token(&self) -> Result<String> {
         let cred = self.credentials.read().await;
         Ok(cred.access_token.clone().context("missing access_token")?)
+    }
+
+    fn drive_id(&self) -> Result<&str> {
+        Ok(self.drive_id.as_deref().context("missing drive_id")?)
     }
 
     pub async fn list_all(&self, parent_file_id: &str) -> Result<Vec<AliyunFile>> {
@@ -123,9 +129,8 @@ impl AliyunDrive {
         parent_file_id: &str,
         marker: Option<&str>,
     ) -> Result<ListFileResponse> {
-        let drive_id = self.drive_id.as_deref().context("missing drive_id")?;
         let req = ListFileRequest {
-            drive_id,
+            drive_id: self.drive_id()?,
             parent_file_id,
             limit: 100,
             all: false,
@@ -138,7 +143,7 @@ impl AliyunDrive {
             marker,
         };
 
-        let access_token = self.get_access_token().await?;
+        let access_token = self.access_token().await?;
 
         let res = self
             .client
@@ -156,9 +161,8 @@ impl AliyunDrive {
     }
 
     pub async fn get(&self, file_id: &str) -> Result<AliyunFile> {
-        let drive_id = self.drive_id.as_deref().context("missing drive_id")?;
         let req = GetFileRequest {
-            drive_id,
+            drive_id: self.drive_id()?,
             file_id,
             image_thumbnail_process: "image/resize,w_400/format,jpeg",
             image_url_process: "image/resize,w_1920/format,jpeg",
@@ -166,7 +170,7 @@ impl AliyunDrive {
             fields: "*",
         };
 
-        let access_token = self.get_access_token().await?;
+        let access_token = self.access_token().await?;
 
         let res = self
             .client

@@ -1,5 +1,6 @@
 use std::io::SeekFrom;
 
+use anyhow::Result;
 use bytes::{Buf, Bytes};
 use futures::future::FutureExt;
 use log::{debug, trace};
@@ -21,10 +22,10 @@ pub struct AliyunDriveFileSystem {
 }
 
 impl AliyunDriveFileSystem {
-    pub async fn new(refresh_token: String) -> Self {
-        let drive = AliyunDrive::new(refresh_token).await;
+    pub async fn new(refresh_token: String) -> Result<Self> {
+        let drive = AliyunDrive::new(refresh_token).await?;
         let file_ids = Cache::new(100000000);
-        Self { drive, file_ids }
+        Ok(Self { drive, file_ids })
     }
 
     async fn get_file_id(&self, path: &DavPath) -> Option<String> {
