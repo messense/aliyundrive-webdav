@@ -3,9 +3,12 @@ use std::{env, io};
 use actix_web::{web, App, HttpServer};
 use log::info;
 use webdav_handler::actix::*;
-use webdav_handler::{fakels::FakeLs, localfs::LocalFs, DavConfig, DavHandler};
+use webdav_handler::{fakels::FakeLs, DavConfig, DavHandler};
+
+use vfs::AliyunDriveFileSystem;
 
 mod aliyundrive;
+mod vfs;
 
 pub async fn dav_handler(req: DavRequest, davhandler: web::Data<DavHandler>) -> DavResponse {
     if let Some(prefix) = req.prefix() {
@@ -23,14 +26,14 @@ async fn main() -> io::Result<()> {
     }
     pretty_env_logger::init();
     let addr = "127.0.0.1:4918";
-    let dir = "/tmp";
 
+    let fs = AliyunDriveFileSystem::new("".to_string()).await;
     let dav_server = DavHandler::builder()
-        .filesystem(LocalFs::new(dir, false, false, false))
+        .filesystem(Box::new(fs))
         .locksystem(FakeLs::new())
         .build_handler();
 
-    info!("listening on {} serving {}", addr, dir);
+    info!("listening on {}", addr);
 
     HttpServer::new(move || {
         App::new()
