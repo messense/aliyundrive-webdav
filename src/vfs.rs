@@ -1,10 +1,11 @@
 use std::io::SeekFrom;
+use std::time::Duration;
 
 use anyhow::Result;
 use bytes::{Buf, Bytes};
 use futures::future::FutureExt;
 use log::{debug, trace};
-use moka::future::Cache;
+use moka::future::{Cache, CacheBuilder};
 use webdav_handler::{
     davpath::DavPath,
     fs::{
@@ -24,7 +25,12 @@ pub struct AliyunDriveFileSystem {
 impl AliyunDriveFileSystem {
     pub async fn new(refresh_token: String) -> Result<Self> {
         let drive = AliyunDrive::new(refresh_token).await?;
-        let file_ids = Cache::new(100000000);
+        let file_ids = CacheBuilder::new(100000)
+            .initial_capacity(100)
+            .time_to_live(Duration::from_secs(30 * 60))
+            .time_to_idle(Duration::from_secs(5 * 60))
+            .build();
+        debug!("file id cache initialized");
         Ok(Self { drive, file_ids })
     }
 

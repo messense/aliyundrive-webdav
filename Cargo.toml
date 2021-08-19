@@ -6,10 +6,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = { version = "4.0.0-beta.6", default-features = false, features = ["compress-gzip"] }
+# actix-web = { version = "4.0.0-beta.6", default-features = false, features = ["compress-gzip"] }
 anyhow = "1.0.43"
 bytes = "1.0.1"
 futures = "0.3.16"
+hyper = { version = "0.14.11", features = ["server"] }
 log = "0.4.14"
 moka = { version = "0.5.1", features = ["future"] }
 pretty_env_logger = "0.4.0"
@@ -18,4 +19,4 @@ serde = { version = "1.0.127", features = ["derive"] }
 structopt = "0.3.22"
 time = "0.2.0"
 tokio = { version = "1.10.0", features = ["full"] }
-webdav-handler = { version = "0.2.0", features = ["actix-compat"] }
+webdav-handler = { version = "0.2.0", features = ["hyper"] }
