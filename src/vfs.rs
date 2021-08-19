@@ -1,3 +1,6 @@
+use std::io::SeekFrom;
+
+use bytes::{Buf, Bytes};
 use futures::future::FutureExt;
 use log::{debug, trace};
 use moka::future::Cache;
@@ -52,7 +55,17 @@ impl AliyunDriveFileSystem {
 impl DavFileSystem for AliyunDriveFileSystem {
     fn open<'a>(&'a self, path: &'a DavPath, _options: OpenOptions) -> FsFuture<Box<dyn DavFile>> {
         debug!("fs: open {}", path);
-        todo!()
+        async move {
+            let file_id = self.get_file_id(path).await.ok_or(FsError::NotFound)?;
+            let file = self
+                .drive
+                .get(&file_id)
+                .await
+                .map_err(|_| FsError::NotFound)?;
+            let dav_file = AliyunDavFile::new(self.drive.clone(), file);
+            Ok(Box::new(dav_file) as Box<dyn DavFile>)
+        }
+        .boxed()
     }
 
     fn read_dir<'a>(
@@ -95,6 +108,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     created_at: now.clone(),
                     updated_at: now,
                     size: 0,
+                    download_url: None,
                 };
                 Ok(Box::new(root) as Box<dyn DavMetaData>)
             } else {
@@ -107,5 +121,72 @@ impl DavFileSystem for AliyunDriveFileSystem {
             }
         }
         .boxed()
+    }
+}
+
+#[derive(Debug, Clone)]
+struct AliyunDavFile {
+    drive: AliyunDrive,
+    file: AliyunFile,
+    current_pos: u64,
+}
+
+impl AliyunDavFile {
+    fn new(drive: AliyunDrive, file: AliyunFile) -> Self {
+        Self {
+            drive,
+            file,
+            current_pos: 0,
+        }
+    }
+}
+
+impl DavFile for AliyunDavFile {
+    fn metadata<'a>(&'a mut self) -> FsFuture<'_, Box<dyn DavMetaData>> {
+        async move {
+            let file = self.file.clone();
+            Ok(Box::new(file) as Box<dyn DavMetaData>)
+        }
+        .boxed()
+    }
+
+    fn write_buf<'a>(&'a mut self, _buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
+        todo!()
+    }
+
+    fn write_bytes<'a>(&'a mut self, _buf: Bytes) -> FsFuture<'_, ()> {
+        todo!()
+    }
+
+    fn read_bytes<'a>(&'a mut self, count: usize) -> FsFuture<'_, Bytes> {
+        async move {
+            let download_url = self.file.download_url.as_ref().ok_or(FsError::NotFound)?;
+            let content = self
+                .drive
+                .download(&download_url, self.current_pos, count)
+                .await
+                .map_err(|_| FsError::NotFound)?;
+            self.current_pos += content.len() as u64;
+            Ok(content)
+        }
+        .boxed()
+    }
+
+    fn seek<'a>(&'a mut self, pos: SeekFrom) -> FsFuture<'_, u64> {
+        trace!("{} seek {:?}", self.file.id, pos);
+        async move {
+            let new_pos = match pos {
+                SeekFrom::Start(pos) => pos,
+                SeekFrom::End(pos) => (self.file.size as i64 - pos) as u64,
+                SeekFrom::Current(size) => self.current_pos + size as u64,
+            };
+            self.current_pos = new_pos;
+            Ok(new_pos)
+        }
+        .boxed()
+    }
+
+    fn flush<'a>(&'a mut self) -> FsFuture<'_, ()> {
+        todo!()
     }
 }

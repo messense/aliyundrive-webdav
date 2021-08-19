@@ -4,8 +4,9 @@ use std::time::SystemTime;
 
 use ::time::{Format, OffsetDateTime};
 use anyhow::{Context, Result};
+use bytes::Bytes;
 use futures::FutureExt;
-use log::{error, info};
+use log::{error, info, trace};
 use serde::{Deserialize, Serialize};
 use tokio::{
     sync::{oneshot, RwLock},
@@ -14,9 +15,9 @@ use tokio::{
 use webdav_handler::fs::{DavDirEntry, DavMetaData, FsError, FsFuture, FsResult};
 
 const API_BASE_URL: &str = "https://api.aliyundrive.com";
-const ORIGIN: &str = "https://www.aliyundrive.com";
-const REFERER: &str = "https://www.aliyundrive.com/";
-const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
+pub const ORIGIN: &str = "https://www.aliyundrive.com";
+pub const REFERER: &str = "https://www.aliyundrive.com/";
+pub const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
 
 #[derive(Debug, Clone)]
 struct Credentials {
@@ -181,6 +182,25 @@ impl AliyunDrive {
         let res = res.json::<AliyunFile>().await?;
         Ok(res)
     }
+
+    pub async fn download(&self, url: &str, start_pos: u64, size: usize) -> Result<Bytes> {
+        use reqwest::header::RANGE;
+
+        let end_pos = start_pos + size as u64 - 1;
+        trace!("download {} from {} to {}", url, start_pos, end_pos);
+        let range = format!("bytes={}-{}", start_pos, end_pos);
+        let res = self
+            .client
+            .get(url)
+            .header("Origin", ORIGIN)
+            .header("Referer", REFERER)
+            .header("User-Agent", UA)
+            .header(RANGE, range)
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(res.bytes().await?)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -236,6 +256,7 @@ pub struct AliyunFile {
     pub updated_at: String,
     #[serde(default)]
     pub size: u64,
+    pub download_url: Option<String>,
 }
 
 impl DavMetaData for AliyunFile {
