@@ -10,6 +10,7 @@ edition = "2018"
 anyhow = "1.0.43"
 bytes = "1.0.1"
 futures = "0.3.16"
+headers = "0.3.4"
 hyper = { version = "0.14.11", features = ["server"] }
 log = "0.4.14"
 moka = { version = "0.5.1", features = ["future"] }

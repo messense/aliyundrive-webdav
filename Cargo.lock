@@ -35,6 +35,7 @@ dependencies = [
  "anyhow",
  "bytes",
  "futures",
+ "headers",
  "hyper",
  "log",
  "moka",

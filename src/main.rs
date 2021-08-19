@@ -2,9 +2,10 @@ use std::convert::Infallible;
 use std::net::ToSocketAddrs;
 use std::{env, io};
 
-use log::{debug, info};
+use headers::{authorization::Basic, Authorization, HeaderMapExt};
+use log::{debug, error, info};
 use structopt::StructOpt;
-use webdav_handler::{fakels::FakeLs, DavHandler};
+use webdav_handler::{body::Body, memls::MemLs, DavConfig, DavHandler};
 
 use vfs::AliyunDriveFileSystem;
 
@@ -23,16 +24,27 @@ struct Opt {
     /// Aliyun drive refresh token
     #[structopt(short, long, env = "REFRESH_TOKEN")]
     refresh_token: String,
+    /// WebDav authentication username
+    #[structopt(short = "U", long)]
+    auth_user: Option<String>,
+    /// WebDav authentication password
+    #[structopt(short = "W", long)]
+    auth_password: Option<String>,
 }
 
-#[tokio::main]
-async fn main() -> io::Result<()> {
+#[tokio::main(flavor = "multi_thread")]
+async fn main() -> anyhow::Result<()> {
     if env::var("RUST_LOG").is_err() {
         env::set_var("RUST_LOG", "aliyundrive_webdav=info");
     }
     pretty_env_logger::init();
 
     let opt = Opt::from_args();
+    let auth_user = opt.auth_user;
+    let auth_pwd = opt.auth_password;
+    if (auth_user.is_some() && auth_pwd.is_none()) || (auth_user.is_none() && auth_pwd.is_some()) {
+        anyhow::bail!("auth-user and auth-password should be specified together.");
+    }
 
     let fs = AliyunDriveFileSystem::new(opt.refresh_token)
         .await
@@ -46,7 +58,7 @@ async fn main() -> io::Result<()> {
 
     let dav_server = DavHandler::builder()
         .filesystem(Box::new(fs))
-        .locksystem(FakeLs::new())
+        .locksystem(MemLs::new())
         .build_handler();
     debug!("webdav handler initialized");
 
@@ -58,11 +70,45 @@ async fn main() -> io::Result<()> {
     info!("listening on {:?}", addr);
 
     let make_service = hyper::service::make_service_fn(move |_| {
+        let auth_user = auth_user.clone();
+        let auth_pwd = auth_pwd.clone();
+        let should_auth = auth_user.is_some() && auth_pwd.is_some();
         let dav_server = dav_server.clone();
         async move {
-            let func = move |req| {
+            let func = move |req: hyper::Request<hyper::Body>| {
                 let dav_server = dav_server.clone();
-                async move { Ok::<_, Infallible>(dav_server.handle(req).await) }
+                let auth_user = auth_user.clone();
+                let auth_pwd = auth_pwd.clone();
+                async move {
+                    if should_auth {
+                        let auth_user = auth_user.unwrap();
+                        let auth_pwd = auth_pwd.unwrap();
+                        let user = match req.headers().typed_get::<Authorization<Basic>>() {
+                            Some(Authorization(basic))
+                                if basic.username() == auth_user
+                                    && basic.password() == auth_pwd =>
+                            {
+                                basic.username().to_string()
+                            }
+                            Some(_) | None => {
+                                // return a 401 reply.
+                                let response = hyper::Response::builder()
+                                    .status(401)
+                                    .header(
+                                        "WWW-Authenticate",
+                                        "Basic realm=\"aliyundrive-webdav\"",
+                                    )
+                                    .body(Body::from("Authenticate required".to_string()))
+                                    .unwrap();
+                                return Ok(response);
+                            }
+                        };
+                        let config = DavConfig::new().principal(user);
+                        Ok::<_, Infallible>(dav_server.handle_with(config, req).await)
+                    } else {
+                        Ok::<_, Infallible>(dav_server.handle(req).await)
+                    }
+                }
             };
             Ok::<_, Infallible>(hyper::service::service_fn(func))
         }
@@ -71,6 +117,6 @@ async fn main() -> io::Result<()> {
     let _ = hyper::Server::bind(&addr)
         .serve(make_service)
         .await
-        .map_err(|e| eprintln!("server error: {}", e));
+        .map_err(|e| error!("server error: {}", e));
     Ok(())
 }
