@@ -13,7 +13,7 @@ use tokio::{
 };
 use webdav_handler::fs::{DavDirEntry, DavMetaData, FsError, FsFuture, FsResult};
 
-const API_BASE_URL: &str = "https://api.aliyundrive.com/adrive/v3";
+const API_BASE_URL: &str = "https://api.aliyundrive.com";
 const ORIGIN: &str = "https://www.aliyundrive.com";
 const REFERER: &str = "https://www.aliyundrive.com/";
 const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
@@ -98,6 +98,11 @@ impl AliyunDrive {
         Ok(res)
     }
 
+    async fn get_access_token(&self) -> Result<String> {
+        let cred = self.credentials.read().await;
+        Ok(cred.access_token.clone().context("missing access_token")?)
+    }
+
     pub async fn list_all(&self, parent_file_id: &str) -> Result<Vec<AliyunFile>> {
         let mut files = Vec::new();
         let mut marker = None;
@@ -132,13 +137,11 @@ impl AliyunDrive {
             marker,
         };
 
-        let cred = self.credentials.read().await;
-        let access_token = cred.access_token.clone().context("missing access_token")?;
-        drop(cred);
+        let access_token = self.get_access_token().await?;
 
         let res = self
             .client
-            .post(format!("{}/file/list", API_BASE_URL))
+            .post(format!("{}/adrive/v3/file/list", API_BASE_URL))
             .header("Origin", ORIGIN)
             .header("Referer", REFERER)
             .header("User-Agent", UA)
@@ -148,6 +151,34 @@ impl AliyunDrive {
             .await?
             .error_for_status()?;
         let res = res.json::<ListFileResponse>().await?;
+        Ok(res)
+    }
+
+    pub async fn get(&self, file_id: &str) -> Result<AliyunFile> {
+        let drive_id = self.drive_id.as_deref().context("missing drive_id")?;
+        let req = GetFileRequest {
+            drive_id,
+            file_id,
+            image_thumbnail_process: "image/resize,w_400/format,jpeg",
+            image_url_process: "image/resize,w_1920/format,jpeg",
+            video_thumbnail_process: "video/snapshot,t_0,f_jpg,ar_auto,w_300",
+            fields: "*",
+        };
+
+        let access_token = self.get_access_token().await?;
+
+        let res = self
+            .client
+            .post(format!("{}/v2/file/get", API_BASE_URL))
+            .header("Origin", ORIGIN)
+            .header("Referer", REFERER)
+            .header("User-Agent", UA)
+            .bearer_auth(&access_token)
+            .json(&req)
+            .send()
+            .await?
+            .error_for_status()?;
+        let res = res.json::<AliyunFile>().await?;
         Ok(res)
     }
 }
@@ -182,6 +213,16 @@ struct ListFileRequest<'a> {
 pub struct ListFileResponse {
     pub items: Vec<AliyunFile>,
     pub next_marker: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct GetFileRequest<'a> {
+    drive_id: &'a str,
+    file_id: &'a str,
+    image_thumbnail_process: &'a str,
+    image_url_process: &'a str,
+    video_thumbnail_process: &'a str,
+    fields: &'a str,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -224,7 +265,7 @@ impl DavDirEntry for AliyunFile {
         self.name.as_bytes().to_vec()
     }
 
-    fn metadata<'a>(&'a self) -> FsFuture<Box<dyn DavMetaData>> {
+    fn metadata(&self) -> FsFuture<Box<dyn DavMetaData>> {
         async move { Ok(Box::new(self.clone()) as Box<dyn DavMetaData>) }.boxed()
     }
 }
