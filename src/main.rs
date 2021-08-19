@@ -30,6 +30,9 @@ struct Opt {
     /// WebDav authentication password
     #[structopt(short = "W", long)]
     auth_password: Option<String>,
+    /// Automatically generate index.html
+    #[structopt(short = "I", long)]
+    auto_index: bool,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -59,6 +62,7 @@ async fn main() -> anyhow::Result<()> {
     let dav_server = DavHandler::builder()
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
+        .autoindex(opt.auto_index)
         .build_handler();
     debug!("webdav handler initialized");
 

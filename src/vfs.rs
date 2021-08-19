@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use bytes::{Buf, Bytes};
-use futures::future::FutureExt;
+use futures::future::{self, FutureExt};
 use log::{debug, trace};
 use moka::future::{Cache, CacheBuilder};
 use webdav_handler::{
@@ -198,11 +198,11 @@ impl DavFile for AliyunDavFile {
     }
 
     fn write_buf<'a>(&'a mut self, _buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
-        todo!()
+        Box::pin(future::ready(Err(FsError::NotImplemented)))
     }
 
     fn write_bytes<'a>(&'a mut self, _buf: Bytes) -> FsFuture<'_, ()> {
-        todo!()
+        Box::pin(future::ready(Err(FsError::NotImplemented)))
     }
 
     fn read_bytes<'a>(&'a mut self, count: usize) -> FsFuture<'_, Bytes> {
@@ -238,6 +238,6 @@ impl DavFile for AliyunDavFile {
     }
 
     fn flush<'a>(&'a mut self) -> FsFuture<'_, ()> {
-        todo!()
+        Box::pin(future::ready(Err(FsError::NotImplemented)))
     }
 }
