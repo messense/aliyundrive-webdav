@@ -188,7 +188,7 @@ impl AliyunDavFile {
 }
 
 impl DavFile for AliyunDavFile {
-    fn metadata<'a>(&'a mut self) -> FsFuture<'_, Box<dyn DavMetaData>> {
+    fn metadata(&'_ mut self) -> FsFuture<'_, Box<dyn DavMetaData>> {
         debug!("file: metadata {}", self.file.name);
         async move {
             let file = self.file.clone();
@@ -197,7 +197,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn write_buf<'a>(&'a mut self, _buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
+    fn write_buf(&'_ mut self, _buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
         Box::pin(future::ready(Err(FsError::NotImplemented)))
     }
 
@@ -214,7 +214,7 @@ impl DavFile for AliyunDavFile {
             let download_url = self.file.download_url.as_ref().ok_or(FsError::NotFound)?;
             let content = self
                 .drive
-                .download(&download_url, self.current_pos, count)
+                .download(download_url, self.current_pos, count)
                 .await
                 .map_err(|_| FsError::NotFound)?;
             self.current_pos += content.len() as u64;

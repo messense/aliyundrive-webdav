@@ -107,7 +107,7 @@ impl AliyunDrive {
     }
 
     fn drive_id(&self) -> Result<&str> {
-        Ok(self.drive_id.as_deref().context("missing drive_id")?)
+        self.drive_id.as_deref().context("missing drive_id")
     }
 
     pub async fn list_all(&self, parent_file_id: &str) -> Result<Vec<AliyunFile>> {
