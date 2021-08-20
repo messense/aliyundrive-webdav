@@ -5,16 +5,16 @@
 
 阿里云盘 WebDav 服务
 
-## Installation
+## 安装
 
-You can download prebuilt binaries from [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases).
-Or install it from PyPI:
+可以从 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面下载预先构建的二进制包，
+也可以使用 pip 从 PyPI 下载:
 
 ```bash
 pip install aliyundrive-webdav
 ```
 
-## Usage
+## 用法
 
 ```bash
 aliyundrive-webdav --help
@@ -35,6 +35,11 @@ OPTIONS:
     -p, --port <port>                      Listen port [default: 8080]
     -r, --refresh-token <refresh-token>    Aliyun drive refresh token [env: REFRESH_TOKEN=]
 ```
+
+### 获取 refresh_token
+
+登录[阿里云盘](https://www.aliyundrive.com/drive/)后，可以在开发者工具 ->
+Application -> Local Storage 中的 `token` 字段中找到。
 
 ## License
 
