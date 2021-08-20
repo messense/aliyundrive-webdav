@@ -111,7 +111,7 @@ impl AliyunDriveFileSystem {
 
     #[async_recursion]
     async fn read_dir_and_cache(&self, path: &DavPath) -> Result<Vec<AliyunFile>, FsError> {
-        debug!(path = %path, "read_dir and cache");
+        debug!(path = %path.as_rel_ospath().display(), "read_dir and cache");
         let parent_file_id = self.get_file_id(path).await?.ok_or(FsError::NotFound)?;
         let files = if let Some(files) = self.read_dir_cache.get(&parent_file_id) {
             files
@@ -166,7 +166,7 @@ impl AliyunDriveFileSystem {
 
 impl DavFileSystem for AliyunDriveFileSystem {
     fn open<'a>(&'a self, path: &'a DavPath, _options: OpenOptions) -> FsFuture<Box<dyn DavFile>> {
-        debug!(path = %path, "fs: open");
+        debug!(path = %path.as_rel_ospath().display(), "fs: open");
         async move {
             let file_id = self.get_file_id(path).await?.ok_or(FsError::NotFound)?;
             let file = self.get_file(file_id).await?;
@@ -181,7 +181,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         path: &'a DavPath,
         _meta: ReadDirMeta,
     ) -> FsFuture<FsStream<Box<dyn DavDirEntry>>> {
-        debug!(path = %path, "fs: read_dir");
+        debug!(path = %path.as_rel_ospath().display(), "fs: read_dir");
         async move {
             let files = self.read_dir_and_cache(path).await?;
             let mut v: Vec<Box<dyn DavDirEntry>> = Vec::with_capacity(files.len());
@@ -198,7 +198,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn metadata<'a>(&'a self, path: &'a DavPath) -> FsFuture<Box<dyn DavMetaData>> {
-        debug!(path = %path, "fs: metadata");
+        debug!(path = %path.as_rel_ospath().display(), "fs: metadata");
         async move {
             let file_id = self.get_file_id(path).await?.ok_or(FsError::NotFound)?;
             if &file_id == "root" {
