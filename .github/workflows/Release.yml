@@ -24,7 +24,7 @@ jobs:
         uses: messense/maturin-action@v1
         with:
           target: x86_64-apple-darwin
-          args: --release --out dist
+          args: --release --out dist --strip
       - name: Install built wheel - x86_64
         run: |
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
@@ -32,7 +32,7 @@ jobs:
       - name: Build wheels - universal2
         uses: messense/maturin-action@v1
         with:
-          args: --release --universal2 --out dist --no-sdist
+          args: --release --universal2 --out dist --strip --no-sdist
       - name: Install built wheel - universal2
         run: |
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
@@ -78,7 +78,7 @@ jobs:
           target: ${{ matrix.platform.target }}
           manylinux: auto
           container: off
-          args: --no-sdist --release -o dist
+          args: --no-sdist --release -o dist --strip
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
