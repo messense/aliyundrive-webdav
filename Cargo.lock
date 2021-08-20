@@ -33,12 +33,14 @@ name = "aliyundrive-webdav"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-recursion",
  "bytes",
  "futures",
  "headers",
  "hyper",
  "log",
  "moka",
+ "percent-encoding 1.0.1",
  "pretty_env_logger",
  "reqwest",
  "serde",
@@ -102,6 +104,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6a8ea61bf9947a1007c5cada31e647dbc77b103c679858150003ba697ea798b"
 dependencies = [
  "event-listener",
+]
+
+[[package]]
+name = "async-recursion"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7d78656ba01f1b93024b7c3a0467f1608e4be67d725749fdcd7d2c7678fd7a2"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

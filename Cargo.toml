@@ -12,12 +12,14 @@ readme = "README.md"
 [dependencies]
 # actix-web = { version = "4.0.0-beta.6", default-features = false, features = ["compress-gzip"] }
 anyhow = "1.0.43"
+async-recursion = "0.3.2"
 bytes = "1.0.1"
 futures = "0.3.16"
 headers = "0.3.4"
 hyper = { version = "0.14.11", features = ["server"] }
 log = "0.4.14"
 moka = { version = "0.5.1", features = ["future"] }
+percent-encoding = "1.0"
 pretty_env_logger = "0.4.0"
 reqwest = { version = "0.11.4", default-features = false, features = ["json", "rustls-tls", "gzip", "deflate"] }
 serde = { version = "1.0.127", features = ["derive"] }
