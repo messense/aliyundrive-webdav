@@ -90,7 +90,7 @@ impl AliyunDriveFileSystem {
                     trace!("{} file_id not found", path_str);
                     let parts: Vec<&str> = path_str.split('/').collect();
                     let parts_len = parts.len();
-                    let filename = dbg!(parts[parts_len - 1]);
+                    let filename = parts[parts_len - 1];
 
                     // find in root first
                     let files = self.read_dir_and_cache(&DavPath::new("/").unwrap()).await?;
@@ -101,7 +101,7 @@ impl AliyunDriveFileSystem {
 
                     let mut prefix = String::new();
                     for part in &parts[0..parts_len - 1] {
-                        let parent = dbg!(format!("{}/{}", prefix, part));
+                        let parent = format!("{}/{}", prefix, part);
                         let parent_path = DavPath::new(&encode_path(parent.as_bytes()))
                             .map_err(|_| FsError::GeneralFailure)?;
                         prefix = parent;
