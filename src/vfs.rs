@@ -6,7 +6,6 @@ use async_recursion::async_recursion;
 use bytes::{Buf, Bytes};
 use futures::future::{self, FutureExt};
 use moka::future::{Cache, CacheBuilder};
-use time::format_description::well_known::Rfc3339;
 use tracing::{debug, trace};
 use webdav_handler::{
     davpath::DavPath,
@@ -210,17 +209,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         async move {
             let file_id = self.get_file_id(path).await?.ok_or(FsError::NotFound)?;
             if &file_id == "root" {
-                let now = ::time::OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
-                let root = AliyunFile {
-                    drive_id: self.drive.drive_id.clone().unwrap(),
-                    name: "/".to_string(),
-                    id: file_id,
-                    r#type: "folder".to_string(),
-                    created_at: now.clone(),
-                    updated_at: now,
-                    size: 0,
-                    download_url: None,
-                };
+                let root = AliyunFile::new_root(self.drive.drive_id.clone().unwrap());
                 Ok(Box::new(root) as Box<dyn DavMetaData>)
             } else {
                 let file = self.get_file(file_id).await?;

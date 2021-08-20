@@ -333,6 +333,24 @@ pub struct AliyunFile {
     #[serde(default)]
     pub size: u64,
     pub download_url: Option<String>,
+    pub category: Option<String>,
+}
+
+impl AliyunFile {
+    pub fn new_root(drive_id: String) -> Self {
+        let now = ::time::OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
+        Self {
+            drive_id,
+            name: "/".to_string(),
+            id: "root".to_string(),
+            r#type: "folder".to_string(),
+            created_at: now.clone(),
+            updated_at: now,
+            size: 0,
+            download_url: None,
+            category: None,
+        }
+    }
 }
 
 impl DavMetaData for AliyunFile {
