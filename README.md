@@ -29,11 +29,14 @@ FLAGS:
     -V, --version       Prints version information
 
 OPTIONS:
-    -W, --auth-password <auth-password>    WebDav authentication password
-    -U, --auth-user <auth-user>            WebDav authentication username
-        --host <host>                      Listen host [default: 127.0.0.1]
-    -p, --port <port>                      Listen port [default: 8080]
-    -r, --refresh-token <refresh-token>    Aliyun drive refresh token [env: REFRESH_TOKEN=]
+    -W, --auth-password <auth-password>          WebDav authentication password
+    -U, --auth-user <auth-user>                  WebDav authentication username
+        --host <host>                            Listen host [default: 127.0.0.1]
+    -p, --port <port>                            Listen port [default: 8080]
+    -S, --read-buffer-size <read-buffer-size>
+            Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
+
+    -r, --refresh-token <refresh-token>          Aliyun drive refresh token [env: REFRESH_TOKEN=]
 ```
 
 ### 获取 refresh_token

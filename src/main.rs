@@ -33,6 +33,9 @@ struct Opt {
     /// Automatically generate index.html
     #[structopt(short = "I", long)]
     auto_index: bool,
+    /// Read/download buffer size in bytes, defaults to 10MB
+    #[structopt(short = "S", long, default_value = "10485760")]
+    read_buffer_size: usize,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -62,10 +65,14 @@ async fn main() -> anyhow::Result<()> {
     let dav_server = DavHandler::builder()
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
-        .read_buf_size(10 * 1024 * 1024) // 10MB
+        .read_buf_size(opt.read_buffer_size)
         .autoindex(opt.auto_index)
         .build_handler();
-    debug!("webdav handler initialized");
+    debug!(
+        read_buffer_size = opt.read_buffer_size,
+        auto_index = opt.auto_index,
+        "webdav handler initialized"
+    );
 
     let addr = (opt.host, opt.port)
         .to_socket_addrs()
