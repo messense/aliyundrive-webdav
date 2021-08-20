@@ -10,7 +10,6 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# actix-web = { version = "4.0.0-beta.6", default-features = false, features = ["compress-gzip"] }
 anyhow = "1.0.43"
 async-recursion = "0.3.2"
 bytes = "1.0.1"
