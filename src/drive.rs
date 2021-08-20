@@ -6,7 +6,7 @@ use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use futures::FutureExt;
-use log::{error, info, trace};
+use tracing::{error, info, trace};
 use serde::{Deserialize, Serialize};
 use tokio::{
     sync::{oneshot, RwLock},

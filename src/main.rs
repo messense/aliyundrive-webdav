@@ -3,7 +3,7 @@ use std::net::ToSocketAddrs;
 use std::{env, io};
 
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
-use log::{debug, error, info};
+use tracing::{debug, error, info};
 use structopt::StructOpt;
 use webdav_handler::{body::Body, memls::MemLs, DavConfig, DavHandler};
 
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
     if env::var("RUST_LOG").is_err() {
         env::set_var("RUST_LOG", "aliyundrive_webdav=info");
     }
-    pretty_env_logger::init();
+    tracing_subscriber::fmt::init();
 
     let opt = Opt::from_args();
     let auth_user = opt.auth_user;

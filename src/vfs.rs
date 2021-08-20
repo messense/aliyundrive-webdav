@@ -5,7 +5,7 @@ use anyhow::Result;
 use async_recursion::async_recursion;
 use bytes::{Buf, Bytes};
 use futures::future::{self, FutureExt};
-use log::{debug, trace};
+use tracing::{debug, trace};
 use moka::future::{Cache, CacheBuilder};
 use time::format_description::well_known::Rfc3339;
 use webdav_handler::{
