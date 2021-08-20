@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use ::time::{Format, OffsetDateTime};
 use anyhow::{bail, Context, Result};
@@ -187,9 +187,41 @@ impl AliyunDrive {
         Ok(res)
     }
 
-    pub async fn download(&self, url: &str, start_pos: u64, size: usize) -> Result<Bytes> {
+    pub async fn download(
+        &self,
+        file_id: &str,
+        url: &str,
+        start_pos: u64,
+        size: usize,
+    ) -> Result<Bytes> {
         use reqwest::header::RANGE;
 
+        let url = if let Ok(download_url) = ::url::Url::parse(url) {
+            let expires = download_url.query_pairs().find_map(|(k, v)| {
+                if k == "x-oss-expires" {
+                    if let Ok(expires) = v.parse::<u64>() {
+                        return Some(expires);
+                    }
+                }
+                None
+            });
+            if let Some(expires) = expires {
+                let current_ts = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .expect("Time went backwards")
+                    .as_secs();
+                if current_ts >= expires {
+                    trace!("download url {} expired, get a new one", url);
+                    self.get_download_url(file_id).await?
+                } else {
+                    url.to_string()
+                }
+            } else {
+                url.to_string()
+            }
+        } else {
+            url.to_string()
+        };
         let end_pos = start_pos + size as u64 - 1;
         trace!("download {} from {} to {}", url, start_pos, end_pos);
         let range = format!("bytes={}-{}", start_pos, end_pos);
@@ -204,6 +236,27 @@ impl AliyunDrive {
             .await?
             .error_for_status()?;
         Ok(res.bytes().await?)
+    }
+
+    async fn get_download_url(&self, file_id: &str) -> Result<String> {
+        let req = GetFileDownloadUrlRequest {
+            drive_id: self.drive_id()?,
+            file_id,
+        };
+        let access_token = self.access_token().await?;
+        let res = self
+            .client
+            .post(format!("{}/v2/file/get_download_url", API_BASE_URL))
+            .header("Origin", ORIGIN)
+            .header("Referer", REFERER)
+            .header("User-Agent", UA)
+            .bearer_auth(&access_token)
+            .json(&req)
+            .send()
+            .await?
+            .error_for_status()?;
+        let res = res.json::<GetFileDownloadUrlResponse>().await?;
+        Ok(res.url)
     }
 }
 
@@ -247,6 +300,19 @@ struct GetFileRequest<'a> {
     image_url_process: &'a str,
     video_thumbnail_process: &'a str,
     fields: &'a str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct GetFileDownloadUrlRequest<'a> {
+    drive_id: &'a str,
+    file_id: &'a str,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct GetFileDownloadUrlResponse {
+    url: String,
+    size: u64,
+    expiration: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]

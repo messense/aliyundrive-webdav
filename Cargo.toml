@@ -26,6 +26,7 @@ serde = { version = "1.0.127", features = ["derive"] }
 structopt = "0.3.22"
 time = "0.2.0"
 tokio = { version = "1.10.0", features = ["full"] }
+url = "2.2.2"
 webdav-handler = { version = "0.2.0", features = ["hyper"] }
 
 [patch.crates-io]

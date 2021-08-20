@@ -26,9 +26,9 @@ impl percent_encoding::EncodeSet for ENCODE_SET {
     // See RFC3986, and https://en.wikipedia.org/wiki/Percent-encoding .
     #[inline]
     fn contains(&self, byte: u8) -> bool {
-        let unreserved = (byte >= b'A' && byte <= b'Z')
-            || (byte >= b'a' && byte <= b'z')
-            || (byte >= b'0' && byte <= b'9')
+        let unreserved = (b'A'..=b'Z').contains(&byte)
+            || (b'a'..=b'z').contains(&byte)
+            || (b'0'..=b'9').contains(&byte)
             || byte == b'-'
             || byte == b'_'
             || byte == b'.'
@@ -265,7 +265,7 @@ impl DavFile for AliyunDavFile {
             let download_url = self.file.download_url.as_ref().ok_or(FsError::NotFound)?;
             let content = self
                 .drive
-                .download(download_url, self.current_pos, count)
+                .download(&self.file.id, download_url, self.current_pos, count)
                 .await
                 .map_err(|_| FsError::NotFound)?;
             self.current_pos += content.len() as u64;
