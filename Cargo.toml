@@ -24,7 +24,7 @@ pretty_env_logger = "0.4.0"
 reqwest = { version = "0.11.4", default-features = false, features = ["json", "rustls-tls", "gzip", "deflate"] }
 serde = { version = "1.0.127", features = ["derive"] }
 structopt = "0.3.22"
-time = "0.2.0"
+time = { version = "0.3.1", features = ["formatting", "parsing"] }
 tokio = { version = "1.10.0", features = ["full"] }
 url = "2.2.2"
 webdav-handler = { version = "0.2.0", features = ["hyper"] }

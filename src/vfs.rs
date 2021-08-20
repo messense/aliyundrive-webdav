@@ -7,6 +7,7 @@ use bytes::{Buf, Bytes};
 use futures::future::{self, FutureExt};
 use log::{debug, trace};
 use moka::future::{Cache, CacheBuilder};
+use time::format_description::well_known::Rfc3339;
 use webdav_handler::{
     davpath::DavPath,
     fs::{
@@ -200,7 +201,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         async move {
             let file_id = self.get_file_id(path).await?.ok_or(FsError::NotFound)?;
             if &file_id == "root" {
-                let now = ::time::OffsetDateTime::now_utc().format(time::Format::Rfc3339);
+                let now = ::time::OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
                 let root = AliyunFile {
                     drive_id: self.drive.drive_id.clone().unwrap(),
                     name: "/".to_string(),

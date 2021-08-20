@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use ::time::{Format, OffsetDateTime};
+use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use futures::FutureExt;
@@ -335,7 +335,7 @@ impl DavMetaData for AliyunFile {
     }
 
     fn modified(&self) -> FsResult<SystemTime> {
-        Ok(OffsetDateTime::parse(&self.updated_at, Format::Rfc3339)
+        Ok(OffsetDateTime::parse(&self.updated_at, &Rfc3339)
             .map_err(|_| FsError::GeneralFailure)?
             .into())
     }
@@ -345,7 +345,7 @@ impl DavMetaData for AliyunFile {
     }
 
     fn created(&self) -> FsResult<SystemTime> {
-        Ok(OffsetDateTime::parse(&self.created_at, Format::Rfc3339)
+        Ok(OffsetDateTime::parse(&self.created_at, &Rfc3339)
             .map_err(|_| FsError::GeneralFailure)?
             .into())
     }
