@@ -133,8 +133,10 @@ impl AliyunDrive {
         parent_file_id: &str,
         marker: Option<&str>,
     ) -> Result<ListFileResponse> {
+        let drive_id = self.drive_id()?;
+        debug!(drive_id = %drive_id, parent_file_id = %parent_file_id, marker = ?marker, "list file");
         let req = ListFileRequest {
-            drive_id: self.drive_id()?,
+            drive_id,
             parent_file_id,
             limit: 100,
             all: false,

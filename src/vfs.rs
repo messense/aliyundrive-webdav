@@ -83,25 +83,33 @@ impl AliyunDriveFileSystem {
             let path_str = path.to_string_lossy().into_owned();
             match self.file_ids.get(&path_str) {
                 Some(file_id) => {
-                    trace!("found {} file_id: {}", path_str, file_id);
+                    trace!("found {} file_id: {} in cache", path_str, file_id);
                     Ok(Some(file_id))
                 }
                 None => {
                     trace!("{} file_id not found", path_str);
-                    self.read_dir_and_cache(&DavPath::new("/").unwrap()).await?;
-                    let filename = path.file_name();
+                    let parts: Vec<&str> = path_str.split('/').collect();
+                    let parts_len = parts.len();
+                    let filename = dbg!(parts[parts_len - 1]);
+
+                    // find in root first
+                    let files = self.read_dir_and_cache(&DavPath::new("/").unwrap()).await?;
+                    if let Some(file) = files.iter().find(|f| f.name == filename) {
+                        trace!("found {} file_id: {}", path_str, file.id);
+                        return Ok(Some(file.id.clone()));
+                    }
+
                     let mut prefix = String::new();
-                    for part in path_str.split('/') {
-                        if let Some(filename) = filename {
-                            if part == filename {
-                                return Ok(self.file_ids.get(&path_str));
-                            }
-                        }
-                        let parent = format!("{}/{}", prefix, part);
+                    for part in &parts[0..parts_len - 1] {
+                        let parent = dbg!(format!("{}/{}", prefix, part));
                         let parent_path = DavPath::new(&encode_path(parent.as_bytes()))
                             .map_err(|_| FsError::GeneralFailure)?;
                         prefix = parent;
-                        let _files = self.read_dir_and_cache(&parent_path).await?;
+                        let files = self.read_dir_and_cache(&parent_path).await?;
+                        if let Some(file) = files.iter().find(|f| f.name == filename) {
+                            trace!("found {} file_id: {}", path_str, file.id);
+                            return Ok(Some(file.id.clone()));
+                        }
                     }
                     Ok(None)
                 }
