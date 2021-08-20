@@ -128,17 +128,17 @@ impl AliyunDriveFileSystem {
     }
 
     async fn cache_file_id(&self, path: String, file_id: String) {
-        trace!("cache file_id {}: {}", file_id, path);
+        trace!(path = %path, file_id = %file_id, "cache file_id");
         self.file_ids.insert(path, file_id).await;
     }
 
     async fn cache_file(&self, file_id: String, file: AliyunFile) {
-        trace!("cache file {}: {}", file_id, file.name);
+        trace!(file_id = %file_id, file_name = %file.name, "cache file");
         self.file_cache.insert(file_id, file).await;
     }
 
     async fn cache_read_dir(&self, path: &DavPath, file_id: String, files: Vec<AliyunFile>) {
-        trace!("cache read_dir {} file count: {}", file_id, files.len());
+        trace!(file_id = %file_id, count = files.len(), "cache read_dir");
         let rel_path = path.as_rel_ospath();
         for file in &files {
             self.cache_file(file.id.clone(), file.clone()).await;
@@ -165,7 +165,7 @@ impl AliyunDriveFileSystem {
 
 impl DavFileSystem for AliyunDriveFileSystem {
     fn open<'a>(&'a self, path: &'a DavPath, _options: OpenOptions) -> FsFuture<Box<dyn DavFile>> {
-        debug!("fs: open {}", path);
+        debug!(path = %path, "fs: open");
         async move {
             let file_id = self.get_file_id(path).await?.ok_or(FsError::NotFound)?;
             let file = self.get_file(file_id).await?;
@@ -180,7 +180,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         path: &'a DavPath,
         _meta: ReadDirMeta,
     ) -> FsFuture<FsStream<Box<dyn DavDirEntry>>> {
-        debug!("fs: read_dir {}", path);
+        debug!(path = %path, "fs: read_dir");
         async move {
             let files = self.read_dir_and_cache(path).await?;
             let mut v: Vec<Box<dyn DavDirEntry>> = Vec::with_capacity(files.len());
@@ -197,7 +197,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn metadata<'a>(&'a self, path: &'a DavPath) -> FsFuture<Box<dyn DavMetaData>> {
-        debug!("fs: metadata {}", path);
+        debug!(path = %path, "fs: metadata");
         async move {
             let file_id = self.get_file_id(path).await?.ok_or(FsError::NotFound)?;
             if &file_id == "root" {
@@ -241,7 +241,7 @@ impl AliyunDavFile {
 
 impl DavFile for AliyunDavFile {
     fn metadata(&'_ mut self) -> FsFuture<'_, Box<dyn DavMetaData>> {
-        debug!("file: metadata {}", self.file.name);
+        debug!(file_id = %self.file.id, file_name = %self.file.name, "file: metadata");
         async move {
             let file = self.file.clone();
             Ok(Box::new(file) as Box<dyn DavMetaData>)
@@ -259,8 +259,12 @@ impl DavFile for AliyunDavFile {
 
     fn read_bytes(&mut self, count: usize) -> FsFuture<Bytes> {
         debug!(
-            "file: read_bytes {}, pos {} count {}, size {}",
-            self.file.name, self.current_pos, count, self.file.size
+            file_id = %self.file.id,
+            file_name = %self.file.name,
+            pos = self.current_pos,
+            count = count,
+            size = self.file.size,
+            "file: read_bytes",
         );
         async move {
             let download_url = self.file.download_url.as_ref().ok_or(FsError::NotFound)?;
@@ -276,7 +280,12 @@ impl DavFile for AliyunDavFile {
     }
 
     fn seek(&mut self, pos: SeekFrom) -> FsFuture<u64> {
-        debug!("file: seek {} to {:?}", self.file.name, pos);
+        debug!(
+            file_id = %self.file.id,
+            file_name = %self.file.name,
+            pos = ?pos,
+            "file: seek"
+        );
         async move {
             let new_pos = match pos {
                 SeekFrom::Start(pos) => pos,

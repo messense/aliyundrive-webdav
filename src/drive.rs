@@ -11,7 +11,7 @@ use tokio::{
     sync::{oneshot, RwLock},
     time,
 };
-use tracing::{error, info, trace};
+use tracing::{debug, error, info};
 use webdav_handler::fs::{DavDirEntry, DavMetaData, FsError, FsFuture, FsResult};
 
 const API_BASE_URL: &str = "https://api.aliyundrive.com";
@@ -74,7 +74,7 @@ impl AliyunDrive {
         if drive_id.is_empty() {
             bail!("get default drive id failed");
         }
-        info!("default drive id is {}", drive_id);
+        info!(drive_id = %drive_id, "found default drive id");
         drive.drive_id = Some(drive_id);
 
         Ok(drive)
@@ -97,7 +97,11 @@ impl AliyunDrive {
         let res = res.json::<RefreshTokenResponse>().await?;
         cred.refresh_token = res.refresh_token.clone();
         cred.access_token = Some(res.access_token.clone());
-        info!("refresh token succeed for {}", res.nick_name);
+        info!(
+            refresh_token = %res.refresh_token,
+            nick_name = %res.nick_name,
+            "refresh token succeed"
+        );
         Ok(res)
     }
 
@@ -211,7 +215,7 @@ impl AliyunDrive {
                     .expect("Time went backwards")
                     .as_secs();
                 if current_ts >= expires {
-                    trace!("download url {} expired, get a new one", url);
+                    debug!(url = %url, "download url expired, get a new one");
                     self.get_download_url(file_id).await?
                 } else {
                     url.to_string()
@@ -223,7 +227,7 @@ impl AliyunDrive {
             url.to_string()
         };
         let end_pos = start_pos + size as u64 - 1;
-        trace!("download {} from {} to {}", url, start_pos, end_pos);
+        debug!(url = %url, start = start_pos, end = end_pos, "download file");
         let range = format!("bytes={}-{}", start_pos, end_pos);
         let res = self
             .client
