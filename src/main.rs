@@ -62,6 +62,7 @@ async fn main() -> anyhow::Result<()> {
     let dav_server = DavHandler::builder()
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
+        .read_buf_size(50 * 1024 * 1024) // 50MB
         .autoindex(opt.auto_index)
         .build_handler();
     debug!("webdav handler initialized");

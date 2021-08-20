@@ -201,11 +201,11 @@ impl DavFile for AliyunDavFile {
         Box::pin(future::ready(Err(FsError::NotImplemented)))
     }
 
-    fn write_bytes<'a>(&'a mut self, _buf: Bytes) -> FsFuture<'_, ()> {
+    fn write_bytes(&mut self, _buf: Bytes) -> FsFuture<()> {
         Box::pin(future::ready(Err(FsError::NotImplemented)))
     }
 
-    fn read_bytes<'a>(&'a mut self, count: usize) -> FsFuture<'_, Bytes> {
+    fn read_bytes(&mut self, count: usize) -> FsFuture<Bytes> {
         debug!(
             "file: read_bytes {}, pos {} count {}, size {}",
             self.file.name, self.current_pos, count, self.file.size
@@ -223,7 +223,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn seek<'a>(&'a mut self, pos: SeekFrom) -> FsFuture<'_, u64> {
+    fn seek(&mut self, pos: SeekFrom) -> FsFuture<u64> {
         debug!("file: seek {} to {:?}", self.file.name, pos);
         async move {
             let new_pos = match pos {
@@ -237,7 +237,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn flush<'a>(&'a mut self) -> FsFuture<'_, ()> {
+    fn flush(&mut self) -> FsFuture<()> {
         Box::pin(future::ready(Err(FsError::NotImplemented)))
     }
 }

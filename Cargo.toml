@@ -21,3 +21,6 @@ structopt = "0.3.22"
 time = "0.2.0"
 tokio = { version = "1.10.0", features = ["full"] }
 webdav-handler = { version = "0.2.0", features = ["hyper"] }
+
+[patch.crates-io]
+webdav-handler = { git = "https://github.com/messense/webdav-handler-rs.git", branch = "read-buf-size" }

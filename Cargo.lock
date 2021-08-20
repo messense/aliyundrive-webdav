@@ -2091,8 +2091,7 @@ dependencies = [
 [[package]]
 name = "webdav-handler"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d140ea43efaf7e37b55454a21194b6030901ebd22b749c27534dd14c76b1012f"
+source = "git+https://github.com/messense/webdav-handler-rs.git?branch=read-buf-size#355ac03069abff803fe3f580d3a497f03d97538b"
 dependencies = [
  "bytes",
  "futures",
