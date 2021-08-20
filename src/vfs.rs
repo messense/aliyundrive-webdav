@@ -111,6 +111,7 @@ impl AliyunDriveFileSystem {
 
     #[async_recursion]
     async fn read_dir_and_cache(&self, path: &DavPath) -> Result<Vec<AliyunFile>, FsError> {
+        debug!(path = %path, "read_dir and cache");
         let parent_file_id = self.get_file_id(path).await?.ok_or(FsError::NotFound)?;
         let files = if let Some(files) = self.read_dir_cache.get(&parent_file_id) {
             files

@@ -4,6 +4,7 @@ version = "0.1.2"
 edition = "2018"
 description = "WebDAV server for AliyunDrive"
 license = "MIT"
+homepage = "https://github.com/messense/aliyundrive-webdav"
 repository = "https://github.com/messense/aliyundrive-webdav.git"
 readme = "README.md"
 

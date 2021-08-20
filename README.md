@@ -3,7 +3,7 @@
 [![GitHub Actions](https://github.com/messense/aliyundrive-webdav/workflows/CI/badge.svg)](https://github.com/messense/aliyundrive-webdav/actions?query=workflow%3ACI)
 [![PyPI](https://img.shields.io/pypi/v/aliyundrive-webdav.svg)](https://pypi.org/project/aliyundrive-webdav)
 
-阿里云盘 WebDav 服务
+阿里云盘 WebDAV 服务
 
 ## 安装
 
