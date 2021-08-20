@@ -65,7 +65,6 @@ jobs:
           { target: "i686-unknown-linux-musl", image_tag: "i686-musl" },
           { target: "aarch64-unknown-linux-musl", image_tag: "aarch64-musl" },
           { target: "armv7-unknown-linux-musleabihf", image_tag: "armv7-musleabihf" },
-          { target: "powerpc64le-unknown-linux-musl", image_tag: "powerpc64le-musl" },
         ]
     container:
       image: docker://messense/rust-musl-cross:${{ matrix.platform.image_tag }}
