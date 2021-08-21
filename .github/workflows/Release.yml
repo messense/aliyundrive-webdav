@@ -64,6 +64,7 @@ jobs:
           { target: "x86_64-unknown-linux-musl", image_tag: "x86_64-musl" },
           { target: "i686-unknown-linux-musl", image_tag: "i686-musl" },
           { target: "aarch64-unknown-linux-musl", image_tag: "aarch64-musl" },
+          { target: "armv7-unknown-linux-musleabi", image_tag: "armv7-musleabi" },
           { target: "armv7-unknown-linux-musleabihf", image_tag: "armv7-musleabihf" },
         ]
     container:
@@ -80,6 +81,7 @@ jobs:
           container: off
           args: --no-sdist --release -o dist --strip
       - name: Upload wheels
+        if: matrix.platform.target != 'armv7-unknown-linux-musleabi'  # only publish armv7 hardware float wheel package
         uses: actions/upload-artifact@v2
         with:
           name: wheels
