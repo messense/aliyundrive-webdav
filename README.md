@@ -18,7 +18,7 @@ pip install aliyundrive-webdav
 
 ```bash
 aliyundrive-webdav --help
-aliyundrive-webdav 0.1.8
+aliyundrive-webdav 0.1.9
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
