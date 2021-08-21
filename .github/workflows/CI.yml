@@ -76,8 +76,15 @@ jobs:
           args: --all-features
 
   openwrt:
-    name: OpenWrt Package
+    name: OpenWrt Package - ${{ matrix.target.cpu }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - cpu: "rockchip"
+            sdk: "https://downloads.openwrt.org/snapshots/targets/rockchip/armv8/openwrt-sdk-rockchip-armv8_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
+          - cpu: "bcm53xx"
+            sdk: "https://downloads.openwrt.org/snapshots/targets/bcm53xx/generic/openwrt-sdk-bcm53xx-generic_gcc-10.3.0_musl_eabi.Linux-x86_64.tar.xz"
     steps:
       - uses: actions/checkout@v2
       - name: Install build requirements
@@ -89,7 +96,7 @@ jobs:
           swig time xsltproc zlib1g-dev
       - name: Install OpenWrt SDK
         run: |
-          wget -O openwrt-sdk.tar.xz https://downloads.openwrt.org/snapshots/targets/x86/64/openwrt-sdk-x86-64_gcc-10.3.0_musl.Linux-x86_64.tar.xz
+          wget -O openwrt-sdk.tar.xz ${{ matrix.target.sdk }}
           xz -q -d openwrt-sdk.tar.xz && tar -xvf openwrt-sdk.tar
           mv -f openwrt-sdk-* openwrt-sdk
       - name: Build Package
@@ -104,5 +111,5 @@ jobs:
       - name: Archive package
         uses: actions/upload-artifact@v1
         with:
-          name: openwrt-packages
+          name: aliyundrive-webdav-openwrt-${{ matrix.target.cpu }}
           path: openwrt-sdk/bin/packages
