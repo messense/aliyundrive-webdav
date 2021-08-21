@@ -50,7 +50,7 @@ jobs:
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: bin
+          name: apple-darwin-bin
           path: target/release/aliyundrive-webdav.tar.gz
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
@@ -99,7 +99,7 @@ jobs:
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: bin
+          name: ${{ matrix.platform.target }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.tar.gz
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
