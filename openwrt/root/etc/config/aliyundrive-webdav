@@ -2,7 +2,7 @@ config aliyun
     option refresh_token ''
 
 config server
-    option host '127.0.0.1'
+    option host '0.0.0.0'
     option port '8080'
     option auth_user ''
     option auth_password ''

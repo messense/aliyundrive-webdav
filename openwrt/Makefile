@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=aliyundrive-webdav
 PKG_VERSION:=0.1.8
-PKG_RELEASE:=20210821
+PKG_RELEASE:=0
 
 PKG_LIBC:=musl
 ifeq ($(ARCH),arm)
