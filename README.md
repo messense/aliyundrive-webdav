@@ -18,7 +18,7 @@ pip install aliyundrive-webdav
 
 ```bash
 aliyundrive-webdav --help
-aliyundrive-webdav 0.1.6
+aliyundrive-webdav 0.1.7
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
@@ -29,8 +29,8 @@ FLAGS:
     -V, --version       Prints version information
 
 OPTIONS:
-    -W, --auth-password <auth-password>          WebDav authentication password
-    -U, --auth-user <auth-user>                  WebDav authentication username
+    -W, --auth-password <auth-password>          WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
+    -U, --auth-user <auth-user>                  WebDAV authentication username [env: WEBDAV_AUTH_USER=]
         --host <host>                            Listen host [default: 127.0.0.1]
     -p, --port <port>                            Listen port [default: 8080]
     -S, --read-buffer-size <read-buffer-size>
