@@ -31,3 +31,7 @@ webdav-handler = { version = "0.2.0", default-features = false, features = ["hyp
 
 [patch.crates-io]
 webdav-handler = { git = "https://github.com/messense/webdav-handler-rs.git", branch = "aliyundrive" }
+
+[profile.release]
+lto = true
+opt-level = "z"  # Optimize for size
