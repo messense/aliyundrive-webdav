@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=aliyundrive-webdav
 PKG_VERSION:=0.1.9
-PKG_RELEASE:=0
+PKG_RELEASE:=1
 
 PKG_LIBC:=musl
 ifeq ($(ARCH),arm)
@@ -44,7 +44,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/aliyundrive-webdav $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DATA) ./root/etc/config/aliyundrive-webdav $(1)/etc/config/aliyundrive-webdav
+	$(INSTALL_CONF) ./root/etc/config/aliyundrive-webdav $(1)/etc/config/aliyundrive-webdav
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./root/etc/init.d/aliyundrive-webdav $(1)/etc/init.d/aliyundrive-webdav
 endef
