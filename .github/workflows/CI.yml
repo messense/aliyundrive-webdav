@@ -74,3 +74,35 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
+
+  openwrt:
+    name: OpenWrt Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install build requirements
+        run: |
+          sudo apt-get install -y build-essential ccache ecj fastjar file g++ gawk \
+          gettext git java-propose-classpath libelf-dev libncurses5-dev \
+          libncursesw5-dev libssl-dev python python2.7-dev python3 unzip wget \
+          python3-distutils python3-setuptools python3-dev rsync subversion \
+          swig time xsltproc zlib1g-dev
+      - name: Install OpenWrt SDK
+        run: |
+          wget -O openwrt-sdk.tar.xz https://downloads.openwrt.org/snapshots/targets/x86/64/openwrt-sdk-x86-64_gcc-10.3.0_musl.Linux-x86_64.tar.xz
+          xz -q -d openwrt-sdk.tar.xz && tar -xvf openwrt-sdk.tar
+          mv -f openwrt-sdk-* openwrt-sdk
+      - name: Build Package
+        run: |
+          mkdir -p openwrt-sdk/package/aliyundrive-webdav
+          cp -r openwrt/* openwrt-sdk/package/aliyundrive-webdav/
+          make -C openwrt-sdk defconfig
+
+          echo 'CONFIG_PACKAGE_aliyundrive-webdav=y' >> openwrt-sdk/.config
+          cd openwrt-sdk
+          make package/aliyundrive-webdav/compile V=s
+      - name: Archive package
+        uses: actions/upload-artifact@v1
+        with:
+          name: openwrt-packages
+          path: openwrt-sdk/bin/packages
