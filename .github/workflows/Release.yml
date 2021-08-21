@@ -47,6 +47,11 @@ jobs:
           cd target/release
           tar czvf aliyundrive-webdav.tar.gz aliyundrive-webdav
           cd -
+      - name: Upload binary artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: bin
+          path: target/release/aliyundrive-webdav.tar.gz
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
@@ -91,6 +96,11 @@ jobs:
           cd target/${{ matrix.platform.target }}/release
           tar czvf aliyundrive-webdav.tar.gz aliyundrive-webdav
           cd -
+      - name: Upload binary artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: bin
+          path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.tar.gz
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
