@@ -66,11 +66,13 @@ jobs:
     strategy:
       matrix:
         platform: [
-          { target: "x86_64-unknown-linux-musl", image_tag: "x86_64-musl" },
-          { target: "i686-unknown-linux-musl", image_tag: "i686-musl" },
-          { target: "aarch64-unknown-linux-musl", image_tag: "aarch64-musl" },
-          { target: "armv7-unknown-linux-musleabi", image_tag: "armv7-musleabi" },
-          { target: "armv7-unknown-linux-musleabihf", image_tag: "armv7-musleabihf" },
+          { target: "x86_64-unknown-linux-musl", image_tag: "x86_64-musl", wheel: true },
+          { target: "i686-unknown-linux-musl", image_tag: "i686-musl", wheel: true },
+          { target: "aarch64-unknown-linux-musl", image_tag: "aarch64-musl", wheel: true },
+          { target: "armv7-unknown-linux-musleabihf", image_tag: "armv7-musleabihf", wheel: true },
+          { target: "armv7-unknown-linux-musleabi", image_tag: "armv7-musleabi", wheel: false },
+          { target: "arm-unknown-linux-musleabihf", image_tag: "arm-musleabihf", wheel: false },
+          { target: "arm-unknown-linux-musleabi", image_tag: "arm-musleabi", wheel: false },
         ]
     container:
       image: docker://messense/rust-musl-cross:${{ matrix.platform.image_tag }}
@@ -86,7 +88,7 @@ jobs:
           container: off
           args: --no-sdist --release -o dist --strip
       - name: Upload wheels
-        if: matrix.platform.target != 'armv7-unknown-linux-musleabi'  # only publish armv7 hardware float wheel package
+        if: matrix.platform.wheel
         uses: actions/upload-artifact@v2
         with:
           name: wheels
