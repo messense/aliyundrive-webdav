@@ -32,6 +32,10 @@ define Package/$(PKG_NAME)/description
 WebDAV server for AliyunDrive.
 endef
 
+define Package/$(PKG_NAME)/conffiles
+/etc/config/aliyundrive-webdav
+endef
+
 define Build/Prepare
 	tar -C $(PKG_BUILD_DIR)/ -zxf $(DL_DIR)/$(PKG_SOURCE)
 endef
