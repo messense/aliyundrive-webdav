@@ -93,6 +93,11 @@ jobs:
         with:
           name: wheels
           path: dist
+      - name: Upx compress binary
+        uses: crazy-max/ghaction-upx@v1
+        with:
+          version: latest
+          files: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
       - name: Archive binary
         run: |
           cd target/${{ matrix.platform.target }}/release
