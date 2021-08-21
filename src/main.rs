@@ -24,11 +24,11 @@ struct Opt {
     /// Aliyun drive refresh token
     #[structopt(short, long, env = "REFRESH_TOKEN")]
     refresh_token: String,
-    /// WebDav authentication username
-    #[structopt(short = "U", long)]
+    /// WebDAV authentication username
+    #[structopt(short = "U", long, env = "WEBDAV_AUTH_USER")]
     auth_user: Option<String>,
-    /// WebDav authentication password
-    #[structopt(short = "W", long)]
+    /// WebDAV authentication password
+    #[structopt(short = "W", long, env = "WEBDAV_AUTH_PASSWORD")]
     auth_password: Option<String>,
     /// Automatically generate index.html
     #[structopt(short = "I", long)]
