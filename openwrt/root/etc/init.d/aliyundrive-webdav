@@ -1,0 +1,30 @@
+#!/bin/sh /etc/rc.common
+# aliyundrive-webdav init script
+
+START=90
+STOP=15
+
+NAME=aliyundrive-webdav
+
+uci_get_by_type() {
+	local ret=$(uci get $NAME.@$1[0].$2 2>/dev/null)
+	echo ${ret:=$3}
+}
+
+start() {
+	local refresh_token=$(uci_get_by_type aliyun refresh_token)
+	local auth_user=$(uci_get_by_type server auth_user)
+	local auth_password=$(uci_get_by_type server auth_password)
+	local read_buf_size=$(uci_get_by_type server read_buffer_size 10485760)
+	local host=$(uci_get_by_type server host 127.0.0.1)
+  local port=$(uci_get_by_type server port 8080)
+
+	export REFRESH_TOKEN=$refresh_token
+	[[ ! -z "$auth_user" ]] && export WEBDAV_AUTH_USER=$auth_user
+	[[ ! -z "$auth_password" ]] && export WEBDAV_AUTH_PASSWORD=$auth_password
+	aliyundrive-webdav --host "$host" --port "$port" -S "$read_buf_size" >>/var/log/aliyundrive-webdav.log 2>&1 &
+}
+
+stop() {
+	kill -9 $(pidof $NAME) >/dev/null 2>&1
+}
