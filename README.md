@@ -14,7 +14,22 @@
 pip install aliyundrive-webdav
 ```
 
-## 用法
+### OpenWrt 路由器
+
+[GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译的 ipk 文件，
+目前提供了 aarch64 和 arm 两个版本，可以下载后使用 opkg 安装，比如
+
+```bash
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.10.post1/aliyundrive-webdav_0.1.10-0_aarch64_generic.ipk
+opkg install aliyundrive-webdav_0.1.10-0_aarch64_generic.ipk
+```
+
+### Koolshare 梅林固件
+
+[GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译包 `aliyundrivewebdav-merlin-arm*.tar.gz`，
+目前只提供了旧的 arm380 固件的版本，可在下载后更改文件名为 `aliyundrivewebdav.tar.gz` 后在软件中心离线安装。
+
+## 命令行用法
 
 ```bash
 aliyundrive-webdav --help
