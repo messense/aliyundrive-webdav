@@ -29,6 +29,8 @@ opkg install aliyundrive-webdav_0.1.10-0_aarch64_generic.ipk
 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译包 `aliyundrivewebdav-merlin-arm*.tar.gz`，
 目前只提供了旧的 arm380 固件的版本，可在下载后更改文件名为 `aliyundrivewebdav.tar.gz` 后在软件中心离线安装。
 
+![梅林配置界面](./doc/merlin.png)
+
 ## 命令行用法
 
 ```bash
