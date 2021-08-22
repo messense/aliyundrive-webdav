@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
-use futures::FutureExt;
+use futures_util::future::FutureExt;
 use serde::{Deserialize, Serialize};
 use tokio::{
     sync::{oneshot, RwLock},

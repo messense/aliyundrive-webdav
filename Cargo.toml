@@ -14,7 +14,7 @@ readme = "README.md"
 anyhow = "1.0.43"
 async-recursion = "0.3.2"
 bytes = "1.0.1"
-futures = "0.3.16"
+futures-util = "0.3.16"
 headers = "0.3.4"
 hyper = { version = "0.14.11", features = ["server"] }
 moka = { version = "0.5.1", features = ["future"] }

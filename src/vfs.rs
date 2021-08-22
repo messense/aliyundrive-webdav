@@ -4,7 +4,7 @@ use std::time::Duration;
 use anyhow::Result;
 use async_recursion::async_recursion;
 use bytes::{Buf, Bytes};
-use futures::future::{self, FutureExt};
+use futures_util::future::{self, FutureExt};
 use moka::future::{Cache, CacheBuilder};
 use tracing::{debug, trace};
 use webdav_handler::{
@@ -198,7 +198,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 self.cache_file_id(file_path, file.id.clone()).await;
                 v.push(Box::new(file));
             }
-            let stream = futures::stream::iter(v);
+            let stream = futures_util::stream::iter(v);
             Ok(Box::pin(stream) as FsStream<Box<dyn DavDirEntry>>)
         }
         .boxed()
