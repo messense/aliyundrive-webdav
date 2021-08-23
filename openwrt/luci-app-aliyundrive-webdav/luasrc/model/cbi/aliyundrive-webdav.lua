@@ -12,10 +12,14 @@ e.anonymous=true
 enable=e:option(Flag,"enable",translate("enable"))
 enable.rmempty=false
 host=e:option(Value,"host",translate("Host"))
+host.default="0.0.0.0"
 port=e:option(Value,"port",translate("Port"))
+port.default="8080"
 auth_user=e:option(Value,"auth_user",translate("Username"))
 auth_password=e:option(Value,"auth_password",translate("Password"))
+auth_password.password = true
 read_buffer_size=e:option(Value,"read_buffer_size",translate("Read Buffer Size"))
+read_buffer_size.default = "10485760"
 
 e=t:section(TypedSection,"aliyun",translate("AliyunDrive"))
 e.anonymous=true
@@ -31,7 +35,7 @@ tvlog.wrap="off"
 function tvlog.cfgvalue(e,e)
 	sylogtext=""
 	if a and nixio.fs.access(a) then
-		sylogtext=luci.sys.exec("tail -n 100 %s"%a)
+		sylogtext=luci.sys.exec("tail -n 100 %s | sed 's/\\x1b\\[[0-9;]*m//g'"%a)
 	end
 	return sylogtext
 end
