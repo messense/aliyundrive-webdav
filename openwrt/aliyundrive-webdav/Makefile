@@ -4,6 +4,8 @@ PKG_NAME:=aliyundrive-webdav
 PKG_VERSION:=0.1.10
 PKG_RELEASE:=0
 
+PKG_LICENSE:=MIT
+
 PKG_LIBC:=musl
 ifeq ($(ARCH),arm)
   PKG_LIBC:=musleabi

@@ -144,15 +144,26 @@ jobs:
           mv -f openwrt-sdk-* openwrt-sdk
       - name: Build Package
         run: |
-          mkdir -p openwrt-sdk/package/aliyundrive-webdav
-          cp -r openwrt/* openwrt-sdk/package/
-          make -C openwrt-sdk defconfig
-
+          echo "src-link aliyundrive $GITHUB_WORKSPACE/openwrt" > openwrt-sdk/feeds.conf
           echo 'CONFIG_PACKAGE_aliyundrive-webdav=y
           CONFIG_PACKAGE_luci-app-aliyundrive-webdav=y
           ' >> openwrt-sdk/.config
           cd openwrt-sdk
+          cat feeds.conf.default >> feeds.conf
+          cat feeds.conf
+
+          ./scripts/feeds update -a > /dev/null
+          make defconfig
+
+          cd feeds/luci/modules/luci-base/src
+          make po2lmo
+          sudo mv po2lmo /usr/bin/po2lmo
+          cd -
+
+          ./scripts/feeds install -d y -p "aliyundrive" -f -a
+          make package/aliyundrive-webdav/compile V=s
           make package/luci-app-aliyundrive-webdav/compile V=s
+          tree bin/packages/
       - name: Archive package
         uses: actions/upload-artifact@v1
         with:

@@ -1,0 +1,32 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "AliyunDrive"
+msgstr "阿里云盘"
+
+msgid "AliyunDriveWebDAV"
+msgstr "阿里云盘 WebDAV"
+
+msgid "enable"
+msgstr "启用"
+
+msgid "Refresh Token"
+msgstr "Refresh Token"
+
+msgid "WebDAV Server"
+msgstr "WebDAV 服务"
+
+msgid "Host"
+msgstr "监听主机"
+
+msgid "Port"
+msgstr "监听端口"
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Read Buffer Size"
+msgstr "下载缓冲大小(bytes)"
