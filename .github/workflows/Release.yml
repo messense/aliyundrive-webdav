@@ -175,7 +175,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
-          file: openwrt-sdk/bin/packages/*/base/*aliyundrive-webdav_*.ipk
+          file: openwrt-sdk/bin/packages/*/aliyundrive/*aliyundrive-webdav_*.ipk
           tag: ${{ github.ref }}
 
   merlin:
