@@ -145,12 +145,14 @@ jobs:
       - name: Build Package
         run: |
           mkdir -p openwrt-sdk/package/aliyundrive-webdav
-          cp -r openwrt/* openwrt-sdk/package/aliyundrive-webdav/
+          cp -r openwrt/* openwrt-sdk/package/
           make -C openwrt-sdk defconfig
 
-          echo 'CONFIG_PACKAGE_aliyundrive-webdav=y' >> openwrt-sdk/.config
+          echo 'CONFIG_PACKAGE_aliyundrive-webdav=y
+          CONFIG_PACKAGE_luci-app-aliyundrive-webdav=y
+          ' >> openwrt-sdk/.config
           cd openwrt-sdk
-          make package/aliyundrive-webdav/compile V=s
+          make package/luci-app-aliyundrive-webdav/compile V=s
       - name: Archive package
         uses: actions/upload-artifact@v1
         with:
@@ -162,7 +164,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
-          file: openwrt-sdk/bin/packages/*/base/aliyundrive-webdav_*.ipk
+          file: openwrt-sdk/bin/packages/*/base/*aliyundrive-webdav_*.ipk
           tag: ${{ github.ref }}
 
   merlin:
