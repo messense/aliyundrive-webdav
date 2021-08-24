@@ -6,6 +6,8 @@ local t,e,o
 
 t=Map("aliyundrive-webdav",translate("AliyunDriveWebDAV"))
 
+t:section(SimpleSection).template = "aliyundrive-webdav-status"
+
 e=t:section(TypedSection,"server",translate("WebDAV Server"))
 e.anonymous=true
 

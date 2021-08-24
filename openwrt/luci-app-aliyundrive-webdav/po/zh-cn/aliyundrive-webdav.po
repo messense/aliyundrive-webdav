@@ -30,3 +30,12 @@ msgstr "密码"
 
 msgid "Read Buffer Size"
 msgstr "下载缓冲大小(bytes)"
+
+msgid "Collecting data..."
+msgstr "获取数据中..."
+
+msgid "RUNNING"
+msgstr "运行中"
+
+msgid "NOT RUNNING"
+msgstr "未运行"
