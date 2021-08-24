@@ -21,7 +21,9 @@ pip install aliyundrive-webdav
 
 ```bash
 wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.11/aliyundrive-webdav_0.1.11-0_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.11/luci-app-aliyundrive-webdav_0.1.11-0_all.ipk
 opkg install aliyundrive-webdav_0.1.11-0_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_0.1.11-0_all.ipk
 ```
 
 ### Koolshare 梅林固件
