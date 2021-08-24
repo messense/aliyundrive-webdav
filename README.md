@@ -20,8 +20,8 @@ pip install aliyundrive-webdav
 目前提供了 aarch64 和 arm 两个版本，可以下载后使用 opkg 安装，比如
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.10.post1/aliyundrive-webdav_0.1.10-0_aarch64_generic.ipk
-opkg install aliyundrive-webdav_0.1.10-0_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.11/aliyundrive-webdav_0.1.11-0_aarch64_generic.ipk
+opkg install aliyundrive-webdav_0.1.11-0_aarch64_generic.ipk
 ```
 
 ### Koolshare 梅林固件
@@ -35,7 +35,7 @@ opkg install aliyundrive-webdav_0.1.10-0_aarch64_generic.ipk
 
 ```bash
 aliyundrive-webdav --help
-aliyundrive-webdav 0.1.10
+aliyundrive-webdav 0.1.11
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>

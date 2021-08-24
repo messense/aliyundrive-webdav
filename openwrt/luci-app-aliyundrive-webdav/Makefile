@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-aliyundrive-webdav
-PKG_VERSION:=0.1.10
-PKG_RELEASE:=2
+PKG_VERSION:=0.1.11
+PKG_RELEASE:=0
 
 PKG_LICENSE:=MIT
 
@@ -32,7 +32,7 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DATA) ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/aliyundrive-webdav
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
 	$(INSTALL_DATA) ./luasrc/model/cbi/*.lua $(1)/usr/lib/lua/luci/model/cbi/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
 	$(INSTALL_DATA) ./luasrc/view/*.htm $(1)/usr/lib/lua/luci/view/
