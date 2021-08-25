@@ -32,10 +32,10 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DATA) ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
-	$(INSTALL_DATA) ./luasrc/model/cbi/*.lua $(1)/usr/lib/lua/luci/model/cbi/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
-	$(INSTALL_DATA) ./luasrc/view/*.htm $(1)/usr/lib/lua/luci/view/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/aliyundrive-webdav
+	$(INSTALL_DATA) ./luasrc/model/cbi/aliyundrive-webdav/*.lua $(1)/usr/lib/lua/luci/model/cbi/aliyundrive-webdav/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/aliyundrive-webdav
+	$(INSTALL_DATA) ./luasrc/view/aliyundrive-webdav/*.htm $(1)/usr/lib/lua/luci/view/aliyundrive-webdav/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
 	po2lmo ./po/zh-cn/aliyundrive-webdav.po $(1)/usr/lib/lua/luci/i18n/aliyundrive-webdav.zh-cn.lmo
 endef

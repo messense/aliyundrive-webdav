@@ -1,18 +1,52 @@
-module("luci.controller.aliyundrive-webdav",package.seeall)
+module("luci.controller.aliyundrive-webdav", package.seeall)
 
-local fs = require "nixio.fs"
 local http = require "luci.http"
-local uci = require"luci.model.uci".cursor()
 
 function index()
-    entry({"admin","services","aliyundrive-webdav"},cbi("aliyundrive-webdav"),_("AliyunDriveWebDAV"),58).acl_depends = { "luci-app-aliyundrive-webdav" }
-    entry({"admin", "services", "aliyundrive-webdav", "status"}, call("adw_status")).leaf = true
+    entry(
+            { "admin", "services", "aliyundrive-webdav" },
+            alias("admin", "services", "aliyundrive-webdav", "client"),
+            _("AliyunDriveWebDAV"),
+            10
+    ).dependent = true  -- 首页
+    entry(
+            { "admin", "services", "aliyundrive-webdav", "client" },
+            cbi("aliyundrive-webdav/client"),
+            _("Settings"), 10
+    ).leaf = true  -- 客户端配置
+    entry(
+            {'admin', 'services', 'aliyundrive-webdav', 'log'},
+            form('aliyundrive-webdav/log'),
+            _('Log'), 30
+    ).leaf = true -- 日志页面
+
+    entry(
+            { "admin", "services", "aliyundrive-webdav", "status" },
+            call("action_status")
+    ).leaf = true
+    entry(
+            { "admin", "services", "aliyundrive-webdav", "logtail" },
+            call("action_logtail")
+    ).leaf = true
 end
 
-function adw_status()
+function action_status()
     local e = {}
-    local binpath = "/usr/bin/aliyundrive-webdav"
-    e.running = luci.sys.call("pgrep " .. binpath .. " >/dev/null") == 0
+    e.running = luci.sys.call("pidof aliyundrive-webdav >/dev/null") == 0
     http.prepare_content("application/json")
     http.write_json(e)
+end
+
+function action_logtail()
+    local fs = require "nixio.fs"
+    local log_path = "/var/log/aliyundrive-webdav.log"
+    local e = {}
+    e.running = luci.sys.call("pidof aliyundrive-webdav >/dev/null") == 0
+    if fs.access(log_path) then
+        e.log = luci.sys.exec("tail -n 100 %s | sed 's/\\x1b\\[[0-9;]*m//g'" % log_path)
+    else
+        e.log = ""
+    end
+    luci.http.prepare_content("application/json")
+    luci.http.write_json(e)
 end

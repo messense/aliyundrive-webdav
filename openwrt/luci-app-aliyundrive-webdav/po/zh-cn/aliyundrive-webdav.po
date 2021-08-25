@@ -13,9 +13,6 @@ msgstr "启用"
 msgid "Refresh Token"
 msgstr "Refresh Token"
 
-msgid "WebDAV Server"
-msgstr "WebDAV 服务"
-
 msgid "Host"
 msgstr "监听主机"
 
@@ -39,3 +36,9 @@ msgstr "运行中"
 
 msgid "NOT RUNNING"
 msgstr "未运行"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Log"
+msgstr "日志"
