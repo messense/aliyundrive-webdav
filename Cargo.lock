@@ -30,7 +30,7 @@ dependencies = [
 
 [[package]]
 name = "aliyundrive-webdav"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "anyhow",
  "async-recursion",
@@ -1059,9 +1059,9 @@ dependencies = [
 
 [[package]]
 name = "quanta"
-version = "0.9.1"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4c3ce38100c1278783c1ef3ddb9f66da5604145c3d3f99d39febe47cacfd2dd"
+checksum = "2524022b1087e9a83e49d357257eb7c8af771cc160305bc861e4621ddcef087d"
 dependencies = [
  "crossbeam-utils",
  "libc",
@@ -1124,9 +1124,9 @@ dependencies = [
 
 [[package]]
 name = "raw-cpuid"
-version = "9.1.1"
+version = "10.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1733f6f80c9c24268736a501cd00d41a9849b4faa7a9f9334c096e5d10553206"
+checksum = "929f54e29691d4e6a9cc558479de70db7aa3d98cd6fe7ab86d7507aa2886b9d2"
 dependencies = [
  "bitflags",
 ]
