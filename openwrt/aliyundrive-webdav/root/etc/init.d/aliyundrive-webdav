@@ -16,7 +16,7 @@ start_service() {
   local enable=$(uci_get_by_type server enable)
   case "$enable" in
     1|on|true|yes|enabled)
-      local refresh_token=$(uci_get_by_type aliyun refresh_token)
+      local refresh_token=$(uci_get_by_type server refresh_token)
       local auth_user=$(uci_get_by_type server auth_user)
       local auth_password=$(uci_get_by_type server auth_password)
       local read_buf_size=$(uci_get_by_type server read_buffer_size 10485760)

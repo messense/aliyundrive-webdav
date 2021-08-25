@@ -10,6 +10,7 @@ e.anonymous = true
 
 enable = e:option(Flag, "enable", translate("enable"))
 enable.rmempty = false
+refresh_token = e:option(Value, "refresh_token", translate("Refresh Token"))
 host = e:option(Value, "host", translate("Host"))
 host.default = "0.0.0.0"
 host.datatype = "ipaddr"
@@ -22,11 +23,6 @@ auth_password.password = true
 read_buffer_size = e:option(Value, "read_buffer_size", translate("Read Buffer Size"))
 read_buffer_size.default = "10485760"
 read_buffer_size.datatype = "uinteger"
-
-e = m:section(TypedSection, "aliyun", translate("AliyunDrive"))
-e.anonymous = true
-
-refresh_token = e:option(Value, "refresh_token", translate("Refresh Token"))
 
 local e = luci.http.formvalue("cbi.apply")
 if e then
