@@ -26,6 +26,8 @@ opkg install aliyundrive-webdav_0.1.12-0_aarch64_generic.ipk
 opkg install luci-app-aliyundrive-webdav_0.1.12-0_all.ipk
 ```
 
+![OpenWrt 配置界面](./doc/openwrt.png)
+
 ### Koolshare 梅林固件
 
 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译包 `aliyundrivewebdav-merlin-arm*.tar.gz`，
