@@ -166,33 +166,6 @@ impl AliyunDrive {
         Ok(res)
     }
 
-    pub async fn get(&self, file_id: &str) -> Result<AliyunFile> {
-        let req = GetFileRequest {
-            drive_id: self.drive_id()?,
-            file_id,
-            image_thumbnail_process: "image/resize,w_400/format,jpeg",
-            image_url_process: "image/resize,w_1920/format,jpeg",
-            video_thumbnail_process: "video/snapshot,t_0,f_jpg,ar_auto,w_300",
-            fields: "*",
-        };
-
-        let access_token = self.access_token().await?;
-
-        let res = self
-            .client
-            .post(format!("{}/v2/file/get", API_BASE_URL))
-            .header("Origin", ORIGIN)
-            .header("Referer", REFERER)
-            .header("User-Agent", UA)
-            .bearer_auth(&access_token)
-            .json(&req)
-            .send()
-            .await?
-            .error_for_status()?;
-        let res = res.json::<AliyunFile>().await?;
-        Ok(res)
-    }
-
     pub async fn download(
         &self,
         file_id: &str,
