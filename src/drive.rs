@@ -190,7 +190,7 @@ impl AliyunDrive {
                     .expect("Time went backwards")
                     .as_secs();
                 if current_ts >= expires {
-                    debug!(url = %url, "download url expired, get a new one");
+                    debug!(url = %url, "download url expired");
                     self.get_download_url(file_id).await?
                 } else {
                     url.to_string()
@@ -217,7 +217,8 @@ impl AliyunDrive {
         Ok(res.bytes().await?)
     }
 
-    async fn get_download_url(&self, file_id: &str) -> Result<String> {
+    pub async fn get_download_url(&self, file_id: &str) -> Result<String> {
+        debug!(file_id = %file_id, "get download url");
         let req = GetFileDownloadUrlRequest {
             drive_id: self.drive_id()?,
             file_id,
@@ -296,7 +297,6 @@ struct GetFileDownloadUrlResponse {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AliyunFile {
-    pub drive_id: String,
     pub name: String,
     #[serde(rename = "file_id")]
     pub id: String,
@@ -305,23 +305,18 @@ pub struct AliyunFile {
     pub updated_at: String,
     #[serde(default)]
     pub size: u64,
-    pub download_url: Option<String>,
-    pub category: Option<String>,
 }
 
 impl AliyunFile {
-    pub fn new_root(drive_id: String) -> Self {
+    pub fn new_root() -> Self {
         let now = ::time::OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
         Self {
-            drive_id,
             name: "/".to_string(),
             id: "root".to_string(),
             r#type: "folder".to_string(),
             created_at: now.clone(),
             updated_at: now,
             size: 0,
-            download_url: None,
-            category: None,
         }
     }
 }

@@ -55,7 +55,7 @@ impl AliyunDriveFileSystem {
         let dir_cache = CacheBuilder::new(100)
             .time_to_live(Duration::from_secs(10 * 60))
             .build();
-        debug!("read_dir cache initialized");
+        debug!("dir cache initialized");
         Ok(Self { drive, dir_cache })
     }
 
@@ -77,7 +77,7 @@ impl AliyunDriveFileSystem {
             });
             Ok(file)
         } else {
-            let root = AliyunFile::new_root(self.drive.drive_id.clone().unwrap());
+            let root = AliyunFile::new_root();
             Ok(Some(root))
         }
     }
@@ -153,7 +153,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
         debug!(path = %path.as_rel_ospath().display(), "fs: open");
         async move {
             let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
-            let dav_file = AliyunDavFile::new(self.drive.clone(), file);
+            let download_url = self.drive.get_download_url(&file.id).await.ok();
+            let dav_file = AliyunDavFile::new(self.drive.clone(), file, download_url);
             Ok(Box::new(dav_file) as Box<dyn DavFile>)
         }
         .boxed()
@@ -192,14 +193,16 @@ struct AliyunDavFile {
     drive: AliyunDrive,
     file: AliyunFile,
     current_pos: u64,
+    download_url: Option<String>,
 }
 
 impl AliyunDavFile {
-    fn new(drive: AliyunDrive, file: AliyunFile) -> Self {
+    fn new(drive: AliyunDrive, file: AliyunFile, download_url: Option<String>) -> Self {
         Self {
             drive,
             file,
             current_pos: 0,
+            download_url,
         }
     }
 }
@@ -232,10 +235,10 @@ impl DavFile for AliyunDavFile {
             "file: read_bytes",
         );
         async move {
-            let download_url = self.file.download_url.as_ref().ok_or(FsError::NotFound)?;
+            let download_url = self.download_url.as_ref().ok_or(FsError::NotFound)?;
             let content = self
                 .drive
-                .download(&self.file.id, download_url, self.current_pos, count)
+                .download(&self.file.id, &download_url, self.current_pos, count)
                 .await
                 .map_err(|_| FsError::NotFound)?;
             self.current_pos += content.len() as u64;
