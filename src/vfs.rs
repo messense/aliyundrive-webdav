@@ -47,7 +47,6 @@ pub struct AliyunDriveFileSystem {
     drive: AliyunDrive,
     file_ids: Cache<String, String>,
     read_dir_cache: Cache<String, Vec<AliyunFile>>,
-    file_cache: Cache<String, AliyunFile>,
 }
 
 impl AliyunDriveFileSystem {
@@ -62,15 +61,10 @@ impl AliyunDriveFileSystem {
             .time_to_live(Duration::from_secs(10 * 60))
             .build();
         debug!("read_dir cache initialized");
-        let file_cache = CacheBuilder::new(10000)
-            .time_to_live(Duration::from_secs(60 * 60))
-            .build();
-        debug!("file cache initialized");
         Ok(Self {
             drive,
             file_ids,
             read_dir_cache,
-            file_cache,
         })
     }
 
@@ -140,16 +134,10 @@ impl AliyunDriveFileSystem {
         self.file_ids.insert(path, file_id).await;
     }
 
-    async fn cache_file(&self, file_id: String, file: AliyunFile) {
-        trace!(file_id = %file_id, file_name = %file.name, "cache file");
-        self.file_cache.insert(file_id, file).await;
-    }
-
     async fn cache_read_dir(&self, path: &DavPath, file_id: String, files: Vec<AliyunFile>) {
         trace!(file_id = %file_id, count = files.len(), "cache read_dir");
         let rel_path = path.as_rel_ospath();
         for file in &files {
-            self.cache_file(file.id.clone(), file.clone()).await;
             let file_path = rel_path.join(&file.name).to_string_lossy().into_owned();
             self.cache_file_id(file_path, file.id.clone()).await;
         }
@@ -157,17 +145,12 @@ impl AliyunDriveFileSystem {
     }
 
     async fn get_file(&self, file_id: String) -> Result<AliyunFile, FsError> {
-        if let Some(file) = self.file_cache.get(&file_id) {
-            Ok(file)
-        } else {
-            let file = self
-                .drive
-                .get(&file_id)
-                .await
-                .map_err(|_| FsError::NotFound)?;
-            self.cache_file(file_id, file.clone()).await;
-            Ok(file)
-        }
+        let file = self
+            .drive
+            .get(&file_id)
+            .await
+            .map_err(|_| FsError::NotFound)?;
+        Ok(file)
     }
 }
 
