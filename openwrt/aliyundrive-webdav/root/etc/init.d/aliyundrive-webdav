@@ -27,8 +27,8 @@ start_service() {
       procd_set_param command /bin/sh -c "/usr/bin/$NAME --host $host --port $port -S $read_buf_size >>/var/log/$NAME.log 2>&1"
       procd_set_param pidfile /var/run/$NAME.pid
       procd_set_param env REFRESH_TOKEN="$refresh_token"
-      [[ ! -z "$auth_user" ]] && procd_set_param env WEBDAV_AUTH_USER="$auth_user"
-      [[ ! -z "$auth_password" ]] && procd_set_param env WEBDAV_AUTH_PASSWORD="$auth_password"
+      [[ ! -z "$auth_user" ]] && procd_append_param env WEBDAV_AUTH_USER="$auth_user"
+      [[ ! -z "$auth_password" ]] && procd_append_param env WEBDAV_AUTH_PASSWORD="$auth_password"
       procd_close_instance ;;
     *)
       stop_service ;;
