@@ -236,7 +236,7 @@ impl DavFile for AliyunDavFile {
             let download_url = self.download_url.as_ref().ok_or(FsError::NotFound)?;
             let content = self
                 .drive
-                .download(&self.file.id, &download_url, self.current_pos, count)
+                .download(&self.file.id, download_url, self.current_pos, count)
                 .await
                 .map_err(|_| FsError::NotFound)?;
             self.current_pos += content.len() as u64;

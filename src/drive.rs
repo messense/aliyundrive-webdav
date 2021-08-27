@@ -332,7 +332,7 @@ impl AliyunFile {
             name: "/".to_string(),
             id: "root".to_string(),
             r#type: FileType::Folder,
-            created_at: DateTime(now.clone()),
+            created_at: DateTime(now),
             updated_at: DateTime(now),
             size: 0,
         }
@@ -345,7 +345,7 @@ impl DavMetaData for AliyunFile {
     }
 
     fn modified(&self) -> FsResult<SystemTime> {
-        Ok(self.updated_at.0.clone())
+        Ok(self.updated_at.0)
     }
 
     fn is_dir(&self) -> bool {
@@ -353,7 +353,7 @@ impl DavMetaData for AliyunFile {
     }
 
     fn created(&self) -> FsResult<SystemTime> {
-        Ok(self.created_at.0.clone())
+        Ok(self.created_at.0)
     }
 }
 
