@@ -6,13 +6,13 @@ use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use futures_util::future::FutureExt;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use tokio::{
     sync::{oneshot, RwLock},
     time,
 };
 use tracing::{debug, error, info};
-use webdav_handler::fs::{DavDirEntry, DavMetaData, FsError, FsFuture, FsResult};
+use webdav_handler::fs::{DavDirEntry, DavMetaData, FsFuture, FsResult};
 
 const API_BASE_URL: &str = "https://api.aliyundrive.com";
 pub const ORIGIN: &str = "https://www.aliyundrive.com";
@@ -295,6 +295,17 @@ struct GetFileDownloadUrlResponse {
     expiration: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct DateTime(SystemTime);
+
+impl<'a> Deserialize<'a> for DateTime {
+    fn deserialize<D: Deserializer<'a>>(deserializer: D) -> Result<Self, D::Error> {
+        let dt = OffsetDateTime::parse(<&str>::deserialize(deserializer)?, &Rfc3339)
+            .map_err(serde::de::Error::custom)?;
+        Ok(Self(dt.into()))
+    }
+}
+
 #[derive(Debug, Clone, Copy, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum FileType {
@@ -308,21 +319,21 @@ pub struct AliyunFile {
     #[serde(rename = "file_id")]
     pub id: String,
     pub r#type: FileType,
-    pub created_at: String,
-    pub updated_at: String,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
     #[serde(default)]
     pub size: u64,
 }
 
 impl AliyunFile {
     pub fn new_root() -> Self {
-        let now = ::time::OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
+        let now = SystemTime::now();
         Self {
             name: "/".to_string(),
             id: "root".to_string(),
             r#type: FileType::Folder,
-            created_at: now.clone(),
-            updated_at: now,
+            created_at: DateTime(now.clone()),
+            updated_at: DateTime(now),
             size: 0,
         }
     }
@@ -334,9 +345,7 @@ impl DavMetaData for AliyunFile {
     }
 
     fn modified(&self) -> FsResult<SystemTime> {
-        Ok(OffsetDateTime::parse(&self.updated_at, &Rfc3339)
-            .map_err(|_| FsError::GeneralFailure)?
-            .into())
+        Ok(self.updated_at.0.clone())
     }
 
     fn is_dir(&self) -> bool {
@@ -344,9 +353,7 @@ impl DavMetaData for AliyunFile {
     }
 
     fn created(&self) -> FsResult<SystemTime> {
-        Ok(OffsetDateTime::parse(&self.created_at, &Rfc3339)
-            .map_err(|_| FsError::GeneralFailure)?
-            .into())
+        Ok(self.created_at.0.clone())
     }
 }
 
