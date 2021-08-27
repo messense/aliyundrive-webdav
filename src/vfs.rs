@@ -3,7 +3,6 @@ use std::path::Path;
 use std::time::Duration;
 
 use anyhow::Result;
-use async_recursion::async_recursion;
 use bytes::{Buf, Bytes};
 use futures_util::future::{self, FutureExt};
 use moka::future::{Cache, CacheBuilder};
@@ -118,7 +117,6 @@ impl AliyunDriveFileSystem {
         }
     }
 
-    #[async_recursion]
     async fn read_dir_and_cache(&self, path: &DavPath) -> Result<Vec<AliyunFile>, FsError> {
         let path = path.as_rel_ospath();
         debug!(path = %path.display(), "read_dir and cache");
