@@ -295,12 +295,19 @@ struct GetFileDownloadUrlResponse {
     expiration: String,
 }
 
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum FileType {
+    Folder,
+    File,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct AliyunFile {
     pub name: String,
     #[serde(rename = "file_id")]
     pub id: String,
-    pub r#type: String,
+    pub r#type: FileType,
     pub created_at: String,
     pub updated_at: String,
     #[serde(default)]
@@ -313,7 +320,7 @@ impl AliyunFile {
         Self {
             name: "/".to_string(),
             id: "root".to_string(),
-            r#type: "folder".to_string(),
+            r#type: FileType::Folder,
             created_at: now.clone(),
             updated_at: now,
             size: 0,
@@ -333,7 +340,7 @@ impl DavMetaData for AliyunFile {
     }
 
     fn is_dir(&self) -> bool {
-        self.r#type == "folder"
+        matches!(self.r#type, FileType::Folder)
     }
 
     fn created(&self) -> FsResult<SystemTime> {
