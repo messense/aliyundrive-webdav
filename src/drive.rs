@@ -138,7 +138,7 @@ impl AliyunDrive {
         let req = ListFileRequest {
             drive_id,
             parent_file_id,
-            limit: 100,
+            limit: 200,
             all: false,
             image_thumbnail_process: "image/resize,w_400/format,jpeg",
             image_url_process: "image/resize,w_1920/format,jpeg",
