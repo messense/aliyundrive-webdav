@@ -20,12 +20,12 @@ aliyundrivewebdav_start_stop(){
         if [ "${aliyundrivewebdav_auth_password}"x != ""x ];then
           AUTH_ARGS="$AUTH_ARGS --auth-password ${aliyundrivewebdav_auth_password}"
         fi
-        if [ "${aliyundrivewebdav_read_bufffer_size}"x = ""x ];then
-          aliyundrivewebdav_read_bufffer_size="10485760"
+        if [ "${aliyundrivewebdav_read_buffer_size}"x = ""x ];then
+          aliyundrivewebdav_read_buffer_size="10485760"
         fi
 
         start-stop-daemon -S -q -b -m -p ${PID_FILE} \
-          -x /bin/sh -- -c "${BIN} --host 0.0.0.0 -p ${aliyundrivewebdav_port} -r ${aliyundrivewebdav_refresh_token} -S ${aliyundrivewebdav_read_bufffer_size} $AUTH_ARGS >/tmp/aliyundrivewebdav.log 2>&1"
+          -x /bin/sh -- -c "${BIN} --host 0.0.0.0 -p ${aliyundrivewebdav_port} -r ${aliyundrivewebdav_refresh_token} -S ${aliyundrivewebdav_read_buffer_size} $AUTH_ARGS >/tmp/aliyundrivewebdav.log 2>&1"
     else
         killall aliyundrive-webdav
     fi
