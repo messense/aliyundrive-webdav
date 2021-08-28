@@ -51,8 +51,9 @@ pub struct AliyunDriveFileSystem {
 impl AliyunDriveFileSystem {
     pub async fn new(refresh_token: String) -> Result<Self> {
         let drive = AliyunDrive::new(refresh_token).await?;
-        let dir_cache = CacheBuilder::new(100)
-            .time_to_live(Duration::from_secs(10 * 60))
+        let dir_cache = CacheBuilder::new(1000)
+            .time_to_live(Duration::from_secs(60 * 60))
+            .time_to_idle(Duration::from_secs(10 * 60))
             .build();
         debug!("dir cache initialized");
         Ok(Self { drive, dir_cache })
