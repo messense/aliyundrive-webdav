@@ -6,6 +6,7 @@ use anyhow::Result;
 use bytes::{Buf, Bytes};
 use futures_util::future::{self, FutureExt};
 use moka::future::{Cache, CacheBuilder};
+use tokio::{sync::oneshot, time::timeout};
 use tracing::{debug, error, trace};
 use webdav_handler::{
     davpath::DavPath,
@@ -129,17 +130,25 @@ impl AliyunDriveFileSystem {
         };
         let files = if let Some(files) = self.dir_cache.get(&path_str) {
             let this = self.clone();
+            let (tx, rx) = oneshot::channel();
             tokio::spawn(async move {
-                if let Err(err) = this
+                match this
                     .list_files_and_cache(path_str.clone(), parent_file_id)
                     .await
                 {
-                    error!(error = ?err, "refresh directory file list failed");
-                } else {
-                    trace!(path = %path_str, "refresh directory file list succeed");
+                    Ok(items) => {
+                        trace!(path = %path_str, "refresh directory file list succeed");
+                        if let Err(_) = tx.send(items) {
+                            trace!("read_dir_and_cache: the receiver dropped");
+                        }
+                    }
+                    Err(err) => error!(error = ?err, "refresh directory file list failed"),
                 }
             });
-            files
+            match timeout(Duration::from_secs(1), rx).await {
+                Ok(items) => items.unwrap_or(files),
+                Err(_) => files,
+            }
         } else {
             self.list_files_and_cache(path_str, parent_file_id)
                 .await
