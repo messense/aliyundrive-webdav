@@ -30,6 +30,11 @@ start_service() {
       procd_set_param env REFRESH_TOKEN="$refresh_token"
       [[ ! -z "$auth_user" ]] && procd_append_param env WEBDAV_AUTH_USER="$auth_user"
       [[ ! -z "$auth_password" ]] && procd_append_param env WEBDAV_AUTH_PASSWORD="$auth_password"
+      case $(uci_get_by_type server debug) in
+        1|on|true|yes|enabled)
+          procd_append_param env RUST_LOG="aliyundrive_webdav=debug" ;;
+        *) ;;
+      esac
       procd_close_instance ;;
     *)
       stop_service ;;

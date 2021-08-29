@@ -45,3 +45,6 @@ msgstr "设置"
 
 msgid "Log"
 msgstr "日志"
+
+msgid "Debug Mode"
+msgstr "调试模式"

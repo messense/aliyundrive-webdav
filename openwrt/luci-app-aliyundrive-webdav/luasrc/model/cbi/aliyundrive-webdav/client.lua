@@ -26,6 +26,8 @@ read_buffer_size.datatype = "uinteger"
 cache_size = e:option(Value, "cache_size", translate("Cache Size"))
 cache_size.default = "1000"
 cache_size.datatype = "uinteger"
+debug = e:option(Flag, "debug", translate("Debug Mode"))
+debug.rmempty = false
 
 local e = luci.http.formvalue("cbi.apply")
 if e then
