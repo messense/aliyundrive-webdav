@@ -6,7 +6,7 @@ use anyhow::Result;
 use bytes::{Buf, Bytes};
 use futures_util::future::{self, FutureExt};
 use moka::future::{Cache, CacheBuilder};
-use tracing::{debug, trace};
+use tracing::{debug, error, trace};
 use webdav_handler::{
     davpath::DavPath,
     fs::{
@@ -53,7 +53,7 @@ impl AliyunDriveFileSystem {
         let drive = AliyunDrive::new(refresh_token).await?;
         let dir_cache = CacheBuilder::new(cache_size)
             .time_to_live(Duration::from_secs(60 * 60))
-            .time_to_idle(Duration::from_secs(10 * 60))
+            .time_to_idle(Duration::from_secs(30 * 60))
             .build();
         debug!("dir cache initialized");
         Ok(Self { drive, dir_cache })
@@ -122,22 +122,39 @@ impl AliyunDriveFileSystem {
         let path = path.as_rel_ospath();
         debug!(path = %path.display(), "read_dir and cache");
         let path_str = path.to_string_lossy().into_owned();
+        let parent_file_id = if path_str.is_empty() {
+            "root".to_string()
+        } else {
+            self.find_in_cache(path)?.ok_or(FsError::NotFound)?.id
+        };
         let files = if let Some(files) = self.dir_cache.get(&path_str) {
+            let this = self.clone();
+            tokio::spawn(async move {
+                if let Err(err) = this
+                    .list_files_and_cache(path_str.clone(), parent_file_id)
+                    .await
+                {
+                    error!(error = ?err, "refresh directory file list failed");
+                } else {
+                    trace!(path = %path_str, "refresh directory file list succeed");
+                }
+            });
             files
         } else {
-            let parent_file_id = if path_str.is_empty() {
-                "root".to_string()
-            } else {
-                self.find_in_cache(path)?.ok_or(FsError::NotFound)?.id
-            };
-            let items = self
-                .drive
-                .list_all(&parent_file_id)
+            self.list_files_and_cache(path_str, parent_file_id)
                 .await
-                .map_err(|_| FsError::NotFound)?;
-            self.cache_dir(path_str, items.clone()).await;
-            items
+                .map_err(|_| FsError::NotFound)?
         };
+        Ok(files)
+    }
+
+    async fn list_files_and_cache(
+        &self,
+        path_str: String,
+        parent_file_id: String,
+    ) -> Result<Vec<AliyunFile>> {
+        let files = self.drive.list_all(&parent_file_id).await?;
+        self.cache_dir(path_str, files.clone()).await;
         Ok(files)
     }
 
