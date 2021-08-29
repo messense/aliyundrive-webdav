@@ -137,9 +137,9 @@ impl AliyunDriveFileSystem {
                     .await
                 {
                     Ok(items) => {
-                        trace!(path = %path_str, "refresh directory file list succeed");
-                        if let Err(_) = tx.send(items) {
-                            trace!("read_dir_and_cache: the receiver dropped");
+                        debug!(path = %path_str, "refresh directory file list succeed");
+                        if tx.send(items).is_err() {
+                            debug!(path = %path_str, "refresh directory file list exceeded a second");
                         }
                     }
                     Err(err) => error!(error = ?err, "refresh directory file list failed"),
