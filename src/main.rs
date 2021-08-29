@@ -36,6 +36,9 @@ struct Opt {
     /// Read/download buffer size in bytes, defaults to 10MB
     #[structopt(short = "S", long, default_value = "10485760")]
     read_buffer_size: usize,
+    /// Directory entries cache size
+    #[structopt(long, default_value = "1000")]
+    cache_size: usize,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -52,7 +55,7 @@ async fn main() -> anyhow::Result<()> {
         anyhow::bail!("auth-user and auth-password should be specified together.");
     }
 
-    let fs = AliyunDriveFileSystem::new(opt.refresh_token)
+    let fs = AliyunDriveFileSystem::new(opt.refresh_token, opt.cache_size)
         .await
         .map_err(|_| {
             io::Error::new(

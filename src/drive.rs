@@ -74,7 +74,7 @@ impl AliyunDrive {
         if drive_id.is_empty() {
             bail!("get default drive id failed");
         }
-        info!(drive_id = %drive_id, "found default drive id");
+        info!(drive_id = %drive_id, "found default drive");
         drive.drive_id = Some(drive_id);
 
         Ok(drive)

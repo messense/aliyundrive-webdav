@@ -64,6 +64,7 @@ FLAGS:
 OPTIONS:
     -W, --auth-password <auth-password>          WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
     -U, --auth-user <auth-user>                  WebDAV authentication username [env: WEBDAV_AUTH_USER=]
+        --cache-size <cache-size>                Directory entries cache size [default: 1000]
         --host <host>                            Listen host [default: 127.0.0.1]
     -p, --port <port>                            Listen port [default: 8080]
     -S, --read-buffer-size <read-buffer-size>
