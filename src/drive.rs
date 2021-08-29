@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use futures_util::future::FutureExt;
+use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Deserializer, Serialize};
 use tokio::{
     sync::{oneshot, RwLock},
@@ -38,8 +39,17 @@ impl AliyunDrive {
             refresh_token,
             access_token: None,
         };
+        let mut headers = HeaderMap::new();
+        headers.insert("Origin", HeaderValue::from_static(ORIGIN));
+        headers.insert("Referer", HeaderValue::from_static(REFERER));
+        let client = reqwest::Client::builder()
+            .user_agent(UA)
+            .default_headers(headers)
+            .connect_timeout(Duration::from_secs(10))
+            .timeout(Duration::from_secs(30))
+            .build()?;
         let mut drive = Self {
-            client: reqwest::Client::new(),
+            client,
             credentials: Arc::new(RwLock::new(credentials)),
             drive_id: None,
         };
@@ -87,9 +97,6 @@ impl AliyunDrive {
         let res = self
             .client
             .post("https://websv.aliyundrive.com/token/refresh")
-            .header("Origin", ORIGIN)
-            .header("Referer", REFERER)
-            .header("User-Agent", UA)
             .json(&data)
             .send()
             .await?
@@ -154,9 +161,6 @@ impl AliyunDrive {
         let res = self
             .client
             .post(format!("{}/adrive/v3/file/list", API_BASE_URL))
-            .header("Origin", ORIGIN)
-            .header("Referer", REFERER)
-            .header("User-Agent", UA)
             .bearer_auth(&access_token)
             .json(&req)
             .send()
@@ -207,9 +211,6 @@ impl AliyunDrive {
         let res = self
             .client
             .get(url)
-            .header("Origin", ORIGIN)
-            .header("Referer", REFERER)
-            .header("User-Agent", UA)
             .header(RANGE, range)
             .send()
             .await?
@@ -227,9 +228,6 @@ impl AliyunDrive {
         let res = self
             .client
             .post(format!("{}/v2/file/get_download_url", API_BASE_URL))
-            .header("Origin", ORIGIN)
-            .header("Referer", REFERER)
-            .header("User-Agent", UA)
             .bearer_auth(&access_token)
             .json(&req)
             .send()
