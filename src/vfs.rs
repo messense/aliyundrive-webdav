@@ -18,29 +18,18 @@ use webdav_handler::{
 
 use crate::drive::{AliyunDrive, AliyunFile};
 
-#[derive(Copy, Clone, Debug)]
-#[allow(non_camel_case_types)]
-struct ENCODE_SET;
-
-impl percent_encoding::EncodeSet for ENCODE_SET {
-    // Encode all non-unreserved characters, except '/'.
-    // See RFC3986, and https://en.wikipedia.org/wiki/Percent-encoding .
-    #[inline]
-    fn contains(&self, byte: u8) -> bool {
-        let unreserved = (b'A'..=b'Z').contains(&byte)
-            || (b'a'..=b'z').contains(&byte)
-            || (b'0'..=b'9').contains(&byte)
-            || byte == b'-'
-            || byte == b'_'
-            || byte == b'.'
-            || byte == b'~';
-        !unreserved && byte != b'/'
-    }
-}
+// Encode all non-unreserved characters, except '/'.
+// See RFC3986, and https://en.wikipedia.org/wiki/Percent-encoding .
+const PATH_ENCODE_SET: &percent_encoding::AsciiSet = &percent_encoding::NON_ALPHANUMERIC
+    .remove(b'-')
+    .remove(b'_')
+    .remove(b'.')
+    .remove(b'~')
+    .remove(b'/');
 
 // encode path segment with user-defined ENCODE_SET
 fn encode_path(src: &[u8]) -> String {
-    percent_encoding::percent_encode(src, ENCODE_SET).to_string()
+    percent_encoding::percent_encode(src, PATH_ENCODE_SET).to_string()
 }
 
 #[derive(Clone)]

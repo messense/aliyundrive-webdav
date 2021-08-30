@@ -38,7 +38,7 @@ dependencies = [
  "headers",
  "hyper",
  "moka",
- "percent-encoding 1.0.1",
+ "percent-encoding",
  "reqwest",
  "serde",
  "structopt",
@@ -371,7 +371,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5fc25a87fa4fd2094bffb06925852034d90a17f0d1e05197d4956d3555752191"
 dependencies = [
  "matches",
- "percent-encoding 2.1.0",
+ "percent-encoding",
 ]
 
 [[package]]
@@ -919,12 +919,6 @@ dependencies = [
 
 [[package]]
 name = "percent-encoding"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31010dd2e1ac33d5b46a5b413495239882813e0369f8ed8a5e266f173602f831"
-
-[[package]]
-name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
@@ -1184,7 +1178,7 @@ dependencies = [
  "lazy_static",
  "log",
  "mime",
- "percent-encoding 2.1.0",
+ "percent-encoding",
  "pin-project-lite",
  "rustls",
  "serde",
@@ -1778,7 +1772,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "matches",
- "percent-encoding 2.1.0",
+ "percent-encoding",
 ]
 
 [[package]]
@@ -1916,7 +1910,7 @@ dependencies = [
 [[package]]
 name = "webdav-handler"
 version = "0.2.0"
-source = "git+https://github.com/messense/webdav-handler-rs.git?branch=aliyundrive#071ee3c9263395cc268819bfe4c8e9fa78c2d60d"
+source = "git+https://github.com/messense/webdav-handler-rs.git?branch=aliyundrive#65718a3ee1ece089dbbccd34ddbb6d7bf7b374c0"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -1932,7 +1926,7 @@ dependencies = [
  "lru",
  "mime_guess",
  "parking_lot",
- "percent-encoding 1.0.1",
+ "percent-encoding",
  "pin-project",
  "pin-utils",
  "regex",
