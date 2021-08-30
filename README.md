@@ -87,4 +87,4 @@ Application -> Local Storage 中的 `token` 字段中找到。
 
 ## License
 
-This work is released under the MIT license. A copy of the license is provided in the [LICENSE](../LICENSE) file.
+This work is released under the MIT license. A copy of the license is provided in the [LICENSE](./LICENSE) file.
