@@ -48,6 +48,12 @@ dbus set aliyundrivewebdav_auth_password=admin  # 密码
 
 并使用 `/koolshare/scripts/aliyundrivewebdav_config.sh` 命令启动/停止服务。
 
+## Docker 运行
+
+```bash
+docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 messense/aliyundrive-webdav --refresh-token 'refresh token'
+```
+
 ## 命令行用法
 
 ```bash
