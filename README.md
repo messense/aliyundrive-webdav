@@ -51,7 +51,7 @@ dbus set aliyundrivewebdav_auth_password=admin  # 密码
 ## Docker 运行
 
 ```bash
-docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 messense/aliyundrive-webdav --refresh-token 'refresh token'
+docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 -e REFRESH_TOKEN='refresh token' messense/aliyundrive-webdav
 ```
 
 ## 命令行用法
