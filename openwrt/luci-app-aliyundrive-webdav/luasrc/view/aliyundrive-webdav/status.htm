@@ -4,9 +4,9 @@ XHR.poll(3, '<%=url([[admin]], [[services]], [[aliyundrive-webdav]], [[status]])
         var tb = document.getElementById('aliyundrive-webdav-status');
         if (data && tb) {
             if (data.running) {
-                tb.innerHTML = '<em><b><font color=green>aliyundrive-webdav <%:RUNNING%></font></b></em>';
+                tb.innerHTML = '<em><b><font color=green>' + data.application + '<%:RUNNING%></font></b></em>';
             } else {
-                tb.innerHTML = '<em><b><font color=red>aliyundrive-webdav <%:NOT RUNNING%></font></b></em>';
+                tb.innerHTML = '<em><b><font color=red>' + data.application + '<%:NOT RUNNING%></font></b></em>';
             }
         }
     }
