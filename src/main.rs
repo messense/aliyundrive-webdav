@@ -16,7 +16,7 @@ mod vfs;
 #[structopt(name = "aliyundrive-webdav")]
 struct Opt {
     /// Listen host
-    #[structopt(long, default_value = "127.0.0.1")]
+    #[structopt(long, default_value = "0.0.0.0")]
     host: String,
     /// Listen port
     #[structopt(short, long, default_value = "8080")]
