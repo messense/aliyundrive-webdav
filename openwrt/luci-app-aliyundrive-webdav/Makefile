@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-aliyundrive-webdav
-PKG_VERSION:=0.1.18
+PKG_VERSION:=0.1.19
 PKG_RELEASE:=0
 
 PKG_LICENSE:=MIT
