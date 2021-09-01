@@ -128,13 +128,13 @@ impl AliyunDriveFileSystem {
                     Ok(items) => {
                         debug!(path = %path_str, "refresh directory file list succeed");
                         if tx.send(items).is_err() {
-                            debug!(path = %path_str, "refresh directory file list exceeded a second");
+                            debug!(path = %path_str, "refresh directory file list exceeded 200ms");
                         }
                     }
                     Err(err) => error!(error = ?err, "refresh directory file list failed"),
                 }
             });
-            match timeout(Duration::from_secs(1), rx).await {
+            match timeout(Duration::from_millis(200), rx).await {
                 Ok(items) => items.unwrap_or(files),
                 Err(_) => files,
             }
