@@ -43,7 +43,7 @@ impl AliyunDriveFileSystem {
         let drive = AliyunDrive::new(refresh_token).await?;
         let dir_cache = CacheBuilder::new(cache_size)
             .time_to_live(Duration::from_secs(60 * 60))
-            .time_to_idle(Duration::from_secs(30 * 60))
+            .time_to_idle(Duration::from_secs(10 * 60))
             .build();
         debug!("dir cache initialized");
         Ok(Self { drive, dir_cache })
