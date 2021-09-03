@@ -9,7 +9,6 @@ rm -f /koolshare/init.d/S99aliyundrivewebdav.sh
 rm -f /koolshare/scripts/aliyundrivewebdav_config.sh
 rm -f /koolshare/webs/Module_aliyundrivewebdav.asp
 rm -f /koolshare/res/icon-aliyundrivewebdav.png
-rm -f /koolshare/res/aliyundrivewebdav_check.html
 rm -f /koolshare/bin/aliyundrive-webdav
 rm -f /koolshare/bin/aliyundrivewebdav.log /tmp/aliyundrivewebdav.log
 rm -f /tmp/var/run/aliyundrivewebdav.pid
