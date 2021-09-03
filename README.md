@@ -32,21 +32,9 @@ opkg install luci-app-aliyundrive-webdav_0.1.19-0_all.ipk
 ### Koolshare 梅林固件
 
 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译包 `aliyundrivewebdav-merlin-arm*.tar.gz`，
-目前只提供了旧的 arm380 固件的版本，可在下载后在软件中心离线安装。
+目前提供了旧的 arm380 和兼容 arm384/386 固件的版本，可在下载后在软件中心离线安装。
 
 ![梅林配置界面](./doc/merlin.png)
-
-梅林 384/386 固件也可以离线安装，但后台管理界面可能不工作（暂无机器开发适配，欢迎 PR 修复），可以直接使用 `dbus` 命令进行配置
-
-```bash
-dbus set aliyundrivewebdav_refresh_token='xxx'  # 阿里云盘 refresh_token
-dbus set aliyundrivewebdav_enable=1  # 设置为 0 禁用服务
-dbus set aliyundrivewebdav_port=8080  # 监听端口
-dbus set aliyundrivewebdav_auth_user=admin  # 用户名
-dbus set aliyundrivewebdav_auth_password=admin  # 密码
-```
-
-并使用 `/koolshare/scripts/aliyundrivewebdav_config.sh` 命令启动/停止服务。
 
 ## Docker 运行
 
