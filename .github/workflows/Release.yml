@@ -192,8 +192,8 @@ jobs:
           name: armv7-unknown-linux-musleabi-bin
       - name: Build package
         run: |
-          mv aliyundrive-webdav merlin/aliyundrivewebdav/bin/
-          cd merlin && python3 build.py && mv aliyundrivewebdav.tar.gz aliyundrivewebdav-merlin-arm380.tar.gz
+          mv aliyundrive-webdav merlin/arm380/bin/
+          cd merlin && python3 build.py arm380 && mv aliyundrivewebdav.tar.gz aliyundrivewebdav-merlin-arm380.tar.gz
       - name: Archive package
         uses: actions/upload-artifact@v1
         with:
