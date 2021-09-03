@@ -1,6 +1,8 @@
 #!/bin/sh
 source /koolshare/scripts/base.sh
 MODULE=aliyundrivewebdav
+DIR=$(cd $(dirname $0); pwd)
+
 cd /tmp
 killall aliyundrive-webdav
 rm -f /koolshare/bin/aliyundrivewebdav.log
@@ -17,7 +19,7 @@ ln -sf /koolshare/scripts/aliyundrivewebdav_config.sh /koolshare/init.d/S99aliyu
 dbus set softcenter_module_${MODULE}_name="${MODULE}"
 dbus set softcenter_module_${MODULE}_title="阿里云盘WebDAV"
 dbus set softcenter_module_${MODULE}_description="阿里云盘 WebDAV 服务器"
-dbus set softcenter_module_${MODULE}_version="0.1.19"
+dbus set softcenter_module_${MODULE}_version="$(cat $DIR/version)"
 dbus set softcenter_module_${MODULE}_install="1"
 
 # 默认配置

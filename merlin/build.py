@@ -38,6 +38,7 @@ def build_module():
         conf = get_or_create()
     except Exception:
         print("config.json.js file format is incorrect")
+        return
     if "module" not in conf:
         print("module is not in config.json.js")
         return
@@ -49,6 +50,10 @@ def build_module():
     if not os.path.isfile(install_path):
         print("%s file not found，check install.sh file" % install_path)
         return
+
+    with codecs.open(os.path.join(parent_path, conf["module"], "version"), "w", "utf-8") as fw:
+        fw.write(conf["version"])
+
     print("build...")
     t = Template("cd $parent_path && rm -f $module.tar.gz && tar -zcf $module.tar.gz $module")
     os.system(t.substitute({"parent_path": parent_path, "module": conf["module"]}))
