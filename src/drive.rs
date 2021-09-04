@@ -158,7 +158,7 @@ impl AliyunDrive {
                         let res = res.json::<U>().await?;
                         Ok(res)
                     }
-                    _ => return Err(err)?,
+                    _ => Err(err.into()),
                 }
             }
         }
