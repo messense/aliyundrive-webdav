@@ -7,6 +7,7 @@ use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use futures_util::future::FutureExt;
 use reqwest::header::{HeaderMap, HeaderValue};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Deserializer, Serialize};
 use tokio::{
     sync::{oneshot, RwLock},
@@ -121,6 +122,48 @@ impl AliyunDrive {
         self.drive_id.as_deref().context("missing drive_id")
     }
 
+    async fn request<T, U>(&self, url: String, req: &T) -> Result<U>
+    where
+        T: Serialize + ?Sized,
+        U: DeserializeOwned,
+    {
+        let access_token = self.access_token().await?;
+        let res = self
+            .client
+            .post(url.clone())
+            .bearer_auth(&access_token)
+            .json(&req)
+            .send()
+            .await?
+            .error_for_status();
+        match res {
+            Ok(res) => {
+                let res = res.json::<U>().await?;
+                Ok(res)
+            }
+            Err(err) => {
+                match err.status() {
+                    Some(reqwest::StatusCode::UNAUTHORIZED) => {
+                        // refresh token and retry
+                        let token_res = self.do_refresh_token().await?;
+                        let access_token = token_res.access_token;
+                        let res = self
+                            .client
+                            .post(url)
+                            .bearer_auth(&access_token)
+                            .json(&req)
+                            .send()
+                            .await?
+                            .error_for_status()?;
+                        let res = res.json::<U>().await?;
+                        Ok(res)
+                    }
+                    _ => return Err(err)?,
+                }
+            }
+        }
+    }
+
     pub async fn list_all(&self, parent_file_id: &str) -> Result<Vec<AliyunFile>> {
         let mut files = Vec::new();
         let mut marker = None;
@@ -155,19 +198,8 @@ impl AliyunDrive {
             order_direction: "DESC",
             marker,
         };
-
-        let access_token = self.access_token().await?;
-
-        let res = self
-            .client
-            .post(format!("{}/adrive/v3/file/list", API_BASE_URL))
-            .bearer_auth(&access_token)
-            .json(&req)
-            .send()
-            .await?
-            .error_for_status()?;
-        let res = res.json::<ListFileResponse>().await?;
-        Ok(res)
+        self.request(format!("{}/adrive/v3/file/list", API_BASE_URL), &req)
+            .await
     }
 
     pub async fn download(
@@ -224,16 +256,9 @@ impl AliyunDrive {
             drive_id: self.drive_id()?,
             file_id,
         };
-        let access_token = self.access_token().await?;
-        let res = self
-            .client
-            .post(format!("{}/v2/file/get_download_url", API_BASE_URL))
-            .bearer_auth(&access_token)
-            .json(&req)
-            .send()
-            .await?
-            .error_for_status()?;
-        let res = res.json::<GetFileDownloadUrlResponse>().await?;
+        let res: GetFileDownloadUrlResponse = self
+            .request(format!("{}/v2/file/get_download_url", API_BASE_URL), &req)
+            .await?;
         Ok(res.url)
     }
 }
