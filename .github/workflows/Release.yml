@@ -284,7 +284,14 @@ jobs:
           name: aarch64-unknown-linux-musl-bin
       - run: |
           chmod a+x aliyundrive-webdav
-          mv aliyundrive-webdav aliyundrive-webdav-arm64
+          cp aliyundrive-webdav aliyundrive-webdav-arm64
+          mv aliyundrive-webdav aliyundrive-webdav-arm64v8
+      - uses: actions/download-artifact@v2
+        with:
+          name: armv7-unknown-linux-musleabihf-bin
+      - run: |
+          chmod a+x aliyundrive-webdav
+          mv aliyundrive-webdav aliyundrive-webdav-armv7
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
@@ -312,8 +319,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/amd64,linux/arm64,linux/arm64/v8,linux/arm/v7
+          push: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
