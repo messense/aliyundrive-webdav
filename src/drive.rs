@@ -128,6 +128,7 @@ impl AliyunDrive {
         U: DeserializeOwned,
     {
         let access_token = self.access_token().await?;
+        let url = reqwest::Url::parse(&url)?;
         let res = self
             .client
             .post(url.clone())
