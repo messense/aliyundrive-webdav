@@ -17,9 +17,9 @@ use tracing::{debug, error, info};
 use webdav_handler::fs::{DavDirEntry, DavMetaData, FsFuture, FsResult};
 
 const API_BASE_URL: &str = "https://api.aliyundrive.com";
-pub const ORIGIN: &str = "https://www.aliyundrive.com";
-pub const REFERER: &str = "https://www.aliyundrive.com/";
-pub const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
+const ORIGIN: &str = "https://www.aliyundrive.com";
+const REFERER: &str = "https://www.aliyundrive.com/";
+const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
 
 #[derive(Debug, Clone)]
 struct Credentials {
@@ -31,7 +31,7 @@ struct Credentials {
 pub struct AliyunDrive {
     client: reqwest::Client,
     credentials: Arc<RwLock<Credentials>>,
-    pub drive_id: Option<String>,
+    drive_id: Option<String>,
 }
 
 impl AliyunDrive {
@@ -127,7 +127,9 @@ impl AliyunDrive {
         T: Serialize + ?Sized,
         U: DeserializeOwned,
     {
-        let access_token = self.access_token().await?;
+        use reqwest::StatusCode;
+
+        let mut access_token = self.access_token().await?;
         let url = reqwest::Url::parse(&url)?;
         let res = self
             .client
@@ -144,10 +146,23 @@ impl AliyunDrive {
             }
             Err(err) => {
                 match err.status() {
-                    Some(reqwest::StatusCode::UNAUTHORIZED) => {
-                        // refresh token and retry
-                        let token_res = self.do_refresh_token().await?;
-                        let access_token = token_res.access_token;
+                    Some(
+                        status_code
+                        @
+                        (StatusCode::UNAUTHORIZED
+                        | StatusCode::INTERNAL_SERVER_ERROR
+                        | StatusCode::BAD_GATEWAY
+                        | StatusCode::SERVICE_UNAVAILABLE
+                        | StatusCode::GATEWAY_TIMEOUT),
+                    ) => {
+                        if status_code == StatusCode::UNAUTHORIZED {
+                            // refresh token and retry
+                            let token_res = self.do_refresh_token().await?;
+                            access_token = token_res.access_token;
+                        } else {
+                            // wait for a while and retry
+                            time::sleep(Duration::from_secs(1)).await;
+                        }
                         let res = self
                             .client
                             .post(url)
