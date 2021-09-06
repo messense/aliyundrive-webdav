@@ -13,7 +13,7 @@ use tokio::{
     sync::{oneshot, RwLock},
     time,
 };
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 use webdav_handler::fs::{DavDirEntry, DavMetaData, FsFuture, FsResult};
 
 const API_BASE_URL: &str = "https://api.aliyundrive.com";
@@ -60,7 +60,7 @@ impl AliyunDrive {
         let client = drive.clone();
         tokio::spawn(async move {
             let mut delay_seconds = 7000;
-            match client.do_refresh_token().await {
+            match client.do_refresh_token_with_retry().await {
                 Ok(res) => {
                     // token usually expires in 7200s, refresh earlier
                     delay_seconds = res.expires_in - 200;
@@ -75,7 +75,7 @@ impl AliyunDrive {
             }
             loop {
                 time::sleep(time::Duration::from_secs(delay_seconds)).await;
-                if let Err(err) = client.do_refresh_token().await {
+                if let Err(err) = client.do_refresh_token_with_retry().await {
                     error!("refresh token failed: {}", err);
                 }
             }
@@ -91,7 +91,7 @@ impl AliyunDrive {
         Ok(drive)
     }
 
-    async fn do_refresh_token(&self) -> Result<RefreshTokenResponse> {
+    async fn do_refresh_token(&self) -> Result<RefreshTokenResponse, reqwest::Error> {
         let mut cred = self.credentials.write().await;
         let mut data = HashMap::new();
         data.insert("refresh_token", &cred.refresh_token);
@@ -111,6 +111,25 @@ impl AliyunDrive {
             "refresh token succeed"
         );
         Ok(res)
+    }
+
+    async fn do_refresh_token_with_retry(&self) -> Result<RefreshTokenResponse> {
+        let mut last_err = None;
+        for _ in 0..10 {
+            match self.do_refresh_token().await {
+                Ok(res) => return Ok(res),
+                Err(err) => {
+                    let should_retry = err.is_connect() || err.is_timeout();
+                    if should_retry {
+                        warn!(error = %err, "refresh token failed, will wait and try");
+                        time::sleep(Duration::from_secs(1)).await;
+                        continue;
+                    }
+                    last_err = Some(err);
+                }
+            }
+        }
+        Err(last_err.unwrap().into())
     }
 
     async fn access_token(&self) -> Result<String> {
@@ -157,7 +176,7 @@ impl AliyunDrive {
                     ) => {
                         if status_code == StatusCode::UNAUTHORIZED {
                             // refresh token and retry
-                            let token_res = self.do_refresh_token().await?;
+                            let token_res = self.do_refresh_token_with_retry().await?;
                             access_token = token_res.access_token;
                         } else {
                             // wait for a while and retry
