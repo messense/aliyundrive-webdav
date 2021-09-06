@@ -2,7 +2,7 @@
 
 USE_PROCD=1
 
-START=90
+START=99
 STOP=15
 
 NAME=aliyundrive-webdav
