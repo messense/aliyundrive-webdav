@@ -1,0 +1,5 @@
+[target.mips64-unknown-linux-muslabi64]
+rustflags = ["-C", "link-arg=-lgcc"]
+
+[target.mips64el-unknown-linux-muslabi64]
+rustflags = ["-C", "link-arg=-lgcc"]
