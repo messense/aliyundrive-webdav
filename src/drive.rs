@@ -316,6 +316,24 @@ impl AliyunDrive {
             .await?;
         Ok(())
     }
+
+    pub async fn create_folder(&self, parent_file_id: &str, name: &str) -> Result<()> {
+        debug!(parent_file_id = %parent_file_id, name = %name, "create folder");
+        let req = CreateFolderRequest {
+            check_name_mode: "refuse",
+            drive_id: self.drive_id()?,
+            name,
+            parent_file_id,
+            r#type: "folder",
+        };
+        let _res: Option<serde::de::IgnoredAny> = self
+            .request(
+                format!("{}/adrive/v2/file/createWithFolders", API_BASE_URL),
+                &req,
+            )
+            .await?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -377,6 +395,15 @@ struct GetFileDownloadUrlResponse {
 struct TrashRequest<'a> {
     drive_id: &'a str,
     file_id: &'a str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct CreateFolderRequest<'a> {
+    check_name_mode: &'a str,
+    drive_id: &'a str,
+    name: &'a str,
+    parent_file_id: &'a str,
+    r#type: &'a str,
 }
 
 #[derive(Debug, Clone)]

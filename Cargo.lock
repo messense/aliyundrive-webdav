@@ -1892,7 +1892,7 @@ dependencies = [
 [[package]]
 name = "webdav-handler"
 version = "0.2.0"
-source = "git+https://github.com/messense/webdav-handler-rs.git?branch=aliyundrive#1fe3d0a2316c2ff7b733358cdbf548580d5ee7b6"
+source = "git+https://github.com/messense/webdav-handler-rs.git?branch=aliyundrive#9626623cf4ec99acab2b6ff6cb5c82982f0f85a4"
 dependencies = [
  "bytes",
  "futures-channel",

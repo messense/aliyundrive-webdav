@@ -201,6 +201,32 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
+    fn create_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
+        let path = dav_path.as_pathbuf();
+        debug!(path = %path.display(), "fs: create_dir");
+        async move {
+            let parent_path = dav_path.parent();
+            let parent_file = self
+                .get_file(&parent_path)
+                .await?
+                .ok_or(FsError::NotFound)?;
+            if !matches!(parent_file.r#type, FileType::Folder) {
+                return Err(FsError::Forbidden);
+            }
+            if let Some(name) = path.file_name() {
+                let name = name.to_string_lossy().into_owned();
+                self.drive
+                    .create_folder(&parent_file.id, &name)
+                    .await
+                    .map_err(|_| FsError::GeneralFailure)?;
+                Ok(())
+            } else {
+                Err(FsError::Forbidden)
+            }
+        }
+        .boxed()
+    }
+
     fn remove_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
         let path = dav_path.as_rel_ospath();
         debug!(path = %path.display(), "fs: remove_dir");
