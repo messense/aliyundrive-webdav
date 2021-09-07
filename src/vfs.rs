@@ -201,10 +201,11 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn remove_dir<'a>(&'a self, path: &'a DavPath) -> FsFuture<()> {
-        debug!(path = %path.as_rel_ospath().display(), "fs: remove_idr");
+    fn remove_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
+        let path = dav_path.as_rel_ospath();
+        debug!(path = %path.display(), "fs: remove_dir");
         async move {
-            let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
+            let file = self.get_file(dav_path).await?.ok_or(FsError::NotFound)?;
             if !matches!(file.r#type, FileType::Folder) {
                 return Err(FsError::Forbidden);
             }
@@ -212,15 +213,18 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .trash(&file.id)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
+            let path_str = path.to_string_lossy().into_owned();
+            self.dir_cache.invalidate(&path_str).await;
             Ok(())
         }
         .boxed()
     }
 
-    fn remove_file<'a>(&'a self, path: &'a DavPath) -> FsFuture<()> {
-        debug!(path = %path.as_rel_ospath().display(), "fs: remove_file");
+    fn remove_file<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
+        let path = dav_path.as_rel_ospath();
+        debug!(path = %path.display(), "fs: remove_file");
         async move {
-            let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
+            let file = self.get_file(dav_path).await?.ok_or(FsError::NotFound)?;
             if !matches!(file.r#type, FileType::File) {
                 return Err(FsError::Forbidden);
             }
@@ -228,6 +232,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .trash(&file.id)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
+            let path_str = path.to_string_lossy().into_owned();
+            self.dir_cache.invalidate(&path_str).await;
             Ok(())
         }
         .boxed()
