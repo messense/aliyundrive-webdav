@@ -43,6 +43,9 @@ struct Opt {
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
+    #[cfg(feature = "native-tls-vendored")]
+    openssl_probe::init_ssl_cert_env_vars();
+
     if env::var("RUST_LOG").is_err() {
         env::set_var("RUST_LOG", "aliyundrive_webdav=info");
     }
