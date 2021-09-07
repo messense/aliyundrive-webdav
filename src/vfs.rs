@@ -16,7 +16,7 @@ use webdav_handler::{
     },
 };
 
-use crate::drive::{AliyunDrive, AliyunFile};
+use crate::drive::{AliyunDrive, AliyunFile, FileType};
 
 // Encode all non-unreserved characters, except '/'.
 // See RFC3986, and https://en.wikipedia.org/wiki/Percent-encoding .
@@ -197,6 +197,38 @@ impl DavFileSystem for AliyunDriveFileSystem {
         async move {
             let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
             Ok(Box::new(file) as Box<dyn DavMetaData>)
+        }
+        .boxed()
+    }
+
+    fn remove_dir<'a>(&'a self, path: &'a DavPath) -> FsFuture<()> {
+        debug!(path = %path.as_rel_ospath().display(), "fs: remove_idr");
+        async move {
+            let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
+            if !matches!(file.r#type, FileType::Folder) {
+                return Err(FsError::Forbidden);
+            }
+            self.drive
+                .trash(&file.id)
+                .await
+                .map_err(|_| FsError::GeneralFailure)?;
+            Ok(())
+        }
+        .boxed()
+    }
+
+    fn remove_file<'a>(&'a self, path: &'a DavPath) -> FsFuture<()> {
+        debug!(path = %path.as_rel_ospath().display(), "fs: remove_file");
+        async move {
+            let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
+            if !matches!(file.r#type, FileType::File) {
+                return Err(FsError::Forbidden);
+            }
+            self.drive
+                .trash(&file.id)
+                .await
+                .map_err(|_| FsError::GeneralFailure)?;
+            Ok(())
         }
         .boxed()
     }

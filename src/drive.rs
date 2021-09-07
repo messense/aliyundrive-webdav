@@ -141,7 +141,7 @@ impl AliyunDrive {
         self.drive_id.as_deref().context("missing drive_id")
     }
 
-    async fn request<T, U>(&self, url: String, req: &T) -> Result<U>
+    async fn request<T, U>(&self, url: String, req: &T) -> Result<Option<U>>
     where
         T: Serialize + ?Sized,
         U: DeserializeOwned,
@@ -160,8 +160,11 @@ impl AliyunDrive {
             .error_for_status();
         match res {
             Ok(res) => {
+                if res.status() == StatusCode::NO_CONTENT {
+                    return Ok(None);
+                }
                 let res = res.json::<U>().await?;
-                Ok(res)
+                Ok(Some(res))
             }
             Err(err) => {
                 match err.status() {
@@ -190,8 +193,11 @@ impl AliyunDrive {
                             .send()
                             .await?
                             .error_for_status()?;
+                        if res.status() == StatusCode::NO_CONTENT {
+                            return Ok(None);
+                        }
                         let res = res.json::<U>().await?;
-                        Ok(res)
+                        Ok(Some(res))
                     }
                     _ => Err(err.into()),
                 }
@@ -235,6 +241,7 @@ impl AliyunDrive {
         };
         self.request(format!("{}/adrive/v3/file/list", API_BASE_URL), &req)
             .await
+            .and_then(|res| res.context("expect response"))
     }
 
     pub async fn download(
@@ -293,8 +300,21 @@ impl AliyunDrive {
         };
         let res: GetFileDownloadUrlResponse = self
             .request(format!("{}/v2/file/get_download_url", API_BASE_URL), &req)
-            .await?;
+            .await?
+            .context("expect response")?;
         Ok(res.url)
+    }
+
+    pub async fn trash(&self, file_id: &str) -> Result<()> {
+        debug!(file_id = %file_id, "trash file");
+        let req = TrashRequest {
+            drive_id: self.drive_id()?,
+            file_id,
+        };
+        let _res: Option<serde::de::IgnoredAny> = self
+            .request(format!("{}/v2/recyclebin/trash", API_BASE_URL), &req)
+            .await?;
+        Ok(())
     }
 }
 
@@ -351,6 +371,12 @@ struct GetFileDownloadUrlResponse {
     url: String,
     size: u64,
     expiration: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct TrashRequest<'a> {
+    drive_id: &'a str,
+    file_id: &'a str,
 }
 
 #[derive(Debug, Clone)]
