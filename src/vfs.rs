@@ -264,6 +264,39 @@ impl DavFileSystem for AliyunDriveFileSystem {
         }
         .boxed()
     }
+
+    fn rename<'a>(&'a self, from: &'a DavPath, to: &'a DavPath) -> FsFuture<()> {
+        debug!(from = %from.as_rel_ospath().display(), to = %to.as_rel_ospath().display(), "fs: rename");
+        async move {
+            if from.parent() == to.parent() {
+                // rename
+                if let Some(name) = to.as_pathbuf().file_name() {
+                    let file = self.get_file(from).await?.ok_or(FsError::NotFound)?;
+                    let name = name.to_string_lossy().into_owned();
+                    self.drive
+                        .rename_file(&file.id, &name)
+                        .await
+                        .map_err(|_| FsError::GeneralFailure)?;
+                    Ok(())
+                } else {
+                    Err(FsError::Forbidden)
+                }
+            } else {
+                // move
+                let file = self.get_file(from).await?.ok_or(FsError::NotFound)?;
+                let to_parent_file = self
+                    .get_file(&to.parent())
+                    .await?
+                    .ok_or(FsError::NotFound)?;
+                self.drive
+                    .move_file(&file.id, &to_parent_file.id)
+                    .await
+                    .map_err(|_| FsError::GeneralFailure)?;
+                Ok(())
+            }
+        }
+        .boxed()
+    }
 }
 
 #[derive(Debug, Clone)]

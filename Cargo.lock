@@ -9,17 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
-name = "ahash"
-version = "0.7.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43bb833f0bf979d8475d38fbf09ed3b8a55e1885fe93ad3f93239fc6a4f17b98"
-dependencies = [
- "getrandom",
- "once_cell",
- "version_check",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "0.7.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -516,9 +505,6 @@ name = "hashbrown"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
-dependencies = [
- "ahash",
-]
 
 [[package]]
 name = "headers"
@@ -721,15 +707,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
 dependencies = [
  "cfg-if 1.0.0",
-]
-
-[[package]]
-name = "lru"
-version = "0.6.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ea2d928b485416e8908cff2d97d621db22b27f7b3b6729e438bcf42c671ba91"
-dependencies = [
- "hashbrown",
 ]
 
 [[package]]
@@ -1892,7 +1869,7 @@ dependencies = [
 [[package]]
 name = "webdav-handler"
 version = "0.2.0"
-source = "git+https://github.com/messense/webdav-handler-rs.git?branch=aliyundrive#9626623cf4ec99acab2b6ff6cb5c82982f0f85a4"
+source = "git+https://github.com/messense/webdav-handler-rs.git?branch=aliyundrive#37c447f3d262a2eeda0138654ed4e5bc52cc5eae"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -1903,11 +1880,8 @@ dependencies = [
  "http-body",
  "hyper",
  "lazy_static",
- "libc",
  "log",
- "lru",
  "mime_guess",
- "parking_lot",
  "percent-encoding",
  "pin-project",
  "pin-utils",

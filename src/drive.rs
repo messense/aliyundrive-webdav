@@ -334,6 +334,35 @@ impl AliyunDrive {
             .await?;
         Ok(())
     }
+
+    pub async fn rename_file(&self, file_id: &str, name: &str) -> Result<()> {
+        debug!(file_id = %file_id, name = %name, "rename file");
+        let req = RenameFileRequest {
+            check_name_mode: "refuse",
+            drive_id: self.drive_id()?,
+            file_id,
+            name,
+        };
+        let _res: Option<serde::de::IgnoredAny> = self
+            .request(format!("{}/v3/file/update", API_BASE_URL), &req)
+            .await?;
+        Ok(())
+    }
+
+    pub async fn move_file(&self, file_id: &str, to_parent_file_id: &str) -> Result<()> {
+        debug!(file_id = %file_id, to_parent_file_id = %to_parent_file_id, "move file");
+        let drive_id = self.drive_id()?;
+        let req = MoveFileRequest {
+            drive_id,
+            file_id,
+            to_drive_id: drive_id,
+            to_parent_file_id,
+        };
+        let _res: Option<serde::de::IgnoredAny> = self
+            .request(format!("{}/v3/file/move", API_BASE_URL), &req)
+            .await?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -404,6 +433,22 @@ struct CreateFolderRequest<'a> {
     name: &'a str,
     parent_file_id: &'a str,
     r#type: &'a str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct RenameFileRequest<'a> {
+    check_name_mode: &'a str,
+    drive_id: &'a str,
+    file_id: &'a str,
+    name: &'a str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct MoveFileRequest<'a> {
+    drive_id: &'a str,
+    file_id: &'a str,
+    to_drive_id: &'a str,
+    to_parent_file_id: &'a str,
 }
 
 #[derive(Debug, Clone)]
