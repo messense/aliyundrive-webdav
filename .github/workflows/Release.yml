@@ -171,28 +171,34 @@ jobs:
           file: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.tar.gz
           tag: ${{ github.ref }}
 
-  linux-openssl:
+  linux-others:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platform: [
-#          { target: "mips-unknown-linux-musl", image_tag: "mips-musl" },
-#          { target: "mipsel-unknown-linux-musl", image_tag: "mipsel-musl" },
-          { target: "mips64-unknown-linux-muslabi64", image_tag: "mips64-muslabi64" },
-          { target: "mips64el-unknown-linux-muslabi64", image_tag: "mips64el-muslabi64" },
-        ]
+        platform:
+          - target: "armv5te-unknown-linux-musleabi"
+            image_tag: "armv5te-musleabi"
+            cargo_extra_args: --no-default-features --features rustls-tls
+          - target: "mips-unknown-linux-musl"
+            image_tag: "mips-musl"
+            cargo_extra_args: --no-default-features --features native-tls-vendored
+          - target: "mipsel-unknown-linux-musl"
+            image_tag: "mipsel-musl"
+            cargo_extra_args: --no-default-features --features native-tls-vendored
     container:
       image: docker://messense/rust-musl-cross:${{ matrix.platform.image_tag }}
     steps:
       - uses: actions/checkout@v2
       - name: Build
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static -C link-arg=-s
         run: |
-          cargo build --release --target ${{ matrix.platform.target }} --no-default-features --features native-tls-vendored
-#      - name: Upx compress binary
-#        uses: crazy-max/ghaction-upx@v1
-#        with:
-#          version: latest
-#          files: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
+          cargo build --release --target ${{ matrix.platform.target }} ${{ matrix.platform.cargo_extra_args }}
+      - name: Upx compress binary
+        uses: crazy-max/ghaction-upx@v1
+        with:
+          version: v3.95  # v3.96 breaks mipsel, https://github.com/upx/upx/issues/504
+          files: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v2
         with:
