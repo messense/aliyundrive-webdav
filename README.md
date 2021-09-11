@@ -22,10 +22,12 @@ pip install aliyundrive-webdav
 目前提供了 aarch64 和 arm 两个版本，可以下载后使用 opkg 安装，比如
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.23/aliyundrive-webdav_0.1.23-0_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.23/luci-app-aliyundrive-webdav_0.1.23-0_all.ipk
-opkg install aliyundrive-webdav_0.1.23-0_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_0.1.23-0_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.24/aliyundrive-webdav_0.1.24-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.24/luci-app-aliyundrive-webdav_0.1.24_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.24/luci-i18n-aliyundrive-webdav-zh-cn_0.1.24-1_all.ipk
+opkg install aliyundrive-webdav_0.1.24-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_0.1.24_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.1.24-1_all.ipk
 ```
 
 ![OpenWrt 配置界面](./doc/openwrt.png)
@@ -47,7 +49,7 @@ docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 -e
 
 ```bash
 aliyundrive-webdav --help
-aliyundrive-webdav 0.1.23
+aliyundrive-webdav 0.1.24
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
