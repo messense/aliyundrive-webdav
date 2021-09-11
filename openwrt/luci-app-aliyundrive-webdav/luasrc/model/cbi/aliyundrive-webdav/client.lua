@@ -1,7 +1,7 @@
 local uci = luci.model.uci.cursor()
 local m, e
 
-m = Map("aliyundrive-webdav", translate("AliyunDriveWebDAV"))
+m = Map("aliyundrive-webdav", translate("AliyunDrive WebDAV"))
 
 m:section(SimpleSection).template = "aliyundrive-webdav/aliyundrive-webdav_status"
 

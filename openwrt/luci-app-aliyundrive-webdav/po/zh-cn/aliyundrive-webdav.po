@@ -4,7 +4,7 @@ msgstr "Content-Type: text/plain; charset=UTF-8\n"
 msgid "AliyunDrive"
 msgstr "阿里云盘"
 
-msgid "AliyunDriveWebDAV"
+msgid "AliyunDrive WebDAV"
 msgstr "阿里云盘 WebDAV"
 
 msgid "enable"
