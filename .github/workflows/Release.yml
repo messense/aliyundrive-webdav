@@ -263,11 +263,6 @@ jobs:
           ./scripts/feeds update -a > /dev/null
           make defconfig
 
-          cd feeds/luci/modules/luci-base/src
-          make po2lmo
-          sudo mv po2lmo /usr/bin/po2lmo
-          cd -
-
           ./scripts/feeds install -d y -p "aliyundrive" -f -a
           make package/aliyundrive-webdav/compile V=s
           make package/luci-app-aliyundrive-webdav/compile V=s
