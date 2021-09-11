@@ -122,10 +122,12 @@ impl AliyunDrive {
                     let should_retry = err.is_connect() || err.is_timeout();
                     if should_retry {
                         warn!(error = %err, "refresh token failed, will wait and try");
+                        last_err = Some(err);
                         time::sleep(Duration::from_secs(1)).await;
                         continue;
+                    } else {
+                        last_err = Some(err);
                     }
-                    last_err = Some(err);
                 }
             }
         }
