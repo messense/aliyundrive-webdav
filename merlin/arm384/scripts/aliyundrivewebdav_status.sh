@@ -14,4 +14,12 @@ else
     text1="<span style='color: red'>$date 阿里云盘 进程未在运行！</span>"
 fi
 
-http_response "$text1@"
+aliversion=$(/koolshare/bin/aliyundrive-webdav -V 2>/dev/null | head -n 1 | cut -d " " -f2)
+if [ -n "$aliversion" ]; then
+	aliversion="$aliversion"
+else
+	aliversion="null"
+fi
+dbus set aliyundrivewebdav_version="$aliversion"
+
+http_response "$text1@$aliversion@"

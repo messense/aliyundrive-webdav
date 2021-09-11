@@ -8,7 +8,7 @@ BIN=/koolshare/bin/aliyundrive-webdav
 http_response "$1"
 
 case $2 in
-1) 
+1)
     echo_date "当前已进入aliyundrivewebdav_config.sh" >> $LOG_FILE
     sh /koolshare/scripts/aliyundrivewebdavconfig.sh restart
     echo BBABBBBC >> $LOG_FILE

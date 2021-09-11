@@ -117,6 +117,7 @@
                             E("aliyundrivewebdav_state1").innerHTML = "aliyudrive-webdav 启动时间 - " + "Waiting for first refresh...";
                         } else {
                             E("aliyundrivewebdav_state1").innerHTML = arr[0];
+                            E("aliyundrivewebdav_version").innerHTML = arr[1];
                         }
                     }
                 });
@@ -267,7 +268,6 @@
                                                             <div>&nbsp;</div>
                                                             <div style="float:left;" class="formfonttitle" style="padding-top: 12px">阿里云盘WebDAV - 设置</div>
                                                             <div style="float:right; width:15px; height:25px;margin-top:10px"><img id="return_btn" onclick="reload_Soft_Center();" align="right" style="cursor:pointer;position:absolute;margin-left:-30px;margin-top:-25px;" title="返回软件中心" src="/images/backprev.png" onMouseOver="this.src='/images/backprevclick.png'" onMouseOut="this.src='/images/backprev.png'"></img></div>
-                                                            <div style="margin-left:5px;margin-top:10px;margin-bottom:10px"><img src="/images/New_ui/export/line_export.png"></div>
                                                             <div class="SimpleNote" id="head_illustrate">
                                                                 <p>阿里云盘 refresh token 可以在登录<a href="https://www.aliyundrive.com/drive/" target="_blank">阿里云盘网页版</a>后在开发者工具 -&gt; Application -&gt; Local Storage 中的 token 字段中找到</p>
                                                             </div>
@@ -301,6 +301,11 @@
                                                                                         <span id="aliyundrivewebdav_state1">运行状态 - Waiting...</span>
                                                                                 </div>
                                                                             </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <th >插件版本</th>
+                                                                        <td colspan="2"  id="aliyundrivewebdav_version">
+                                                                        </td>
                                                                     </tr>
                                                                     <tr id="refresh_token_tr">
                                                                         <th>refresh token</th>
