@@ -291,28 +291,38 @@ jobs:
     strategy:
       matrix:
         platform:
-          - arm380
-          - arm384
+          - type: arm380
+            name: arm380
+            target: armv7-unknown-linux-musleabi
+          - type: arm384
+            name: arm384-armv5te
+            target: armv5te-unknown-linux-musleabi
+          - type: arm384
+            name: arm384-armv7
+            target: armv7-unknown-linux-musleabi
+          - type: arm384
+            name: arm384-aarch64
+            target: aarch64-unknown-linux-musl
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: armv7-unknown-linux-musleabi-bin
+          name: ${{ matrix.platform.target }}-bin
       - name: Build package
         run: |
-          mv aliyundrive-webdav merlin/${{ matrix.platform }}/bin/
-          cd merlin && python3 build.py ${{ matrix.platform }} && mv aliyundrivewebdav.tar.gz aliyundrivewebdav-merlin-${{ matrix.platform }}.tar.gz
+          mv aliyundrive-webdav merlin/${{ matrix.platform.type }}/bin/
+          cd merlin && python3 build.py ${{ matrix.platform.type }} && mv aliyundrivewebdav.tar.gz aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
       - name: Archive package
         uses: actions/upload-artifact@v1
         with:
           name: aliyundrive-webdav-merlin
-          path: merlin/aliyundrivewebdav-merlin-${{ matrix.platform }}.tar.gz
+          path: merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
       - name: Upload package to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: merlin/aliyundrivewebdav-merlin-${{ matrix.platform }}.tar.gz
+          file: merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
           tag: ${{ github.ref }}
 
   docker:
