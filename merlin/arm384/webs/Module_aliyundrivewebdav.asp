@@ -43,7 +43,6 @@
                 buildswitch();
                 update_visibility();
                 get_status_front();
-            
             }
             function get_dbus_data(){
                 $.ajax({
@@ -54,29 +53,28 @@
                         db_aliyundrivewebdav = data.result[0];
                         conf2obj();
                        }
-                });    
+                });
             }
             function conf2obj() {
                 for (var i = 0; i < params_check.length; i++) {
                     console.log(params_check.length);
                     E(params_check[i]).checked = db_aliyundrivewebdav[params_check[i]] == 1 ? true : false
-                    
-                }  
+                }
                 for (var i = 0; i < params_inputs.length; i++) {
                     if (db_aliyundrivewebdav[params_inputs[i]]) {
                         E(params_inputs[i]).value = db_aliyundrivewebdav[params_inputs[i]];
                     }
-                }  
+                }
             }
             function reload_Soft_Center(){
                 location.href = "/Module_Softcenter.asp";
             }
 
             function buildswitch(){
-            	$("#aliyundrivewebdav_enable").click(
-            	function(){
-            		update_visibility();
-            	});
+                $("#aliyundrivewebdav_enable").click(
+                function(){
+                    update_visibility();
+                });
             }
 
             function update_visibility(){
@@ -140,7 +138,7 @@
                     alert("目录缓存不能为空！！！");
                     return false;
                 }
-                
+
                 for (var i = 0; i < params_check.length; i++) {
                     db_aliyundrivewebdav[params_check[i]] = E(params_check[i]).checked ? '1' : '0';
                 }
@@ -266,11 +264,14 @@
                                                     <tr>
                                                         <td bgcolor="#4D595D" colspan="3" valign="top">
                                                             <div>&nbsp;</div>
-                                                            <div style="float:left;" class="formfonttitle" style="padding-top: 12px">阿里云盘WebDAV - 设置</div>
-                                                            <div style="float:right; width:15px; height:25px;margin-top:10px"><img id="return_btn" onclick="reload_Soft_Center();" align="right" style="cursor:pointer;position:absolute;margin-left:-30px;margin-top:-25px;" title="返回软件中心" src="/images/backprev.png" onMouseOver="this.src='/images/backprevclick.png'" onMouseOut="this.src='/images/backprev.png'"></img></div>
-                                                            <div class="SimpleNote" id="head_illustrate">
-                                                                <p>阿里云盘 refresh token 可以在登录<a href="https://www.aliyundrive.com/drive/" target="_blank">阿里云盘网页版</a>后在开发者工具 -&gt; Application -&gt; Local Storage 中的 token 字段中找到</p>
-                                                            </div>
+										<div class="formfonttitle">阿里云盘WebDAV - 设置</div>
+										<div style="float:right; width:15px; height:25px;margin-top:-20px">
+											<img id="return_btn" onclick="reload_Soft_Center();" align="right" style="cursor:pointer;position:absolute;margin-left:-30px;margin-top:-25px;" title="返回软件中心" src="/images/backprev.png" onMouseOver="this.src='/images/backprevclick.png'" onMouseOut="this.src='/images/backprev.png'"></img>
+										</div>
+										<div style="margin:10px 0 10px 5px;" class="splitLine"></div>
+										<div class="SimpleNote" id="head_illustrate"><i></i>
+											<p>阿里云盘 refresh token 可以在登录<a href="https://www.aliyundrive.com/drive/" target="_blank">阿里云盘网页版</a>后在开发者工具 -&gt; Application -&gt; Local Storage 中的 token 字段中找到</p>
+										</div><div>&nbsp;</div>
                                                             <table style="margin:20px 0px 0px 0px;" width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
                                                                 <thead>
                                                                     <tr>
@@ -335,9 +336,6 @@
                                                             </table>
                                                             <div class="apply_gen">
                                                                 <input class="button_gen" type="button" onclick="save()" value="提交" />
-                                                            </div>
-                                                            <div style="margin-left:5px;margin-top:10px;margin-bottom:10px">
-                                                                <img src="/images/New_ui/export/line_export.png" />
                                                             </div>
                                                             <div class="KoolshareBottom" style="margin-top:540px;">
                                                                 论坛技术支持：
