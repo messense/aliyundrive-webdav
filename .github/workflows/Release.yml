@@ -321,7 +321,7 @@ jobs:
       - name: Archive package
         uses: actions/upload-artifact@v1
         with:
-          name: aliyundrive-webdav-merlin
+          name: aliyundrive-webdav-merlin-${{ matrix.platform.name }}
           path: merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
       - name: Upload package to GitHub Release
         uses: svenstaro/upload-release-action@v2
