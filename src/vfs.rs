@@ -73,34 +73,26 @@ impl AliyunDriveFileSystem {
     }
 
     async fn get_file(&self, dav_path: &DavPath) -> Result<Option<AliyunFile>, FsError> {
-        let path = dav_path.as_rel_ospath();
+        let path = dav_path.as_pathbuf();
         let path_str = path.to_string_lossy().into_owned();
-        let file = self.find_in_cache(path)?;
+        let file = self.find_in_cache(&path)?;
         if let Some(file) = file {
-            trace!("found {} file: {} in cache", path_str, file.id);
+            trace!(path = %path.display(), file_id = %file.id, "file found in cache");
             Ok(Some(file))
         } else {
-            trace!("{} file not found in cache", path_str);
+            trace!(path = %path.display(), "file not found in cache");
             let parts: Vec<&str> = path_str.split('/').collect();
             let parts_len = parts.len();
             let filename = parts[parts_len - 1];
-
-            // find in root first
-            let mut files = self.read_dir_and_cache(&DavPath::new("/").unwrap()).await?;
-            if let Some(file) = files.iter().find(|f| f.name == filename) {
-                trace!("found {} file: {}", path_str, file.id);
-                return Ok(Some(file.clone()));
-            }
-
             let mut prefix = String::new();
             for part in &parts[0..parts_len - 1] {
                 let parent = format!("{}/{}", prefix, part);
                 let parent_path = DavPath::new(&encode_path(parent.as_bytes()))
                     .map_err(|_| FsError::GeneralFailure)?;
                 prefix = parent;
-                files = self.read_dir_and_cache(&parent_path).await?;
+                let files = self.read_dir_and_cache(&parent_path).await?;
                 if let Some(file) = files.iter().find(|f| f.name == filename) {
-                    trace!("found {} file: {}", path_str, file.id);
+                    trace!(path = %path.display(), file_id = %file.id, "file found in cache");
                     return Ok(Some(file.clone()));
                 }
             }
@@ -109,13 +101,13 @@ impl AliyunDriveFileSystem {
     }
 
     async fn read_dir_and_cache(&self, path: &DavPath) -> Result<Vec<AliyunFile>, FsError> {
-        let path = path.as_rel_ospath();
-        debug!(path = %path.display(), "read_dir and cache");
+        let path = path.as_pathbuf();
         let path_str = path.to_string_lossy().into_owned();
-        let parent_file_id = if path_str.is_empty() {
+        debug!(path = %path_str, "read_dir and cache");
+        let parent_file_id = if path_str == "/" {
             "root".to_string()
         } else {
-            self.find_in_cache(path)?.ok_or(FsError::NotFound)?.id
+            self.find_in_cache(&path)?.ok_or(FsError::NotFound)?.id
         };
         let files = if let Some(files) = self.dir_cache.get(&path_str) {
             let this = self.clone();
@@ -164,7 +156,7 @@ impl AliyunDriveFileSystem {
 
 impl DavFileSystem for AliyunDriveFileSystem {
     fn open<'a>(&'a self, path: &'a DavPath, _options: OpenOptions) -> FsFuture<Box<dyn DavFile>> {
-        debug!(path = %path.as_rel_ospath().display(), "fs: open");
+        debug!(path = %path, "fs: open");
         async move {
             let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
             let download_url = self.drive.get_download_url(&file.id).await.ok();
@@ -179,7 +171,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         path: &'a DavPath,
         _meta: ReadDirMeta,
     ) -> FsFuture<FsStream<Box<dyn DavDirEntry>>> {
-        debug!(path = %path.as_rel_ospath().display(), "fs: read_dir");
+        debug!(path = %path, "fs: read_dir");
         async move {
             let files = self.read_dir_and_cache(path).await?;
             let mut v: Vec<Box<dyn DavDirEntry>> = Vec::with_capacity(files.len());
@@ -193,7 +185,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn metadata<'a>(&'a self, path: &'a DavPath) -> FsFuture<Box<dyn DavMetaData>> {
-        debug!(path = %path.as_rel_ospath().display(), "fs: metadata");
+        debug!(path = %path, "fs: metadata");
         async move {
             let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
             Ok(Box::new(file) as Box<dyn DavMetaData>)
@@ -228,8 +220,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn remove_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
-        let path = dav_path.as_rel_ospath();
-        debug!(path = %path.display(), "fs: remove_dir");
+        debug!(path = %dav_path, "fs: remove_dir");
         async move {
             let file = self.get_file(dav_path).await?.ok_or(FsError::NotFound)?;
             if !matches!(file.r#type, FileType::Folder) {
@@ -239,6 +230,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .trash(&file.id)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
+            let path = dav_path.as_pathbuf();
             let path_str = path.to_string_lossy().into_owned();
             self.dir_cache.invalidate(&path_str).await;
             Ok(())
@@ -247,8 +239,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn remove_file<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
-        let path = dav_path.as_rel_ospath();
-        debug!(path = %path.display(), "fs: remove_file");
+        debug!(path = %dav_path, "fs: remove_file");
         async move {
             let file = self.get_file(dav_path).await?.ok_or(FsError::NotFound)?;
             if !matches!(file.r#type, FileType::File) {
@@ -258,6 +249,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .trash(&file.id)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
+            let path = dav_path.as_pathbuf();
             let path_str = path.to_string_lossy().into_owned();
             self.dir_cache.invalidate(&path_str).await;
             Ok(())
@@ -266,7 +258,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn rename<'a>(&'a self, from: &'a DavPath, to: &'a DavPath) -> FsFuture<()> {
-        debug!(from = %from.as_rel_ospath().display(), to = %to.as_rel_ospath().display(), "fs: rename");
+        debug!(from = %from, to = %to, "fs: rename");
         async move {
             if from.parent() == to.parent() {
                 // rename
