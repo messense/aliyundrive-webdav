@@ -283,7 +283,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           overwrite: true
-          file: openwrt-sdk/bin/packages/*/aliyundrive/*aliyundrive-webdav_*.ipk
+          file: openwrt-sdk/bin/packages/*/aliyundrive/*aliyundrive-webdav*.ipk
           tag: ${{ github.ref }}
 
   merlin:
