@@ -234,6 +234,8 @@ jobs:
             sdk: "https://downloads.openwrt.org/snapshots/targets/bcm27xx/bcm2711/openwrt-sdk-bcm27xx-bcm2711_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
           - cpu: "x86-64"
             sdk: "https://downloads.openwrt.org/snapshots/targets/x86/64/openwrt-sdk-x86-64_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
+          - cpu: "x86"
+            sdk: "https://downloads.openwrt.org/snapshots/targets/x86/generic/openwrt-sdk-x86-generic_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
           - cpu: "mt7621"
             sdk: "https://downloads.openwrt.org/snapshots/targets/ramips/mt7621/openwrt-sdk-ramips-mt7621_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
           - cpu: "ox820"

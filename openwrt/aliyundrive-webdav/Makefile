@@ -5,7 +5,6 @@ PKG_VERSION:=0.1.24
 PKG_RELEASE:=1
 
 PKG_LICENSE:=MIT
-
 PKG_LIBC:=musl
 ifeq ($(ARCH),arm)
   PKG_LIBC:=musleabi
@@ -16,7 +15,12 @@ ifeq ($(ARCH),arm)
   endif
 endif
 
-PKG_SOURCE:=aliyundrive-webdav-$(ARCH)-unknown-linux-$(PKG_LIBC).tar.gz
+PKG_ARCH=$(ARCH)
+ifeq ($(ARCH),i386)
+  PKG_ARCH:=i686
+endif
+
+PKG_SOURCE:=aliyundrive-webdav-$(PKG_ARCH)-unknown-linux-$(PKG_LIBC).tar.gz
 PKG_SOURCE_URL:=https://github.com/messense/aliyundrive-webdav/releases/download/v$(PKG_VERSION)/
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)-$(PKG_RELEASE)
 PKG_HASH:=skip
