@@ -43,6 +43,7 @@ jobs:
         with:
           name: wheels
           path: dist
+          if-no-files-found: error
       - name: Archive binary
         run: |
           cd target/release
@@ -53,7 +54,8 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: apple-darwin-bin
-          path: target/release/aliyundrive-webdav.tar.gz
+          path: target/release/aliyundrive-webdav-apple-darwin.tar.gz
+          if-no-files-found: error
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
@@ -99,6 +101,7 @@ jobs:
         with:
           name: wheels
           path: dist
+          if-no-files-found: error
       - name: Archive binary
         run: |
           cd target/${{ matrix.platform.target }}/release
@@ -109,6 +112,7 @@ jobs:
         with:
           name: windows-${{ matrix.platform.arch }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.zip
+          if-no-files-found: error
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
@@ -151,6 +155,7 @@ jobs:
         with:
           name: wheels
           path: dist
+          if-no-files-found: error
       - name: Upx compress binary
         uses: crazy-max/ghaction-upx@v1
         with:
@@ -161,6 +166,7 @@ jobs:
         with:
           name: ${{ matrix.platform.target }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
+          if-no-files-found: error
       - name: Archive binary
         run: |
           cd target/${{ matrix.platform.target }}/release
@@ -210,6 +216,7 @@ jobs:
         with:
           name: ${{ matrix.platform.target }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
+          if-no-files-found: error
       - name: Archive binary
         run: |
           cd target/${{ matrix.platform.target }}/release
@@ -283,6 +290,7 @@ jobs:
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.cpu }}
           path: openwrt-sdk/bin/packages/*/aliyundrive/*.ipk
+          if-no-files-found: error
       - name: Upload package to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
@@ -332,6 +340,7 @@ jobs:
         with:
           name: aliyundrive-webdav-merlin-${{ matrix.platform.name }}
           path: merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
+          if-no-files-found: error
       - name: Upload package to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
