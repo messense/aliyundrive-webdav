@@ -10,7 +10,7 @@ PKG_MAINTAINER:=messense <messense@icloud.com>
 
 LUCI_TITLE:=LuCI Support for aliyundrive-webdav
 LUCI_PKGARCH:=all
-LUCI_DEPENDS:=+aliyundrive-webdav
+LUCI_DEPENDS:=+aliyundrive-webdav +lua +libuci-lua
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
