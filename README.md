@@ -45,6 +45,33 @@ opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.1.26-1_all.ipk
 docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 -e REFRESH_TOKEN='refresh token' messense/aliyundrive-webdav
 ```
 
+
+### QNAP 威联通 NAS
+
+亲测环境 Intel 64 位 x86 CPU 可用，其他应该大同小异。
+
+管理员登陆 NAS 后安装 ContainerStation 并启动服务，在 Management (管理) 标签中 Create Application (新建应用)，配置如下
+
+	version: '3.3'
+	services:
+		aliyundrive-webdav:
+			container_name: aliyundrive-webdav
+			restart: unless-stopped
+			ports:
+				- '8080:8080'
+			environment:
+				- 'REFRESH_TOKEN=mytoken...'
+			image: messense/aliyundrive-webdav
+
+其中 REFRESH_TOKEN 文档最下面说明；`:8080` 网盘访问隐射端口，可以按需改为其他的。
+
+点击 Create (创建)后启动，访问 http://nas地址:8080/ 即可看到你网盘的自动生成索引网页文件。
+
+参考文档
+- https://docs.docker.com/compose/
+- https://www.composerize.com/
+
+
 ## 命令行用法
 
 ```bash
@@ -74,7 +101,8 @@ OPTIONS:
 ### 获取 refresh_token
 
 登录[阿里云盘](https://www.aliyundrive.com/drive/)后，可以在开发者工具 ->
-Application -> Local Storage 中的 `token` 字段中找到。
+Application -> Local Storage 中的 `token` 字段中找到。  
+注意：不是复制整段 JSON 值，而是 JSON 里 token 字段的值。
 
 ## License
 
