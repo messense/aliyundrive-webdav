@@ -279,10 +279,10 @@ jobs:
           make package/luci-app-aliyundrive-webdav/compile V=s
           tree bin/packages/
       - name: Archive package
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.cpu }}
-          path: openwrt-sdk/bin/packages
+          path: openwrt-sdk/bin/packages/*/aliyundrive/*.ipk
       - name: Upload package to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
@@ -328,7 +328,7 @@ jobs:
           mv aliyundrive-webdav merlin/${{ matrix.platform.type }}/bin/
           cd merlin && python3 build.py ${{ matrix.platform.type }} && mv aliyundrivewebdav.tar.gz aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
       - name: Archive package
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: aliyundrive-webdav-merlin-${{ matrix.platform.name }}
           path: merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
