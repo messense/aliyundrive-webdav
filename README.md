@@ -22,12 +22,12 @@ pip install aliyundrive-webdav
 目前提供了 aarch64 和 arm 两个版本，可以下载后使用 opkg 安装，比如
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.25/aliyundrive-webdav_0.1.25-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.25/luci-app-aliyundrive-webdav_0.1.25_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.25/luci-i18n-aliyundrive-webdav-zh-cn_0.1.25-1_all.ipk
-opkg install aliyundrive-webdav_0.1.25-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_0.1.25_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.1.25-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.26/aliyundrive-webdav_0.1.26-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.26/luci-app-aliyundrive-webdav_0.1.26_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.26/luci-i18n-aliyundrive-webdav-zh-cn_0.1.26-1_all.ipk
+opkg install aliyundrive-webdav_0.1.26-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_0.1.26_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.1.26-1_all.ipk
 ```
 
 ![OpenWrt 配置界面](./doc/openwrt.png)
@@ -49,7 +49,7 @@ docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 -e
 
 ```bash
 aliyundrive-webdav --help
-aliyundrive-webdav 0.1.25
+aliyundrive-webdav 0.1.26
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
