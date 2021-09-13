@@ -7,7 +7,7 @@ msgstr "阿里云盘"
 msgid "AliyunDrive WebDAV"
 msgstr "阿里云盘 WebDAV"
 
-msgid "enable"
+msgid "Enable"
 msgstr "启用"
 
 msgid "Refresh Token"

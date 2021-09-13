@@ -8,7 +8,7 @@ m:section(SimpleSection).template = "aliyundrive-webdav/aliyundrive-webdav_statu
 e = m:section(TypedSection, "server")
 e.anonymous = true
 
-enable = e:option(Flag, "enable", translate("enable"))
+enable = e:option(Flag, "enable", translate("Enable"))
 enable.rmempty = false
 
 refresh_token = e:option(Value, "refresh_token", translate("Refresh Token"))

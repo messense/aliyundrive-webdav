@@ -1,5 +1,5 @@
 config server
-    option enable '1'
+    option enable '0'
     option debug '0'
     option refresh_token ''
     option host '0.0.0.0'
