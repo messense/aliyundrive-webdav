@@ -5,7 +5,7 @@
 [![Docker Image](https://img.shields.io/docker/pulls/messense/aliyundrive-webdav.svg?maxAge=2592000)](https://hub.docker.com/r/messense/aliyundrive-webdav/)
 
 阿里云盘 WebDAV 服务，主要使用场景为配合支持 WebDAV 协议的客户端 App
-如 [Infuse](https://firecore.com/infuse) 等实现在电视上直接观看云盘视频内容。
+如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 等实现在电视上直接观看云盘视频内容。
 
 ## 安装
 
