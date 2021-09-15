@@ -339,11 +339,11 @@
                                                             <table id="public_table" style="margin:10px 0px 0px 0px;" width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
                                                                 <thead>
                                                                 <tr>
-                                                                    <td colspan="2">DDNS公网访问设定 -- <em style="color: gold;">【建议设置五位数端口】【设置<a href="./Advanced_VirtualServer_Content.asp" target="_blank"><em>端口转发</em></a>】</em>【<a href="http://coolaf.com/tool/port" target="_blank"><em>检测端口开放情况</em></a>】</em></td>
+                                                                    <td colspan="2">公网访问设定 -- <em style="color: gold;">【建议设置五位数端口】【设置<a href="./Advanced_VirtualServer_Content.asp" target="_blank"><em>端口转发</em></a>】</em>【<a href="http://coolaf.com/tool/port" target="_blank"><em>检测端口开放情况</em></a>】</em></td>
                                                                 </tr>
                                                                 </thead>
                                                                 <tr id="public">	
-                                                                <th>开启DDNS公网访问</th>
+                                                                <th>开启公网访问</th>
                                                                 <td colspan="2">
                                                                     <div class="switch_field" style="display:table-cell;float: left;">
                                                                     <label for="aliyundrivewebdav_public">
