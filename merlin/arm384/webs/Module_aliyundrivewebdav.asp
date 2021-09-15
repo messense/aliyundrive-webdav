@@ -36,7 +36,7 @@
             var noChange = 0;
             var x = 5;
             var params_inputs = ['aliyundrivewebdav_refresh_token', 'aliyundrivewebdav_port', 'aliyundrivewebdav_auth_user', 'aliyundrivewebdav_auth_password', 'aliyundrivewebdav_read_buffer_size', 'aliyundrivewebdav_cache_size'];
-            var params_check = ['aliyundrivewebdav_enable'];
+            var params_check = ['aliyundrivewebdav_enable', 'aliyundrivewebdav_public'];
             function init() {
                 show_menu(menu_hook);
                 get_dbus_data();
@@ -86,6 +86,7 @@
                     document.getElementById("auth_password_tr").style.display = "";
                     document.getElementById("read_buffer_size_tr").style.display = "";
                     document.getElementById("cache_size_tr").style.display = "";
+                    document.getElementById("public_table").style.display = "";
                 } else {
                     document.getElementById("state_tr").style.display = "none";
                     document.getElementById("refresh_token_tr").style.display = "none";
@@ -94,6 +95,7 @@
                     document.getElementById("auth_password_tr").style.display = "none";
                     document.getElementById("read_buffer_size_tr").style.display = "none";
                     document.getElementById("cache_size_tr").style.display = "none";
+                    document.getElementById("public_table").style.display = "none";
                 }
 
             }
@@ -333,6 +335,29 @@
                                                                         <td><input type="text" id="aliyundrivewebdav_cache_size" value="1000" class="input_15_table"></td>
                                                                     </tr>
                                                                 </tbody>
+                                                            </table>
+                                                            <table id="public_table" style="margin:10px 0px 0px 0px;" width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+                                                                <thead>
+                                                                <tr>
+                                                                    <td colspan="2">公网访问设定 -- <em style="color: gold;">【建议设置五位数端口】【设置<a href="./Advanced_VirtualServer_Content.asp" target="_blank"><em>端口转发</em></a>】</em>【<a href="http://coolaf.com/tool/port" target="_blank"><em>检测端口开放情况</em></a>】</em></td>
+                                                                </tr>
+                                                                </thead>
+                                                                <tr id="public">	
+                                                                <th>开启公网访问</th>
+                                                                <td colspan="2">
+                                                                    <div class="switch_field" style="display:table-cell;float: left;">
+                                                                    <label for="aliyundrivewebdav_public">
+                                                                        <input id="aliyundrivewebdav_public" type="checkbox" name="public" class="switch" style="display: none;">
+                                                                        <div class="switch_container" >
+                                                                            <div class="switch_bar"></div>
+                                                                            <div class="switch_circle transition_style">
+                                                                                <div></div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </label>													
+                                                                </div>
+                                                                </td>
+                                                                </tr>												
                                                             </table>
                                                             <div class="apply_gen">
                                                                 <input class="button_gen" type="button" onclick="save()" value="提交" />
