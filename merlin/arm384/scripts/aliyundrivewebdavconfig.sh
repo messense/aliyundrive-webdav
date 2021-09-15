@@ -34,6 +34,11 @@ aliyundrivewebdav_start_stop(){
         sleep 5s
         if [ ! -z "$(pidof aliyundrive-webdav)" -a ! -n "$(grep "Error" /tmp/upload/aliyundrivewebdav.log)" ] ; then
           echo_date "aliyundrive 进程启动成功！(PID: $(pidof aliyundrive-webdav))" >> $LOG_FILE
+          if [ "$aliyundrivewebdav_public" == "1" ]; then
+            iptables -I INPUT -p tcp --dport $aliyundrivewebdav_port -j ACCEPT >/dev/null 2>&1 &
+          else
+            iptables -D INPUT -p tcp --dport $aliyundrivewebdav_port -j ACCEPT >/dev/null 2>&1 &
+          fi
         else
           echo_date "aliyundrive 进程启动失败！请检查参数是否存在问题，即将关闭" >> $LOG_FILE
           echo_date "失败原因：" >> $LOG_FILE
@@ -45,10 +50,12 @@ aliyundrivewebdav_start_stop(){
         fi
     else
         killall aliyundrive-webdav
+        iptables -D INPUT -p tcp --dport $aliyundrivewebdav_port -j ACCEPT >/dev/null 2>&1 &
     fi
 }
 aliyundrivewebdav_stop(){
   killall aliyundrive-webdav
+  iptables -D INPUT -p tcp --dport $aliyundrivewebdav_port -j ACCEPT >/dev/null 2>&1 &
 }
 
 
