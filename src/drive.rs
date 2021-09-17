@@ -91,7 +91,7 @@ impl AliyunDrive {
         Ok(drive)
     }
 
-    async fn do_refresh_token(&self) -> Result<RefreshTokenResponse, reqwest::Error> {
+    async fn do_refresh_token(&self) -> Result<RefreshTokenResponse> {
         let mut cred = self.credentials.write().await;
         let mut data = HashMap::new();
         data.insert("refresh_token", &cred.refresh_token);
@@ -100,17 +100,25 @@ impl AliyunDrive {
             .post("https://websv.aliyundrive.com/token/refresh")
             .json(&data)
             .send()
-            .await?
-            .error_for_status()?;
-        let res = res.json::<RefreshTokenResponse>().await?;
-        cred.refresh_token = res.refresh_token.clone();
-        cred.access_token = Some(res.access_token.clone());
-        info!(
-            refresh_token = %res.refresh_token,
-            nick_name = %res.nick_name,
-            "refresh token succeed"
-        );
-        Ok(res)
+            .await?;
+        match res.error_for_status_ref() {
+            Ok(_) => {
+                let res = res.json::<RefreshTokenResponse>().await?;
+                cred.refresh_token = res.refresh_token.clone();
+                cred.access_token = Some(res.access_token.clone());
+                info!(
+                    refresh_token = %res.refresh_token,
+                    nick_name = %res.nick_name,
+                    "refresh token succeed"
+                );
+                Ok(res)
+            }
+            Err(err) => {
+                let msg = res.text().await?;
+                let context = format!("{}: {}", err, msg);
+                Err(err).context(context)
+            }
+        }
     }
 
     async fn do_refresh_token_with_retry(&self) -> Result<RefreshTokenResponse> {
@@ -119,7 +127,10 @@ impl AliyunDrive {
             match self.do_refresh_token().await {
                 Ok(res) => return Ok(res),
                 Err(err) => {
-                    let should_retry = err.is_connect() || err.is_timeout();
+                    let should_retry = match err.downcast_ref::<reqwest::Error>() {
+                        Some(e) => e.is_connect() || e.is_timeout(),
+                        None => false,
+                    };
                     if should_retry {
                         warn!(error = %err, "refresh token failed, will wait and try");
                         last_err = Some(err);
