@@ -42,9 +42,9 @@ aliyundrivewebdav_start_stop(){
         else
           echo_date "aliyundrive 进程启动失败！请检查参数是否存在问题，即将关闭" >> $LOG_FILE
           echo_date "失败原因：" >> $LOG_FILE
-          error1=$(cat /tmp/upload/aliyundrivewebdav.log | grep -oE "Error.*")
+          error1=$(cat /tmp/upload/aliyundrivewebdav.log | grep -ioE "Error.*")
           if [ -n "$error1" ]; then
-              echo_date $error1 >> $LOG_FILE		
+              echo_date $error1 >> $LOG_FILE
           fi
           dbus set aliyundrivewebdav_enable="0"
         fi
@@ -70,11 +70,11 @@ start_nat)
     ;;
 restart)
     aliyundrivewebdav_start_stop
-    ;;  
+    ;;
 stop)
     aliyundrivewebdav_stop
     echo BBABBBBC >> $LOG_FILE
-    ;; 
+    ;;
 *)
     aliyundrivewebdav_start_stop
     echo BBABBBBC >> $LOG_FILE
