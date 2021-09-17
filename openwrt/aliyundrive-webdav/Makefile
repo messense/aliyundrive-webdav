@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=aliyundrive-webdav
-PKG_VERSION:=0.1.26
+PKG_VERSION:=0.1.27
 PKG_RELEASE:=1
 
 PKG_LICENSE:=MIT

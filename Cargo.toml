@@ -1,6 +1,6 @@
 [package]
 name = "aliyundrive-webdav"
-version = "0.1.26"
+version = "0.1.27"
 edition = "2018"
 description = "WebDAV server for AliyunDrive"
 license = "MIT"
@@ -24,8 +24,8 @@ serde = { version = "1.0.127", features = ["derive"] }
 structopt = "0.3.22"
 time = { version = "0.3.1", features = ["formatting", "parsing"] }
 tokio = { version = "1.10.0", features = ["rt-multi-thread", "io-util", "net", "time", "sync", "macros", "parking_lot"] }
-tracing = "0.1.26"
-tracing-subscriber = "0.2.20"
+tracing = "0.1"
+tracing-subscriber = "0.2"
 url = "2.2.2"
 webdav-handler = { version = "0.2.0", default-features = false, features = ["hyper"] }
 
