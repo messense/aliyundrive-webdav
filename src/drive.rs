@@ -142,7 +142,7 @@ impl AliyunDrive {
                 }
             }
         }
-        Err(last_err.unwrap().into())
+        Err(last_err.unwrap())
     }
 
     async fn access_token(&self) -> Result<String> {
