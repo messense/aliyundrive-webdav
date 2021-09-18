@@ -244,6 +244,8 @@ jobs:
             sdk: "https://downloads.openwrt.org/snapshots/targets/rockchip/armv8/openwrt-sdk-rockchip-armv8_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
           - cpu: "bcm53xx"
             sdk: "https://downloads.openwrt.org/snapshots/targets/bcm53xx/generic/openwrt-sdk-bcm53xx-generic_gcc-10.3.0_musl_eabi.Linux-x86_64.tar.xz"
+          - cpu: "bcm2710"
+            sdk: "https://downloads.openwrt.org/snapshots/targets/bcm27xx/bcm2710/openwrt-sdk-bcm27xx-bcm2710_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
           - cpu: "bcm2711"
             sdk: "https://downloads.openwrt.org/snapshots/targets/bcm27xx/bcm2711/openwrt-sdk-bcm27xx-bcm2711_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
           - cpu: "x86-64"
@@ -289,7 +291,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.cpu }}
-          path: openwrt-sdk/bin/packages/*/aliyundrive/*.ipk
+          path: openwrt-sdk/bin/packages/*/aliyundrive/aliyundrive-webdav*.ipk
+          if-no-files-found: error
+      - name: Archive luci packages
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.target.cpu == 'rockchip' }}
+        with:
+          name: aliyundrive-webdav-openwrt-${{ matrix.target.cpu }}
+          path: openwrt-sdk/bin/packages/*/aliyundrive/luci-*.ipk
           if-no-files-found: error
       - name: Upload package to GitHub Release
         uses: svenstaro/upload-release-action@v2
@@ -298,7 +307,16 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           overwrite: true
-          file: openwrt-sdk/bin/packages/*/aliyundrive/*aliyundrive-webdav*.ipk
+          file: openwrt-sdk/bin/packages/*/aliyundrive/aliyundrive-webdav*.ipk
+          tag: ${{ github.ref }}
+      - name: Upload luci packages to GitHub Release
+        uses: svenstaro/upload-release-action@v2
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.target.cpu == 'rockchip' }}
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          overwrite: true
+          file: openwrt-sdk/bin/packages/*/aliyundrive/luci-*.ipk
           tag: ${{ github.ref }}
 
   merlin:
