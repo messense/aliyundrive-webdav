@@ -19,7 +19,7 @@ pip install aliyundrive-webdav
 ### OpenWrt 路由器
 
 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译的 ipk 文件，
-目前提供了 aarch64 和 arm 两个版本，可以下载后使用 opkg 安装，比如
+目前提供了 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，比如
 
 ```bash
 wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.27/aliyundrive-webdav_0.1.27-1_aarch64_generic.ipk
