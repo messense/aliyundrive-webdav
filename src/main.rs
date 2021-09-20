@@ -39,6 +39,9 @@ struct Opt {
     /// Directory entries cache size
     #[structopt(long, default_value = "1000")]
     cache_size: usize,
+    /// Root directory path, defaults to /
+    #[structopt(long, default_value = "/")]
+    root: String,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -58,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
         anyhow::bail!("auth-user and auth-password should be specified together.");
     }
 
-    let fs = AliyunDriveFileSystem::new(opt.refresh_token, opt.cache_size)
+    let fs = AliyunDriveFileSystem::new(opt.refresh_token, opt.root, opt.cache_size)
         .await
         .map_err(|_| {
             io::Error::new(

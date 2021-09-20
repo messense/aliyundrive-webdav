@@ -1,5 +1,5 @@
 use std::io::SeekFrom;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use anyhow::Result;
@@ -18,35 +18,31 @@ use webdav_handler::{
 
 use crate::drive::{AliyunDrive, AliyunFile, FileType};
 
-// Encode all non-unreserved characters, except '/'.
-// See RFC3986, and https://en.wikipedia.org/wiki/Percent-encoding .
-const PATH_ENCODE_SET: &percent_encoding::AsciiSet = &percent_encoding::NON_ALPHANUMERIC
-    .remove(b'-')
-    .remove(b'_')
-    .remove(b'.')
-    .remove(b'~')
-    .remove(b'/');
-
-// encode path segment with user-defined ENCODE_SET
-fn encode_path(src: &[u8]) -> String {
-    percent_encoding::percent_encode(src, PATH_ENCODE_SET).to_string()
-}
-
 #[derive(Clone)]
 pub struct AliyunDriveFileSystem {
     drive: AliyunDrive,
     dir_cache: Cache<String, Vec<AliyunFile>>,
+    root: PathBuf,
 }
 
 impl AliyunDriveFileSystem {
-    pub async fn new(refresh_token: String, cache_size: usize) -> Result<Self> {
+    pub async fn new(refresh_token: String, root: String, cache_size: usize) -> Result<Self> {
         let drive = AliyunDrive::new(refresh_token).await?;
         let dir_cache = CacheBuilder::new(cache_size)
             .time_to_live(Duration::from_secs(60 * 60))
             .time_to_idle(Duration::from_secs(10 * 60))
             .build();
         debug!("dir cache initialized");
-        Ok(Self { drive, dir_cache })
+        let root = if root.starts_with('/') {
+            PathBuf::from(root)
+        } else {
+            Path::new("/").join(root)
+        };
+        Ok(Self {
+            drive,
+            dir_cache,
+            root,
+        })
     }
 
     fn find_in_cache(&self, path: &Path) -> Result<Option<AliyunFile>, FsError> {
@@ -72,8 +68,7 @@ impl AliyunDriveFileSystem {
         }
     }
 
-    async fn get_file(&self, dav_path: &DavPath) -> Result<Option<AliyunFile>, FsError> {
-        let path = dav_path.as_pathbuf();
+    async fn get_file(&self, path: PathBuf) -> Result<Option<AliyunFile>, FsError> {
         let path_str = path.to_string_lossy().into_owned();
         let file = self.find_in_cache(&path)?;
         if let Some(file) = file {
@@ -84,13 +79,11 @@ impl AliyunDriveFileSystem {
             let parts: Vec<&str> = path_str.split('/').collect();
             let parts_len = parts.len();
             let filename = parts[parts_len - 1];
-            let mut prefix = String::new();
+            let mut prefix = PathBuf::from("/");
             for part in &parts[0..parts_len - 1] {
-                let parent = format!("{}/{}", prefix, part);
-                let parent_path = DavPath::new(&encode_path(parent.as_bytes()))
-                    .map_err(|_| FsError::GeneralFailure)?;
-                prefix = parent;
-                let files = self.read_dir_and_cache(&parent_path).await?;
+                let parent = prefix.join(part);
+                prefix = parent.clone();
+                let files = self.read_dir_and_cache(parent).await?;
                 if let Some(file) = files.iter().find(|f| f.name == filename) {
                     trace!(path = %path.display(), file_id = %file.id, "file found in cache");
                     return Ok(Some(file.clone()));
@@ -100,8 +93,7 @@ impl AliyunDriveFileSystem {
         }
     }
 
-    async fn read_dir_and_cache(&self, path: &DavPath) -> Result<Vec<AliyunFile>, FsError> {
-        let path = path.as_pathbuf();
+    async fn read_dir_and_cache(&self, path: PathBuf) -> Result<Vec<AliyunFile>, FsError> {
         let path_str = path.to_string_lossy().into_owned();
         debug!(path = %path_str, "read_dir and cache");
         let parent_file_id = if path_str == "/" {
@@ -152,11 +144,24 @@ impl AliyunDriveFileSystem {
         trace!(path = %dir_path, count = files.len(), "cache dir");
         self.dir_cache.insert(dir_path, files).await;
     }
+
+    fn normalize_dav_path(&self, dav_path: &DavPath) -> PathBuf {
+        let path = dav_path.as_pathbuf();
+        if self.root.parent().is_none() || path.starts_with(&self.root) {
+            return path;
+        }
+        let rel_path = dav_path.as_rel_ospath();
+        if rel_path == Path::new("") {
+            return self.root.clone();
+        }
+        self.root.join(rel_path)
+    }
 }
 
 impl DavFileSystem for AliyunDriveFileSystem {
     fn open<'a>(&'a self, path: &'a DavPath, _options: OpenOptions) -> FsFuture<Box<dyn DavFile>> {
-        debug!(path = %path, "fs: open");
+        let path = self.normalize_dav_path(path);
+        debug!(path = %path.display(), "fs: open");
         async move {
             let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
             let download_url = self.drive.get_download_url(&file.id).await.ok();
@@ -171,7 +176,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
         path: &'a DavPath,
         _meta: ReadDirMeta,
     ) -> FsFuture<FsStream<Box<dyn DavDirEntry>>> {
-        debug!(path = %path, "fs: read_dir");
+        let path = self.normalize_dav_path(path);
+        debug!(path = %path.display(), "fs: read_dir");
         async move {
             let files = self.read_dir_and_cache(path).await?;
             let mut v: Vec<Box<dyn DavDirEntry>> = Vec::with_capacity(files.len());
@@ -185,7 +191,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn metadata<'a>(&'a self, path: &'a DavPath) -> FsFuture<Box<dyn DavMetaData>> {
-        debug!(path = %path, "fs: metadata");
+        let path = self.normalize_dav_path(path);
+        debug!(path = %path.display(), "fs: metadata");
         async move {
             let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
             Ok(Box::new(file) as Box<dyn DavMetaData>)
@@ -194,12 +201,12 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn create_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
-        let path = dav_path.as_pathbuf();
+        let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: create_dir");
         async move {
-            let parent_path = dav_path.parent();
+            let parent_path = path.parent().unwrap();
             let parent_file = self
-                .get_file(&parent_path)
+                .get_file(parent_path.to_path_buf())
                 .await?
                 .ok_or(FsError::NotFound)?;
             if !matches!(parent_file.r#type, FileType::Folder) {
@@ -220,9 +227,13 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn remove_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
-        debug!(path = %dav_path, "fs: remove_dir");
+        let path = self.normalize_dav_path(dav_path);
+        debug!(path = %path.display(), "fs: remove_dir");
         async move {
-            let file = self.get_file(dav_path).await?.ok_or(FsError::NotFound)?;
+            let file = self
+                .get_file(path.clone())
+                .await?
+                .ok_or(FsError::NotFound)?;
             if !matches!(file.r#type, FileType::Folder) {
                 return Err(FsError::Forbidden);
             }
@@ -230,7 +241,6 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .trash(&file.id)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
-            let path = dav_path.as_pathbuf();
             let path_str = path.to_string_lossy().into_owned();
             self.dir_cache.invalidate(&path_str).await;
             Ok(())
@@ -239,9 +249,13 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn remove_file<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
-        debug!(path = %dav_path, "fs: remove_file");
+        let path = self.normalize_dav_path(dav_path);
+        debug!(path = %path.display(), "fs: remove_file");
         async move {
-            let file = self.get_file(dav_path).await?.ok_or(FsError::NotFound)?;
+            let file = self
+                .get_file(path.clone())
+                .await?
+                .ok_or(FsError::NotFound)?;
             if !matches!(file.r#type, FileType::File) {
                 return Err(FsError::Forbidden);
             }
@@ -249,7 +263,6 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .trash(&file.id)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
-            let path = dav_path.as_pathbuf();
             let path_str = path.to_string_lossy().into_owned();
             self.dir_cache.invalidate(&path_str).await;
             Ok(())
@@ -258,11 +271,13 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 
     fn rename<'a>(&'a self, from: &'a DavPath, to: &'a DavPath) -> FsFuture<()> {
-        debug!(from = %from, to = %to, "fs: rename");
+        let from = self.normalize_dav_path(from);
+        let to = self.normalize_dav_path(to);
+        debug!(from = %from.display(), to = %to.display(), "fs: rename");
         async move {
             if from.parent() == to.parent() {
                 // rename
-                if let Some(name) = to.as_pathbuf().file_name() {
+                if let Some(name) = to.file_name() {
                     let file = self.get_file(from).await?.ok_or(FsError::NotFound)?;
                     let name = name.to_string_lossy().into_owned();
                     self.drive
@@ -277,7 +292,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 // move
                 let file = self.get_file(from).await?.ok_or(FsError::NotFound)?;
                 let to_parent_file = self
-                    .get_file(&to.parent())
+                    .get_file(to.parent().unwrap().to_path_buf())
                     .await?
                     .ok_or(FsError::NotFound)?;
                 self.drive
