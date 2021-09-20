@@ -74,6 +74,10 @@
                                                                         <th>refresh token</th>
                                                                         <td> <input type="text" id="aliyundrivewebdav_refresh_token" value="<% dbus_get_def("aliyundrivewebdav_refresh_token", ""); %>" class="input_ss_table"></td>
                                                                     </tr>
+                                                                    <tr id="root_tr">
+                                                                        <th>根目录</th>
+                                                                        <td> <input type="text" id="aliyundrivewebdav_root" value="<% dbus_get_def("aliyundrivewebdav_root", "/"); %>" class="input_ss_table"></td>
+                                                                    </tr>
                                                                     <tr id="port_tr">
                                                                         <th>监听端口</th>
                                                                         <td><input type="text" id="aliyundrivewebdav_port" value="<% dbus_get_def("aliyundrivewebdav_port", "8080"); %>" class="input_ss_table"></td>
@@ -131,7 +135,7 @@
                 buildswitch();
                 update_visibility();
                 var posting = false;
-                var inputs = ['refresh_token', 'port', 'auth_user', 'auth_password', 'read_buffer_size', 'cache_size'];
+                var inputs = ['refresh_token', 'port', 'auth_user', 'auth_password', 'read_buffer_size', 'cache_size', 'root'];
                 $('.button_gen').click(function () {
                     if(posting) return;
                     posting = true; // save
@@ -179,13 +183,16 @@
             function update_visibility(){
                 if (document.getElementById('switch').checked) {
                     document.getElementById("refresh_token_tr").style.display = "";
+                    document.getElementById("root_tr").style.display = "";
                     document.getElementById("port_tr").style.display = "";
                     document.getElementById("auth_user_tr").style.display = "";
                     document.getElementById("auth_password_tr").style.display = "";
                     document.getElementById("read_buffer_size_tr").style.display = "";
                     document.getElementById("cache_size_tr").style.display = "";
+
                 } else {
                     document.getElementById("refresh_token_tr").style.display = "none";
+                    document.getElementById("root_tr").style.display = "none";
                     document.getElementById("port_tr").style.display = "none";
                     document.getElementById("auth_user_tr").style.display = "none";
                     document.getElementById("auth_password_tr").style.display = "none";
