@@ -35,7 +35,7 @@
             var _responseLen;
             var noChange = 0;
             var x = 5;
-            var params_inputs = ['aliyundrivewebdav_refresh_token', 'aliyundrivewebdav_port', 'aliyundrivewebdav_auth_user', 'aliyundrivewebdav_auth_password', 'aliyundrivewebdav_read_buffer_size', 'aliyundrivewebdav_cache_size'];
+            var params_inputs = ['aliyundrivewebdav_refresh_token', 'aliyundrivewebdav_port', 'aliyundrivewebdav_auth_user', 'aliyundrivewebdav_auth_password', 'aliyundrivewebdav_read_buffer_size', 'aliyundrivewebdav_cache_size', 'aliyundrivewebdav_root'];
             var params_check = ['aliyundrivewebdav_enable', 'aliyundrivewebdav_public'];
             function init() {
                 show_menu(menu_hook);
@@ -81,6 +81,7 @@
                 if (document.getElementById('aliyundrivewebdav_enable').checked) {
                     document.getElementById("state_tr").style.display = "";
                     document.getElementById("refresh_token_tr").style.display = "";
+                    document.getElementById("root_tr").style.display = "";
                     document.getElementById("port_tr").style.display = "";
                     document.getElementById("auth_user_tr").style.display = "";
                     document.getElementById("auth_password_tr").style.display = "";
@@ -90,6 +91,7 @@
                 } else {
                     document.getElementById("state_tr").style.display = "none";
                     document.getElementById("refresh_token_tr").style.display = "none";
+                    document.getElementById("root_tr").style.display = "none";
                     document.getElementById("port_tr").style.display = "none";
                     document.getElementById("auth_user_tr").style.display = "none";
                     document.getElementById("auth_password_tr").style.display = "none";
@@ -313,6 +315,10 @@
                                                                     <tr id="refresh_token_tr">
                                                                         <th>refresh token</th>
                                                                         <td> <input type="text" id="aliyundrivewebdav_refresh_token" class="input_15_table" value=""></td>
+                                                                    </tr>
+                                                                    <tr id="root_tr">
+                                                                        <th>根目录</th>
+                                                                        <td> <input type="text" id="aliyundrivewebdav_root" class="input_15_table" value=""></td>
                                                                     </tr>
                                                                     <tr id="port_tr">
                                                                         <th>监听端口</th>

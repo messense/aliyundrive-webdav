@@ -13,6 +13,9 @@ enable.rmempty = false
 
 refresh_token = e:option(Value, "refresh_token", translate("Refresh Token"))
 
+root = e:option(Value, "root", translate("Root Directory"))
+root.default = "/"
+
 host = e:option(Value, "host", translate("Host"))
 host.default = "0.0.0.0"
 host.datatype = "ipaddr"
