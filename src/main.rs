@@ -39,7 +39,7 @@ struct Opt {
     /// Directory entries cache size
     #[structopt(long, default_value = "1000")]
     cache_size: usize,
-    /// Root directory path, defaults to /
+    /// Root directory path
     #[structopt(long, default_value = "/")]
     root: String,
 }

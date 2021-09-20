@@ -22,12 +22,12 @@ pip install aliyundrive-webdav
 目前提供了 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，比如
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.27/aliyundrive-webdav_0.1.27-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.27/luci-app-aliyundrive-webdav_0.1.27_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.1.27/luci-i18n-aliyundrive-webdav-zh-cn_0.1.27-1_all.ipk
-opkg install aliyundrive-webdav_0.1.27-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_0.1.27_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.1.27-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.2.0/aliyundrive-webdav_0.2.0-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.2.0/luci-app-aliyundrive-webdav_0.2.0_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.2.0/luci-i18n-aliyundrive-webdav-zh-cn_0.2.0-1_all.ipk
+opkg install aliyundrive-webdav_0.2.0-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_0.2.0_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.2.0-1_all.ipk
 ```
 
 ![OpenWrt 配置界面](./doc/openwrt.png)
@@ -78,7 +78,7 @@ services:
 
 ```bash
 aliyundrive-webdav --help
-aliyundrive-webdav 0.1.27
+aliyundrive-webdav 0.2.0
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
@@ -92,12 +92,13 @@ OPTIONS:
     -W, --auth-password <auth-password>          WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
     -U, --auth-user <auth-user>                  WebDAV authentication username [env: WEBDAV_AUTH_USER=]
         --cache-size <cache-size>                Directory entries cache size [default: 1000]
-        --host <host>                            Listen host [default: 127.0.0.1]
+        --host <host>                            Listen host [default: 0.0.0.0]
     -p, --port <port>                            Listen port [default: 8080]
     -S, --read-buffer-size <read-buffer-size>
             Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
 
     -r, --refresh-token <refresh-token>          Aliyun drive refresh token [env: REFRESH_TOKEN=]
+        --root <root>                            Root directory path [default: /]
 ```
 
 ### 获取 refresh_token
