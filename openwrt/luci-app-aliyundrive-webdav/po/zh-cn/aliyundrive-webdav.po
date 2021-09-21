@@ -51,3 +51,9 @@ msgstr "日志"
 
 msgid "Debug Mode"
 msgstr "调试模式"
+
+msgid "<a href=\"https://github.com/messense/aliyundrive-webdav\" target=\"_blank\">Project GitHub URL</a>"
+msgstr "<a href=\"https://github.com/messense/aliyundrive-webdav\" target=\"_blank\">GitHub 项目地址</a>"
+
+msgid "<a href=\"https://github.com/messense/aliyundrive-webdav#%E8%8E%B7%E5%8F%96-refresh_token\" target=\"_blank\">How to get refresh token</a>"
+msgstr "<a href=\"https://github.com/messense/aliyundrive-webdav#%E8%8E%B7%E5%8F%96-refresh_token\" target=\"_blank\">查看获取 refresh token 的方法</a>"

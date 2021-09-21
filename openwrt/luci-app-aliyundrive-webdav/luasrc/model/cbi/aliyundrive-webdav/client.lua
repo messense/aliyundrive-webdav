@@ -1,7 +1,8 @@
 local uci = luci.model.uci.cursor()
 local m, e
 
-m = Map("aliyundrive-webdav", translate("AliyunDrive WebDAV"))
+m = Map("aliyundrive-webdav", translate("AliyunDrive WebDAV"),
+        translate("<a href=\"https://github.com/messense/aliyundrive-webdav\" target=\"_blank\">Project GitHub URL</a>"))
 
 m:section(SimpleSection).template = "aliyundrive-webdav/aliyundrive-webdav_status"
 
@@ -11,7 +12,8 @@ e.anonymous = true
 enable = e:option(Flag, "enable", translate("Enable"))
 enable.rmempty = false
 
-refresh_token = e:option(Value, "refresh_token", translate("Refresh Token"))
+refresh_token = e:option(Value, "refresh_token", translate("Refresh Token"),
+        translate("<a href=\"https://github.com/messense/aliyundrive-webdav#%E8%8E%B7%E5%8F%96-refresh_token\" target=\"_blank\">How to get refresh token</a>"))
 
 root = e:option(Value, "root", translate("Root Directory"))
 root.default = "/"
