@@ -163,8 +163,8 @@ impl AliyunDrive {
                     // retry if command line refresh_token is invalid but we also have
                     // refresh_token from file
                     if let Some(refresh_token_from_file) = refresh_token_from_file.as_ref() {
-                        if &refresh_token != refresh_token_from_file {
-                            refresh_token = refresh_token_from_file.clone();
+                        if !should_retry && &refresh_token != refresh_token_from_file {
+                            refresh_token = refresh_token_from_file.trim().to_string();
                             should_retry = true;
                         }
                     }
