@@ -322,7 +322,7 @@ jobs:
   merlin:
     name: Merlin Package
     runs-on: ubuntu-latest
-    needs: [ linux ]
+    needs: [ linux, linux-others ]
     strategy:
       matrix:
         platform:
