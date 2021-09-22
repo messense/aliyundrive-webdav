@@ -253,7 +253,7 @@ jobs:
           - cpu: "x86"
             sdk: "https://downloads.openwrt.org/snapshots/targets/x86/generic/openwrt-sdk-x86-generic_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
           - cpu: "mt7621"
-            sdk: "https://downloads.openwrt.org/snapshots/targets/ramips/mt7621/openwrt-sdk-ramips-mt7621_gcc-10.3.0_musl.Linux-x86_64.tar.xz"
+            sdk: "https://downloads.openwrt.org/snapshots/targets/ramips/mt7621/openwrt-sdk-ramips-mt7621_gcc-11.2.0_musl.Linux-x86_64.tar.xz"
           - cpu: "ox820"
             sdk: "https://downloads.openwrt.org/snapshots/targets/oxnas/ox820/openwrt-sdk-oxnas-ox820_gcc-10.3.0_musl_eabi.Linux-x86_64.tar.xz"
     steps:
