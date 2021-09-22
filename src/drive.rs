@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -32,10 +33,11 @@ pub struct AliyunDrive {
     client: reqwest::Client,
     credentials: Arc<RwLock<Credentials>>,
     drive_id: Option<String>,
+    work_dir: Option<PathBuf>,
 }
 
 impl AliyunDrive {
-    pub async fn new(refresh_token: String) -> Result<Self> {
+    pub async fn new(refresh_token: String, work_dir: Option<PathBuf>) -> Result<Self> {
         let credentials = Credentials {
             refresh_token,
             access_token: None,
@@ -53,14 +55,25 @@ impl AliyunDrive {
             client,
             credentials: Arc::new(RwLock::new(credentials)),
             drive_id: None,
+            work_dir,
         };
 
         let (tx, rx) = oneshot::channel();
         // schedule update token task
         let client = drive.clone();
+        let refresh_token_from_file = if let Some(dir) = drive.work_dir.as_ref() {
+            tokio::fs::read_to_string(dir.join("refresh_token"))
+                .await
+                .ok()
+        } else {
+            None
+        };
         tokio::spawn(async move {
             let mut delay_seconds = 7000;
-            match client.do_refresh_token_with_retry().await {
+            match client
+                .do_refresh_token_with_retry(refresh_token_from_file)
+                .await
+            {
                 Ok(res) => {
                     // token usually expires in 7200s, refresh earlier
                     delay_seconds = res.expires_in - 200;
@@ -75,7 +88,7 @@ impl AliyunDrive {
             }
             loop {
                 time::sleep(time::Duration::from_secs(delay_seconds)).await;
-                if let Err(err) = client.do_refresh_token_with_retry().await {
+                if let Err(err) = client.do_refresh_token_with_retry(None).await {
                     error!("refresh token failed: {}", err);
                 }
             }
@@ -91,10 +104,18 @@ impl AliyunDrive {
         Ok(drive)
     }
 
-    async fn do_refresh_token(&self) -> Result<RefreshTokenResponse> {
-        let mut cred = self.credentials.write().await;
+    async fn save_refresh_token(&self, refresh_token: &str) -> Result<()> {
+        if let Some(dir) = self.work_dir.as_ref() {
+            tokio::fs::create_dir_all(dir).await?;
+            let refresh_token_file = dir.join("refresh_token");
+            tokio::fs::write(refresh_token_file, refresh_token).await?;
+        }
+        Ok(())
+    }
+
+    async fn do_refresh_token(&self, refresh_token: &str) -> Result<RefreshTokenResponse> {
         let mut data = HashMap::new();
-        data.insert("refresh_token", &cred.refresh_token);
+        data.insert("refresh_token", refresh_token);
         let res = self
             .client
             .post("https://websv.aliyundrive.com/token/refresh")
@@ -104,6 +125,7 @@ impl AliyunDrive {
         match res.error_for_status_ref() {
             Ok(_) => {
                 let res = res.json::<RefreshTokenResponse>().await?;
+                let mut cred = self.credentials.write().await;
                 cred.refresh_token = res.refresh_token.clone();
                 cred.access_token = Some(res.access_token.clone());
                 info!(
@@ -111,6 +133,9 @@ impl AliyunDrive {
                     nick_name = %res.nick_name,
                     "refresh token succeed"
                 );
+                if let Err(err) = self.save_refresh_token(&res.refresh_token).await {
+                    error!(error = %err, "save refresh token failed");
+                }
                 Ok(res)
             }
             Err(err) => {
@@ -121,16 +146,28 @@ impl AliyunDrive {
         }
     }
 
-    async fn do_refresh_token_with_retry(&self) -> Result<RefreshTokenResponse> {
+    async fn do_refresh_token_with_retry(
+        &self,
+        refresh_token_from_file: Option<String>,
+    ) -> Result<RefreshTokenResponse> {
         let mut last_err = None;
+        let mut refresh_token = self.refresh_token().await;
         for _ in 0..10 {
-            match self.do_refresh_token().await {
+            match self.do_refresh_token(&refresh_token).await {
                 Ok(res) => return Ok(res),
                 Err(err) => {
-                    let should_retry = match err.downcast_ref::<reqwest::Error>() {
+                    let mut should_retry = match err.downcast_ref::<reqwest::Error>() {
                         Some(e) => e.is_connect() || e.is_timeout(),
                         None => false,
                     };
+                    // retry if command line refresh_token is invalid but we also have
+                    // refresh_token from file
+                    if let Some(refresh_token_from_file) = refresh_token_from_file.as_ref() {
+                        if &refresh_token != refresh_token_from_file {
+                            refresh_token = refresh_token_from_file.clone();
+                            should_retry = true;
+                        }
+                    }
                     if should_retry {
                         warn!(error = %err, "refresh token failed, will wait and try");
                         last_err = Some(err);
@@ -143,6 +180,11 @@ impl AliyunDrive {
             }
         }
         Err(last_err.unwrap())
+    }
+
+    async fn refresh_token(&self) -> String {
+        let cred = self.credentials.read().await;
+        cred.refresh_token.clone()
     }
 
     async fn access_token(&self) -> Result<String> {
@@ -192,7 +234,7 @@ impl AliyunDrive {
                     ) => {
                         if status_code == StatusCode::UNAUTHORIZED {
                             // refresh token and retry
-                            let token_res = self.do_refresh_token_with_retry().await?;
+                            let token_res = self.do_refresh_token_with_retry(None).await?;
                             access_token = token_res.access_token;
                         } else {
                             // wait for a while and retry

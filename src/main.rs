@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 use std::net::ToSocketAddrs;
-use std::{env, io};
+use std::{env, io, path::PathBuf};
 
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
 use structopt::StructOpt;
@@ -42,6 +42,9 @@ struct Opt {
     /// Root directory path
     #[structopt(long, default_value = "/")]
     root: String,
+    /// Working directory, refresh_token will be stored in there if specified
+    #[structopt(short = "w", long)]
+    work_dir: Option<PathBuf>,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -61,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
         anyhow::bail!("auth-user and auth-password should be specified together.");
     }
 
-    let fs = AliyunDriveFileSystem::new(opt.refresh_token, opt.root, opt.cache_size)
+    let fs = AliyunDriveFileSystem::new(opt.refresh_token, opt.root, opt.cache_size, opt.work_dir)
         .await
         .map_err(|_| {
             io::Error::new(
