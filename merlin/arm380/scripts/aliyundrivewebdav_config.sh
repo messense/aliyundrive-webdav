@@ -31,7 +31,7 @@ aliyundrivewebdav_start_stop(){
         fi
 
         start-stop-daemon -S -q -b -m -p ${PID_FILE} \
-          -x /bin/sh -- -c "${BIN} -I --host 0.0.0.0 -p ${aliyundrivewebdav_port} -r ${aliyundrivewebdav_refresh_token} --root ${aliyundrivewebdav_root} -S ${aliyundrivewebdav_read_buffer_size} --cache-size ${aliyundrivewebdav_cache_size} $AUTH_ARGS >/tmp/aliyundrivewebdav.log 2>&1"
+          -x /bin/sh -- -c "${BIN} -I --host 0.0.0.0 -p ${aliyundrivewebdav_port} -r ${aliyundrivewebdav_refresh_token} --root ${aliyundrivewebdav_root} --workdir /var/run/aliyundrivewebdav -S ${aliyundrivewebdav_read_buffer_size} --cache-size ${aliyundrivewebdav_cache_size} $AUTH_ARGS >/tmp/aliyundrivewebdav.log 2>&1"
     else
         killall aliyundrive-webdav
     fi
