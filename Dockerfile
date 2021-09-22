@@ -7,8 +7,9 @@ RUN apk add tzdata && \
 	echo "Asia/Shanghai" > /etc/timezone && \
 	apk del tzdata
 
+RUN mkdir -p /etc/aliyundrive-webdav
 WORKDIR /root/
 ADD aliyundrive-webdav-$TARGETARCH$TARGETVARIANT /usr/bin/aliyundrive-webdav
 
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["/usr/bin/aliyundrive-webdav", "--host", "0.0.0.0", "--auto-index"]
+CMD ["/usr/bin/aliyundrive-webdav", "--host", "0.0.0.0", "--auto-index", "--workdir", "/etc/aliyundrive-webdav"]

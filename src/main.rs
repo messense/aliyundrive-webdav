@@ -44,7 +44,7 @@ struct Opt {
     root: String,
     /// Working directory, refresh_token will be stored in there if specified
     #[structopt(short = "w", long)]
-    work_dir: Option<PathBuf>,
+    workdir: Option<PathBuf>,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
         anyhow::bail!("auth-user and auth-password should be specified together.");
     }
 
-    let fs = AliyunDriveFileSystem::new(opt.refresh_token, opt.root, opt.cache_size, opt.work_dir)
+    let fs = AliyunDriveFileSystem::new(opt.refresh_token, opt.root, opt.cache_size, opt.workdir)
         .await
         .map_err(|_| {
             io::Error::new(

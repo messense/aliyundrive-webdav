@@ -33,11 +33,11 @@ pub struct AliyunDrive {
     client: reqwest::Client,
     credentials: Arc<RwLock<Credentials>>,
     drive_id: Option<String>,
-    work_dir: Option<PathBuf>,
+    workdir: Option<PathBuf>,
 }
 
 impl AliyunDrive {
-    pub async fn new(refresh_token: String, work_dir: Option<PathBuf>) -> Result<Self> {
+    pub async fn new(refresh_token: String, workdir: Option<PathBuf>) -> Result<Self> {
         let credentials = Credentials {
             refresh_token,
             access_token: None,
@@ -55,13 +55,13 @@ impl AliyunDrive {
             client,
             credentials: Arc::new(RwLock::new(credentials)),
             drive_id: None,
-            work_dir,
+            workdir,
         };
 
         let (tx, rx) = oneshot::channel();
         // schedule update token task
         let client = drive.clone();
-        let refresh_token_from_file = if let Some(dir) = drive.work_dir.as_ref() {
+        let refresh_token_from_file = if let Some(dir) = drive.workdir.as_ref() {
             tokio::fs::read_to_string(dir.join("refresh_token"))
                 .await
                 .ok()
@@ -105,7 +105,7 @@ impl AliyunDrive {
     }
 
     async fn save_refresh_token(&self, refresh_token: &str) -> Result<()> {
-        if let Some(dir) = self.work_dir.as_ref() {
+        if let Some(dir) = self.workdir.as_ref() {
             tokio::fs::create_dir_all(dir).await?;
             let refresh_token_file = dir.join("refresh_token");
             tokio::fs::write(refresh_token_file, refresh_token).await?;

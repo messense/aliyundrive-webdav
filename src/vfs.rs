@@ -30,9 +30,9 @@ impl AliyunDriveFileSystem {
         refresh_token: String,
         root: String,
         cache_size: usize,
-        work_dir: Option<PathBuf>,
+        workdir: Option<PathBuf>,
     ) -> Result<Self> {
-        let drive = AliyunDrive::new(refresh_token, work_dir).await?;
+        let drive = AliyunDrive::new(refresh_token, workdir).await?;
         let dir_cache = CacheBuilder::new(cache_size)
             .time_to_live(Duration::from_secs(60 * 60))
             .time_to_idle(Duration::from_secs(10 * 60))
