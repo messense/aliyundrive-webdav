@@ -21,6 +21,7 @@ const API_BASE_URL: &str = "https://api.aliyundrive.com";
 const ORIGIN: &str = "https://www.aliyundrive.com";
 const REFERER: &str = "https://www.aliyundrive.com/";
 const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
+pub const UPLOAD_CHUNK_SIZE: u64 = 16 * 1024 * 1024; // 16MB
 
 #[derive(Debug, Clone)]
 struct Credentials {
@@ -418,6 +419,66 @@ impl AliyunDrive {
             .await?;
         Ok(())
     }
+
+    pub async fn create_file_with_proof(
+        &self,
+        name: &str,
+        parent_file_id: &str,
+        size: u64,
+    ) -> Result<CreateFileWithProofResponse> {
+        debug!(name = %name, parent_file_id = %parent_file_id, size = size, "create file with proof");
+        let drive_id = self.drive_id()?;
+        let chunk_count =
+            size / UPLOAD_CHUNK_SIZE + if size % UPLOAD_CHUNK_SIZE != 0 { 1 } else { 0 };
+        let part_info_list = (1..=chunk_count)
+            .map(|part_number| PartInfo {
+                part_number,
+                upload_url: String::new(),
+            })
+            .collect();
+        let req = CreateFileWithProofRequest {
+            check_name_mode: "refuse",
+            content_hash: "",
+            content_hash_name: "none",
+            drive_id,
+            name,
+            parent_file_id,
+            proof_code: "",
+            proof_version: "v1",
+            size,
+            part_info_list,
+            r#type: "file",
+        };
+        let res: CreateFileWithProofResponse = self
+            .request(format!("{}/v2/file/create_with_proof", API_BASE_URL), &req)
+            .await?
+            .context("expect response")?;
+        Ok(res)
+    }
+
+    pub async fn complete_file_upload(&self, file_id: &str, upload_id: &str) -> Result<()> {
+        debug!(file_id = %file_id, upload_id = %upload_id, "complete file upload");
+        let drive_id = self.drive_id()?;
+        let req = CompleteUploadRequest {
+            drive_id,
+            file_id,
+            upload_id,
+        };
+        let _res: Option<serde::de::IgnoredAny> = self
+            .request(format!("{}/v2/file/complete", API_BASE_URL), &req)
+            .await?;
+        Ok(())
+    }
+
+    pub async fn upload(&self, url: &str, body: Bytes) -> Result<()> {
+        self.client
+            .put(url)
+            .body(body)
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -506,8 +567,60 @@ struct MoveFileRequest<'a> {
     to_parent_file_id: &'a str,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PartInfo {
+    pub part_number: u64,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub upload_url: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct CreateFileWithProofRequest<'a> {
+    check_name_mode: &'a str,
+    content_hash: &'a str,
+    content_hash_name: &'a str,
+    drive_id: &'a str,
+    name: &'a str,
+    parent_file_id: &'a str,
+    proof_code: &'a str,
+    proof_version: &'a str,
+    size: u64,
+    part_info_list: Vec<PartInfo>,
+    r#type: &'a str,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreateFileWithProofResponse {
+    #[serde(default)]
+    pub part_info_list: Vec<PartInfo>,
+    pub file_id: String,
+    pub upload_id: String,
+    pub file_name: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct CompleteUploadRequest<'a> {
+    drive_id: &'a str,
+    file_id: &'a str,
+    upload_id: &'a str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct GetUploadUrlRequest<'a> {
+    drive_id: &'a str,
+    file_id: &'a str,
+    upload_id: &'a str,
+    part_info_list: Vec<PartInfo>,
+}
+
 #[derive(Debug, Clone)]
 pub struct DateTime(SystemTime);
+
+impl DateTime {
+    pub fn new(st: SystemTime) -> Self {
+        Self(st)
+    }
+}
 
 impl<'a> Deserialize<'a> for DateTime {
     fn deserialize<D: Deserializer<'a>>(deserializer: D) -> Result<Self, D::Error> {

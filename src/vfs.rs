@@ -1,10 +1,10 @@
 use std::io::SeekFrom;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use anyhow::Result;
-use bytes::{Buf, Bytes};
-use futures_util::future::{self, FutureExt};
+use bytes::{Buf, BufMut, Bytes, BytesMut};
+use futures_util::future::FutureExt;
 use moka::future::{Cache, CacheBuilder};
 use tokio::{sync::oneshot, time::timeout};
 use tracing::{debug, error, trace};
@@ -16,7 +16,8 @@ use webdav_handler::{
     },
 };
 
-use crate::drive::{AliyunDrive, AliyunFile, FileType};
+use crate::drive::{AliyunDrive, AliyunFile, DateTime, FileType, UPLOAD_CHUNK_SIZE};
+use std::fmt::{Debug, Formatter};
 
 #[derive(Clone)]
 pub struct AliyunDriveFileSystem {
@@ -164,13 +165,48 @@ impl AliyunDriveFileSystem {
 }
 
 impl DavFileSystem for AliyunDriveFileSystem {
-    fn open<'a>(&'a self, path: &'a DavPath, _options: OpenOptions) -> FsFuture<Box<dyn DavFile>> {
-        let path = self.normalize_dav_path(path);
+    fn open<'a>(
+        &'a self,
+        dav_path: &'a DavPath,
+        options: OpenOptions,
+    ) -> FsFuture<Box<dyn DavFile>> {
+        let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: open");
         async move {
-            let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
-            let download_url = self.drive.get_download_url(&file.id).await.ok();
-            let dav_file = AliyunDavFile::new(self.drive.clone(), file, download_url);
+            if options.append {
+                // Can't support open in write-append mode
+                return Err(FsError::NotImplemented);
+            }
+            let parent_path = path.parent().ok_or(FsError::NotFound)?;
+            let parent_file = self
+                .get_file(parent_path.to_path_buf())
+                .await?
+                .ok_or(FsError::NotFound)?;
+            let dav_file = if let Some(file) = self.get_file(path.clone()).await? {
+                if options.write && options.create_new {
+                    return Err(FsError::Exists);
+                }
+                let download_url = self.drive.get_download_url(&file.id).await.ok();
+                AliyunDavFile::new(self.clone(), file, parent_file.id, download_url)
+            } else {
+                if options.write && (options.create || options.create_new) {
+                    let size = options.size.ok_or(FsError::NotImplemented)?;
+                    let name = String::from_utf8(dav_path.file_name().to_vec())
+                        .map_err(|_| FsError::GeneralFailure)?;
+                    let now = SystemTime::now();
+                    let file = AliyunFile {
+                        name,
+                        id: "".to_string(),
+                        r#type: FileType::File,
+                        created_at: DateTime::new(now),
+                        updated_at: DateTime::new(now),
+                        size,
+                    };
+                    AliyunDavFile::new(self.clone(), file, parent_file.id, None)
+                } else {
+                    return Err(FsError::NotFound);
+                }
+            };
             Ok(Box::new(dav_file) as Box<dyn DavFile>)
         }
         .boxed()
@@ -209,7 +245,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: create_dir");
         async move {
-            let parent_path = path.parent().unwrap();
+            let parent_path = path.parent().ok_or(FsError::NotFound)?;
             let parent_file = self
                 .get_file(parent_path.to_path_buf())
                 .await?
@@ -311,22 +347,106 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
+struct UploadState {
+    buffer: BytesMut,
+    chunk_count: u64,
+    chunk: u64,
+    upload_id: String,
+    upload_urls: Vec<String>,
+}
+
+#[derive(Clone)]
 struct AliyunDavFile {
-    drive: AliyunDrive,
+    fs: AliyunDriveFileSystem,
     file: AliyunFile,
+    parent_file_id: String,
     current_pos: u64,
     download_url: Option<String>,
+    upload_state: UploadState,
+}
+
+impl Debug for AliyunDavFile {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AliyunDavFile")
+            .field("file", &self.file)
+            .field("parent_file_id", &self.parent_file_id)
+            .field("current_pos", &self.current_pos)
+            .field("upload_state", &self.upload_state)
+            .finish()
+    }
 }
 
 impl AliyunDavFile {
-    fn new(drive: AliyunDrive, file: AliyunFile, download_url: Option<String>) -> Self {
+    fn new(
+        fs: AliyunDriveFileSystem,
+        file: AliyunFile,
+        parent_file_id: String,
+        download_url: Option<String>,
+    ) -> Self {
         Self {
-            drive,
+            fs,
             file,
+            parent_file_id,
             current_pos: 0,
             download_url,
+            upload_state: UploadState::default(),
         }
+    }
+
+    async fn prepare_for_upload(&mut self) -> Result<(), FsError> {
+        if self.upload_state.chunk_count == 0 {
+            // TODO: create parent folders
+            let size = self.file.size;
+            let chunk_count =
+                size / UPLOAD_CHUNK_SIZE + if size % UPLOAD_CHUNK_SIZE != 0 { 1 } else { 0 };
+            self.upload_state.chunk_count = chunk_count;
+            self.upload_state.chunk = 1;
+            let res = self
+                .fs
+                .drive
+                .create_file_with_proof(&self.file.name, &self.parent_file_id, size)
+                .await
+                .map_err(|_| FsError::GeneralFailure)?;
+            self.file.id = res.file_id.clone();
+            self.upload_state.upload_id = res.upload_id.clone();
+            let upload_urls = res
+                .part_info_list
+                .into_iter()
+                .map(|x| x.upload_url)
+                .collect();
+            self.upload_state.upload_urls = upload_urls;
+        }
+        Ok(())
+    }
+
+    async fn maybe_upload_chunk(&mut self, remaining: bool) -> Result<(), FsError> {
+        let chunk_size = if remaining {
+            // last chunk size maybe less than UPLOAD_CHUNK_SIZE
+            self.upload_state.buffer.remaining()
+        } else {
+            UPLOAD_CHUNK_SIZE as usize
+        };
+        if self.upload_state.buffer.remaining() >= chunk_size {
+            let current_chunk = self.upload_state.chunk;
+            let chunk_data = self.upload_state.buffer.split_to(chunk_size);
+            debug!(
+                file_id = %self.file.id,
+                file_name = %self.file.name,
+                "upload part {}/{}",
+                current_chunk,
+                self.upload_state.chunk_count
+            );
+            let upload_url = &self.upload_state.upload_urls[current_chunk as usize - 1];
+            self.fs
+                .drive
+                .upload(upload_url, chunk_data.freeze())
+                .await
+                .map_err(|_| FsError::GeneralFailure)?;
+            // TODO: refresh upload url if expired
+            self.upload_state.chunk += 1;
+        }
+        Ok(())
     }
 }
 
@@ -340,12 +460,26 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn write_buf(&'_ mut self, _buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
-        Box::pin(future::ready(Err(FsError::NotImplemented)))
+    fn write_buf(&'_ mut self, buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
+        debug!(file_id = %self.file.id, file_name = %self.file.name, "file: write_buf");
+        async move {
+            self.prepare_for_upload().await?;
+            self.upload_state.buffer.put(buf);
+            self.maybe_upload_chunk(false).await?;
+            Ok(())
+        }
+        .boxed()
     }
 
-    fn write_bytes(&mut self, _buf: Bytes) -> FsFuture<()> {
-        Box::pin(future::ready(Err(FsError::NotImplemented)))
+    fn write_bytes(&mut self, buf: Bytes) -> FsFuture<()> {
+        debug!(file_id = %self.file.id, file_name = %self.file.name, "file: write_bytes");
+        async move {
+            self.prepare_for_upload().await?;
+            self.upload_state.buffer.extend_from_slice(&buf);
+            self.maybe_upload_chunk(false).await?;
+            Ok(())
+        }
+        .boxed()
     }
 
     fn read_bytes(&mut self, count: usize) -> FsFuture<Bytes> {
@@ -360,6 +494,7 @@ impl DavFile for AliyunDavFile {
         async move {
             let download_url = self.download_url.as_ref().ok_or(FsError::NotFound)?;
             let content = self
+                .fs
                 .drive
                 .download(&self.file.id, download_url, self.current_pos, count)
                 .await
@@ -390,6 +525,18 @@ impl DavFile for AliyunDavFile {
     }
 
     fn flush(&mut self) -> FsFuture<()> {
-        Box::pin(future::ready(Err(FsError::NotImplemented)))
+        debug!(file_id = %self.file.id, file_name = %self.file.name, "file: flush");
+        async move {
+            self.maybe_upload_chunk(true).await?;
+            if !self.upload_state.upload_id.is_empty() {
+                self.fs
+                    .drive
+                    .complete_file_upload(&self.file.id, &self.upload_state.upload_id)
+                    .await
+                    .map_err(|_| FsError::GeneralFailure)?;
+            }
+            Ok(())
+        }
+        .boxed()
     }
 }

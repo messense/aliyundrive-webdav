@@ -31,7 +31,7 @@ dependencies = [
  "reqwest",
  "serde",
  "structopt",
- "time 0.3.2",
+ "time 0.3.3",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -695,9 +695,9 @@ dependencies = [
 
 [[package]]
 name = "instant"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bee0328b1209d157ef001c94dd85b4f8f64139adb0eac2659f4b08382b2f474d"
+checksum = "716d3d89f35ac6a34fd0eed635395f4c3b76fa889338a4632e5231a8684216bd"
 dependencies = [
  "cfg-if 1.0.0",
 ]
@@ -1068,9 +1068,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkg-config"
-version = "0.3.19"
+version = "0.3.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3831453b3449ceb48b6d9c7ad7c96d5ea673e9b470a1dc578c2ce6521230884c"
+checksum = "7c9b1041b4387893b91ee6746cddfc28516aff326a3519fb2adf820932c5e6cb"
 
 [[package]]
 name = "polling"
@@ -1566,9 +1566,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.76"
+version = "1.0.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6f107db402c2c2055242dbf4d2af0e69197202e9faacbef9571bbe47f5a1b84"
+checksum = "5239bc68e0fef57495900cfea4e8dc75596d9a319d7e16b1e0a440d24e6fe0a0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1639,9 +1639,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e0a10c9a9fb3a5dce8c2239ed670f1a2569fcf42da035f5face1b19860d52b0"
+checksum = "cde1cf55178e0293453ba2cca0d5f8392a922e52aa958aee9c28ed02becc6d03"
 dependencies = [
  "itoa",
  "libc",
@@ -1650,15 +1650,15 @@ dependencies = [
 
 [[package]]
 name = "time-macros"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72c7ca5e81982d152f0788b131ebf96cc4bbd1b4575a7ed51f0f6fc866a05fdb"
+checksum = "25eb0ca3468fc0acc11828786797f6ef9aa1555e4a211a60d64cc8e4d1be47d6"
 
 [[package]]
 name = "tinyvec"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5241dd6f21443a3606b432718b166d3cedc962fd4b8bea54a8bc7f514ebda986"
+checksum = "f83b2a3d4d9091d0abd7eba4dc2710b1718583bd4d8992e2190720ea38f391f7"
 dependencies = [
  "tinyvec_macros",
 ]
@@ -2033,7 +2033,7 @@ dependencies = [
 [[package]]
 name = "webdav-handler"
 version = "0.2.0"
-source = "git+https://github.com/messense/webdav-handler-rs.git?branch=aliyundrive#93611e40284d80a89a7f725b5dff382e8f9c0bfe"
+source = "git+https://github.com/messense/webdav-handler-rs.git?branch=aliyundrive#bab2e3bc2255924fe0860d43f005d7d7f2597798"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -2050,7 +2050,7 @@ dependencies = [
  "pin-project",
  "pin-utils",
  "regex",
- "time 0.3.2",
+ "time 0.3.3",
  "tokio",
  "url",
  "uuid",

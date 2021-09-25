@@ -76,7 +76,7 @@ services:
 ## 命令行用法
 
 ```bash
-aliyundrive-webdav --help
+$ aliyundrive-webdav --help
 aliyundrive-webdav 0.2.1
 
 USAGE:
