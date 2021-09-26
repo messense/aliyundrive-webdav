@@ -5,7 +5,8 @@
 [![Docker Image](https://img.shields.io/docker/pulls/messense/aliyundrive-webdav.svg?maxAge=2592000)](https://hub.docker.com/r/messense/aliyundrive-webdav/)
 
 阿里云盘 WebDAV 服务，主要使用场景为配合支持 WebDAV 协议的客户端 App
-如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 等实现在电视上直接观看云盘视频内容。
+如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 等实现在电视上直接观看云盘视频内容，
+支持上传文件，但受限于 WebDAV 协议不支持文件秒传。
 
 ## 安装
 
@@ -22,12 +23,12 @@ pip install aliyundrive-webdav
 目前提供了 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，比如
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.2.1/aliyundrive-webdav_0.2.1-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.2.1/luci-app-aliyundrive-webdav_0.2.1_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.2.1/luci-i18n-aliyundrive-webdav-zh-cn_0.2.1-1_all.ipk
-opkg install aliyundrive-webdav_0.2.1-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_0.2.1_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.2.1-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.3.0/aliyundrive-webdav_0.3.0-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.3.0/luci-app-aliyundrive-webdav_0.3.0_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.3.0/luci-i18n-aliyundrive-webdav-zh-cn_0.3.0-1_all.ipk
+opkg install aliyundrive-webdav_0.3.0-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_0.3.0_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.3.0-1_all.ipk
 ```
 
 ![OpenWrt 配置界面](./doc/openwrt.png)
@@ -77,7 +78,7 @@ services:
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 0.2.1
+aliyundrive-webdav 0.3.0
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
