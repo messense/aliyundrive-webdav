@@ -188,24 +188,22 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 }
                 let download_url = self.drive.get_download_url(&file.id).await.ok();
                 AliyunDavFile::new(self.clone(), file, parent_file.id, download_url)
+            } else if options.write && (options.create || options.create_new) {
+                let size = options.size.ok_or(FsError::NotImplemented)?;
+                let name = String::from_utf8(dav_path.file_name().to_vec())
+                    .map_err(|_| FsError::GeneralFailure)?;
+                let now = SystemTime::now();
+                let file = AliyunFile {
+                    name,
+                    id: "".to_string(),
+                    r#type: FileType::File,
+                    created_at: DateTime::new(now),
+                    updated_at: DateTime::new(now),
+                    size,
+                };
+                AliyunDavFile::new(self.clone(), file, parent_file.id, None)
             } else {
-                if options.write && (options.create || options.create_new) {
-                    let size = options.size.ok_or(FsError::NotImplemented)?;
-                    let name = String::from_utf8(dav_path.file_name().to_vec())
-                        .map_err(|_| FsError::GeneralFailure)?;
-                    let now = SystemTime::now();
-                    let file = AliyunFile {
-                        name,
-                        id: "".to_string(),
-                        r#type: FileType::File,
-                        created_at: DateTime::new(now),
-                        updated_at: DateTime::new(now),
-                        size,
-                    };
-                    AliyunDavFile::new(self.clone(), file, parent_file.id, None)
-                } else {
-                    return Err(FsError::NotFound);
-                }
+                return Err(FsError::NotFound);
             };
             Ok(Box::new(dav_file) as Box<dyn DavFile>)
         }
