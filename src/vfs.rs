@@ -345,13 +345,25 @@ impl DavFileSystem for AliyunDriveFileSystem {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 struct UploadState {
     buffer: BytesMut,
     chunk_count: u64,
     chunk: u64,
     upload_id: String,
     upload_urls: Vec<String>,
+}
+
+impl Default for UploadState {
+    fn default() -> Self {
+        Self {
+            buffer: BytesMut::new(),
+            chunk_count: 0,
+            chunk: 1,
+            upload_id: String::new(),
+            upload_urls: Vec::new(),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -399,7 +411,6 @@ impl AliyunDavFile {
             let chunk_count =
                 size / UPLOAD_CHUNK_SIZE + if size % UPLOAD_CHUNK_SIZE != 0 { 1 } else { 0 };
             self.upload_state.chunk_count = chunk_count;
-            self.upload_state.chunk = 1;
             let res = self
                 .fs
                 .drive
@@ -408,11 +419,15 @@ impl AliyunDavFile {
                 .map_err(|_| FsError::GeneralFailure)?;
             self.file.id = res.file_id.clone();
             self.upload_state.upload_id = res.upload_id.clone();
-            let upload_urls = res
+            let upload_urls: Vec<_> = res
                 .part_info_list
                 .into_iter()
                 .map(|x| x.upload_url)
                 .collect();
+            if upload_urls.is_empty() {
+                error!(file_id = %self.file.id, file_name = %self.file.name, "empty upload urls");
+                return Err(FsError::GeneralFailure);
+            }
             self.upload_state.upload_urls = upload_urls;
         }
         Ok(())
