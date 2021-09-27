@@ -406,6 +406,7 @@ impl AliyunDavFile {
 
     async fn prepare_for_upload(&mut self) -> Result<(), FsError> {
         if self.upload_state.chunk_count == 0 {
+            debug!(file_id = %self.file.id, file_name = %self.file.name, "prepare for upload");
             // TODO: create parent folders
             let size = self.file.size;
             let chunk_count =
@@ -440,7 +441,7 @@ impl AliyunDavFile {
         } else {
             UPLOAD_CHUNK_SIZE as usize
         };
-        if self.upload_state.buffer.remaining() >= chunk_size {
+        if chunk_size > 0 && self.upload_state.buffer.remaining() >= chunk_size {
             let current_chunk = self.upload_state.chunk;
             let chunk_data = self.upload_state.buffer.split_to(chunk_size);
             debug!(
@@ -540,6 +541,7 @@ impl DavFile for AliyunDavFile {
     fn flush(&mut self) -> FsFuture<()> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: flush");
         async move {
+            self.prepare_for_upload().await?;
             self.maybe_upload_chunk(true).await?;
             if !self.upload_state.upload_id.is_empty() {
                 self.fs
