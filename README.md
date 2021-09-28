@@ -48,8 +48,6 @@ docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 -v
 
 ### QNAP 威联通 NAS
 
-亲测环境 Intel 64 位 x86 CPU 可用，其他应该大同小异。
-
 管理员登陆 NAS 后安装 ContainerStation 并启动服务，在 Management (管理) 标签中 Create Application (新建应用)，配置如下
 
 ```yaml
