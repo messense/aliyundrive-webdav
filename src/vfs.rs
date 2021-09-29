@@ -6,7 +6,6 @@ use anyhow::Result;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use futures_util::future::FutureExt;
 use moka::future::{Cache, CacheBuilder};
-use tokio::{sync::oneshot, time::timeout};
 use tracing::{debug, error, trace};
 use webdav_handler::{
     davpath::DavPath,
@@ -35,8 +34,7 @@ impl AliyunDriveFileSystem {
     ) -> Result<Self> {
         let drive = AliyunDrive::new(refresh_token, workdir).await?;
         let dir_cache = CacheBuilder::new(cache_size)
-            .time_to_live(Duration::from_secs(60 * 60))
-            .time_to_idle(Duration::from_secs(10 * 60))
+            .time_to_live(Duration::from_secs(10 * 60))
             .build();
         debug!("dir cache initialized");
         let root = if root.starts_with('/') {
@@ -108,26 +106,7 @@ impl AliyunDriveFileSystem {
             self.find_in_cache(&path)?.ok_or(FsError::NotFound)?.id
         };
         let files = if let Some(files) = self.dir_cache.get(&path_str) {
-            let this = self.clone();
-            let (tx, rx) = oneshot::channel();
-            tokio::spawn(async move {
-                match this
-                    .list_files_and_cache(path_str.clone(), parent_file_id)
-                    .await
-                {
-                    Ok(items) => {
-                        debug!(path = %path_str, "refresh directory file list succeed");
-                        if tx.send(items).is_err() {
-                            debug!(path = %path_str, "refresh directory file list exceeded 200ms");
-                        }
-                    }
-                    Err(err) => error!(error = ?err, "refresh directory file list failed"),
-                }
-            });
-            match timeout(Duration::from_millis(200), rx).await {
-                Ok(items) => items.unwrap_or(files),
-                Err(_) => files,
-            }
+            files
         } else {
             self.list_files_and_cache(path_str, parent_file_id)
                 .await
@@ -317,19 +296,24 @@ impl DavFileSystem for AliyunDriveFileSystem {
             if from.parent() == to.parent() {
                 // rename
                 if let Some(name) = to.file_name() {
-                    let file = self.get_file(from).await?.ok_or(FsError::NotFound)?;
+                    let file = self
+                        .get_file(from.clone())
+                        .await?
+                        .ok_or(FsError::NotFound)?;
                     let name = name.to_string_lossy().into_owned();
                     self.drive
                         .rename_file(&file.id, &name)
                         .await
                         .map_err(|_| FsError::GeneralFailure)?;
-                    Ok(())
                 } else {
-                    Err(FsError::Forbidden)
+                    return Err(FsError::Forbidden);
                 }
             } else {
                 // move
-                let file = self.get_file(from).await?.ok_or(FsError::NotFound)?;
+                let file = self
+                    .get_file(from.clone())
+                    .await?
+                    .ok_or(FsError::NotFound)?;
                 let to_parent_file = self
                     .get_file(to.parent().unwrap().to_path_buf())
                     .await?
@@ -338,8 +322,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     .move_file(&file.id, &to_parent_file.id)
                     .await
                     .map_err(|_| FsError::GeneralFailure)?;
-                Ok(())
             }
+            let path_str = from.to_string_lossy().into_owned();
+            self.dir_cache.invalidate(&path_str).await;
+            Ok(())
         }
         .boxed()
     }
