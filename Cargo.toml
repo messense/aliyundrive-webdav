@@ -13,6 +13,7 @@ readme = "README.md"
 [dependencies]
 anyhow = "1.0.43"
 bytes = "1.0.1"
+dashmap = "4.0.2"
 futures-util = "0.3"
 headers = "0.3.4"
 hyper = { version = "0.14.11", features = ["server"] }

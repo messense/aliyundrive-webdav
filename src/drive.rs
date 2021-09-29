@@ -24,7 +24,6 @@ const API_BASE_URL: &str = "https://api.aliyundrive.com";
 const ORIGIN: &str = "https://www.aliyundrive.com";
 const REFERER: &str = "https://www.aliyundrive.com/";
 const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
-pub const UPLOAD_CHUNK_SIZE: u64 = 16 * 1024 * 1024; // 16MB
 
 #[derive(Debug, Clone)]
 struct Credentials {
@@ -424,11 +423,10 @@ impl AliyunDrive {
         name: &str,
         parent_file_id: &str,
         size: u64,
+        chunk_count: u64,
     ) -> Result<CreateFileWithProofResponse> {
         debug!(name = %name, parent_file_id = %parent_file_id, size = size, "create file with proof");
         let drive_id = self.drive_id()?;
-        let chunk_count =
-            size / UPLOAD_CHUNK_SIZE + if size % UPLOAD_CHUNK_SIZE != 0 { 1 } else { 0 };
         let part_info_list = (1..=chunk_count)
             .map(|part_number| PartInfo {
                 part_number,

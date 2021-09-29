@@ -1,9 +1,12 @@
+use std::fmt::{Debug, Formatter};
 use std::io::SeekFrom;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
+use dashmap::DashMap;
 use futures_util::future::FutureExt;
 use moka::future::{Cache, CacheBuilder};
 use tracing::{debug, error, trace};
@@ -15,13 +18,15 @@ use webdav_handler::{
     },
 };
 
-use crate::drive::{AliyunDrive, AliyunFile, DateTime, FileType, UPLOAD_CHUNK_SIZE};
-use std::fmt::{Debug, Formatter};
+use crate::drive::{AliyunDrive, AliyunFile, DateTime, FileType};
+
+const UPLOAD_CHUNK_SIZE: u64 = 16 * 1024 * 1024; // 16MB
 
 #[derive(Clone)]
 pub struct AliyunDriveFileSystem {
     drive: AliyunDrive,
     dir_cache: Cache<String, Vec<AliyunFile>>,
+    uploading: Arc<DashMap<String, Vec<AliyunFile>>>,
     root: PathBuf,
 }
 
@@ -45,6 +50,7 @@ impl AliyunDriveFileSystem {
         Ok(Self {
             drive,
             dir_cache,
+            uploading: Arc::new(DashMap::new()),
             root,
         })
     }
@@ -120,14 +126,34 @@ impl AliyunDriveFileSystem {
                 }
             }
         };
-        let files = if let Some(files) = self.dir_cache.get(&path_str) {
+        let mut files = if let Some(files) = self.dir_cache.get(&path_str) {
             files
         } else {
-            self.list_files_and_cache(path_str, parent_file_id)
+            self.list_files_and_cache(path_str, parent_file_id.clone())
                 .await
                 .map_err(|_| FsError::NotFound)?
         };
+        let uploading_files = self.list_uploading_files(&parent_file_id);
+        if uploading_files.len() > 0 {
+            debug!("added {} uploading files", uploading_files.len());
+        }
+        files.extend(uploading_files);
         Ok(files)
+    }
+
+    fn list_uploading_files(&self, parent_file_id: &str) -> Vec<AliyunFile> {
+        self.uploading
+            .get(parent_file_id)
+            .map(|val_ref| val_ref.value().clone())
+            .unwrap_or_default()
+    }
+
+    fn remove_uploading_file(&self, parent_file_id: &str, name: &str) {
+        if let Some(mut files) = self.uploading.get_mut(parent_file_id) {
+            if let Some(index) = files.iter().position(|x| x.name == name) {
+                files.swap_remove(index);
+            }
+        }
     }
 
     async fn list_files_and_cache(
@@ -169,6 +195,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         async move {
             if options.append {
                 // Can't support open in write-append mode
+                error!(path = %path.display(), "unsupported write-append mode");
                 return Err(FsError::NotImplemented);
             }
             let parent_path = path.parent().ok_or(FsError::NotFound)?;
@@ -182,7 +209,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 }
                 AliyunDavFile::new(self.clone(), file, parent_file.id)
             } else if options.write && (options.create || options.create_new) {
-                let size = options.size.ok_or(FsError::NotImplemented)?;
+                let size = options.size;
                 let name = String::from_utf8(dav_path.file_name().to_vec())
                     .map_err(|_| FsError::GeneralFailure)?;
                 let now = SystemTime::now();
@@ -192,8 +219,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     r#type: FileType::File,
                     created_at: DateTime::new(now),
                     updated_at: DateTime::new(now),
-                    size,
+                    size: size.unwrap_or(0),
                 };
+                let mut uploading = self.uploading.entry(parent_file.id.clone()).or_default();
+                uploading.push(file.clone());
                 AliyunDavFile::new(self.clone(), file, parent_file.id)
             } else {
                 return Err(FsError::NotFound);
@@ -211,7 +240,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         let path = self.normalize_dav_path(path);
         debug!(path = %path.display(), "fs: read_dir");
         async move {
-            let files = self.read_dir_and_cache(path).await?;
+            let files = self.read_dir_and_cache(path.clone()).await?;
             let mut v: Vec<Box<dyn DavDirEntry>> = Vec::with_capacity(files.len());
             for file in files {
                 v.push(Box::new(file));
@@ -295,8 +324,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .trash(&file.id)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
-            let path_str = path.to_string_lossy().into_owned();
-            self.dir_cache.invalidate(&path_str).await;
+            if let Some(parent) = path.parent() {
+                let path_str = parent.to_string_lossy().into_owned();
+                self.dir_cache.invalidate(&path_str).await;
+            }
             Ok(())
         }
         .boxed()
@@ -338,6 +369,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     .map_err(|_| FsError::GeneralFailure)?;
             }
             let path_str = from.to_string_lossy().into_owned();
+            self.dir_cache.invalidate(&path_str).await;
+            let path_str = to.to_string_lossy().into_owned();
             self.dir_cache.invalidate(&path_str).await;
             Ok(())
         }
@@ -421,7 +454,13 @@ impl AliyunDavFile {
 
     async fn prepare_for_upload(&mut self) -> Result<(), FsError> {
         if self.upload_state.chunk_count == 0 {
-            debug!(file_id = %self.file.id, file_name = %self.file.name, "prepare for upload");
+            debug!(file_name = %self.file.name, "prepare for upload");
+            if !self.file.id.is_empty() {
+                // existing file, delete before upload
+                if let Err(err) = self.fs.drive.trash(&self.file.id).await {
+                    error!(file_name = %self.file.name, error = %err, "delete file before upload failed");
+                }
+            }
             // TODO: create parent folders
             let size = self.file.size;
             let chunk_count =
@@ -430,7 +469,7 @@ impl AliyunDavFile {
             let res = self
                 .fs
                 .drive
-                .create_file_with_proof(&self.file.name, &self.parent_file_id, size)
+                .create_file_with_proof(&self.file.name, &self.parent_file_id, size, chunk_count)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
             self.file.id = res.file_id.clone();
@@ -521,6 +560,10 @@ impl DavFile for AliyunDavFile {
             "file: read_bytes",
         );
         async move {
+            if self.file.id.is_empty() {
+                // upload in progress
+                return Err(FsError::NotFound);
+            }
             let download_url = self.download_url.take();
             let download_url = if let Some(mut url) = download_url {
                 if let Ok(download_url) = ::url::Url::parse(&url) {
@@ -592,6 +635,9 @@ impl DavFile for AliyunDavFile {
                     .await
                     .map_err(|_| FsError::GeneralFailure)?;
             }
+            self.fs
+                .remove_uploading_file(&self.parent_file_id, &self.file.name);
+            self.fs.dir_cache.invalidate_all();
             Ok(())
         }
         .boxed()
