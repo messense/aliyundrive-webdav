@@ -1,6 +1,6 @@
 use std::io::SeekFrom;
 use std::path::{Path, PathBuf};
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
@@ -165,8 +165,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 if options.write && options.create_new {
                     return Err(FsError::Exists);
                 }
-                let download_url = self.drive.get_download_url(&file.id).await.ok();
-                AliyunDavFile::new(self.clone(), file, parent_file.id, download_url)
+                AliyunDavFile::new(self.clone(), file, parent_file.id)
             } else if options.write && (options.create || options.create_new) {
                 let size = options.size.ok_or(FsError::NotImplemented)?;
                 let name = String::from_utf8(dav_path.file_name().to_vec())
@@ -180,7 +179,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     updated_at: DateTime::new(now),
                     size,
                 };
-                AliyunDavFile::new(self.clone(), file, parent_file.id, None)
+                AliyunDavFile::new(self.clone(), file, parent_file.id)
             } else {
                 return Err(FsError::NotFound);
             };
@@ -374,20 +373,22 @@ impl Debug for AliyunDavFile {
 }
 
 impl AliyunDavFile {
-    fn new(
-        fs: AliyunDriveFileSystem,
-        file: AliyunFile,
-        parent_file_id: String,
-        download_url: Option<String>,
-    ) -> Self {
+    fn new(fs: AliyunDriveFileSystem, file: AliyunFile, parent_file_id: String) -> Self {
         Self {
             fs,
             file,
             parent_file_id,
             current_pos: 0,
-            download_url,
+            download_url: None,
             upload_state: UploadState::default(),
         }
+    }
+
+    async fn get_download_url(&self) -> Result<String, FsError> {
+        self.fs.drive.get_download_url(&self.file.id).await.map_err(|err| {
+            error!(file_id = %self.file.id, file_name = %self.file.name, error = %err, "get download url failed");
+            FsError::GeneralFailure
+        })
     }
 
     async fn prepare_for_upload(&mut self) -> Result<(), FsError> {
@@ -492,14 +493,41 @@ impl DavFile for AliyunDavFile {
             "file: read_bytes",
         );
         async move {
-            let download_url = self.download_url.as_ref().ok_or(FsError::NotFound)?;
+            let download_url = self.download_url.take();
+            let download_url = if let Some(mut url) = download_url {
+                if let Ok(download_url) = ::url::Url::parse(&url) {
+                    let expires = download_url.query_pairs().find_map(|(k, v)| {
+                        if k == "x-oss-expires" {
+                            if let Ok(expires) = v.parse::<u64>() {
+                                return Some(expires);
+                            }
+                        }
+                        None
+                    });
+                    if let Some(expires) = expires {
+                        let current_ts = SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .expect("Time went backwards")
+                            .as_secs();
+                        if current_ts >= expires {
+                            debug!(url = %url, "download url expired");
+                            url = self.get_download_url().await?;
+                        }
+                    }
+                }
+                url
+            } else {
+                self.get_download_url().await?
+            };
+
             let content = self
                 .fs
                 .drive
-                .download(&self.file.id, download_url, self.current_pos, count)
+                .download(&download_url, self.current_pos, count)
                 .await
                 .map_err(|_| FsError::NotFound)?;
             self.current_pos += content.len() as u64;
+            self.download_url = Some(download_url);
             Ok(content)
         }
         .boxed()

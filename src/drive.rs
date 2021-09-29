@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 
 use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use anyhow::{bail, Context, Result};
@@ -300,41 +300,9 @@ impl AliyunDrive {
             .and_then(|res| res.context("expect response"))
     }
 
-    pub async fn download(
-        &self,
-        file_id: &str,
-        url: &str,
-        start_pos: u64,
-        size: usize,
-    ) -> Result<Bytes> {
+    pub async fn download(&self, url: &str, start_pos: u64, size: usize) -> Result<Bytes> {
         use reqwest::header::RANGE;
 
-        let url = if let Ok(download_url) = ::url::Url::parse(url) {
-            let expires = download_url.query_pairs().find_map(|(k, v)| {
-                if k == "x-oss-expires" {
-                    if let Ok(expires) = v.parse::<u64>() {
-                        return Some(expires);
-                    }
-                }
-                None
-            });
-            if let Some(expires) = expires {
-                let current_ts = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .expect("Time went backwards")
-                    .as_secs();
-                if current_ts >= expires {
-                    debug!(url = %url, "download url expired");
-                    self.get_download_url(file_id).await?
-                } else {
-                    url.to_string()
-                }
-            } else {
-                url.to_string()
-            }
-        } else {
-            url.to_string()
-        };
         let end_pos = start_pos + size as u64 - 1;
         debug!(url = %url, start = start_pos, end = end_pos, "download file");
         let range = format!("bytes={}-{}", start_pos, end_pos);
