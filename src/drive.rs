@@ -447,6 +447,17 @@ impl AliyunDrive {
             .error_for_status()?;
         Ok(())
     }
+
+    pub async fn get_quota(&self) -> Result<(u64, u64)> {
+        let drive_id = self.drive_id()?;
+        let mut data = HashMap::new();
+        data.insert("drive_id", drive_id);
+        let res: GetDriveResponse = self
+            .request(format!("{}/v2/drive/get", API_BASE_URL), &data)
+            .await?
+            .context("expect response")?;
+        Ok((res.used_size, res.total_size))
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -579,6 +590,12 @@ struct GetUploadUrlRequest<'a> {
     file_id: &'a str,
     upload_id: &'a str,
     part_info_list: Vec<PartInfo>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GetDriveResponse {
+    total_size: u64,
+    used_size: u64,
 }
 
 #[derive(Debug, Clone)]

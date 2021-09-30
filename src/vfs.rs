@@ -328,6 +328,19 @@ impl DavFileSystem for AliyunDriveFileSystem {
         }
         .boxed()
     }
+
+    fn get_quota(&self) -> FsFuture<(u64, Option<u64>)> {
+        debug!("fs: get_quota");
+        async move {
+            let (used, total) = self
+                .drive
+                .get_quota()
+                .await
+                .map_err(|_| FsError::GeneralFailure)?;
+            Ok((used, Some(total)))
+        }
+        .boxed()
+    }
 }
 
 #[derive(Debug, Clone)]
