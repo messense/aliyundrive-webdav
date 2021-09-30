@@ -7,7 +7,10 @@ use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use futures_util::future::FutureExt;
-use reqwest::header::{HeaderMap, HeaderValue};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    StatusCode,
+};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Deserializer, Serialize};
 use tokio::{
@@ -202,8 +205,6 @@ impl AliyunDrive {
         T: Serialize + ?Sized,
         U: DeserializeOwned,
     {
-        use reqwest::StatusCode;
-
         let mut access_token = self.access_token().await?;
         let url = reqwest::Url::parse(&url)?;
         let res = self
@@ -256,6 +257,36 @@ impl AliyunDrive {
                         Ok(Some(res))
                     }
                     _ => Err(err.into()),
+                }
+            }
+        }
+    }
+
+    pub async fn get_by_path(&self, path: &str) -> Result<Option<AliyunFile>> {
+        let drive_id = self.drive_id()?;
+        debug!(drive_id = %drive_id, path = %path, "get file by path");
+        if path == "/" || path.is_empty() {
+            return Ok(Some(AliyunFile::new_root()));
+        }
+        let req = GetFileByPathRequest {
+            drive_id,
+            file_path: path,
+        };
+        let res: Result<AliyunFile> = self
+            .request(format!("{}/v2/file/get_by_path", API_BASE_URL), &req)
+            .await
+            .and_then(|res| res.context("expect response"));
+        match res {
+            Ok(file) => Ok(Some(file)),
+            Err(err) => {
+                if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
+                    if matches!(req_err.status(), Some(StatusCode::NOT_FOUND)) {
+                        Ok(None)
+                    } else {
+                        Err(err)
+                    }
+                } else {
+                    Err(err)
                 }
             }
         }
@@ -493,13 +524,9 @@ pub struct ListFileResponse {
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct GetFileRequest<'a> {
+struct GetFileByPathRequest<'a> {
     drive_id: &'a str,
-    file_id: &'a str,
-    image_thumbnail_process: &'a str,
-    image_url_process: &'a str,
-    video_thumbnail_process: &'a str,
-    fields: &'a str,
+    file_path: &'a str,
 }
 
 #[derive(Debug, Clone, Serialize)]
