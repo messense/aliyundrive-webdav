@@ -210,8 +210,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 AliyunDavFile::new(self.clone(), file, parent_file.id)
             } else if options.write && (options.create || options.create_new) {
                 let size = options.size;
-                let name = String::from_utf8(dav_path.file_name().to_vec())
-                    .map_err(|_| FsError::GeneralFailure)?;
+                let name = dav_path
+                    .file_name()
+                    .ok_or(FsError::GeneralFailure)?
+                    .to_string();
                 let now = SystemTime::now();
                 let file = AliyunFile {
                     name,
@@ -325,6 +327,38 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
             if let Some(parent) = path.parent() {
+                let path_str = parent.to_string_lossy().into_owned();
+                self.dir_cache.invalidate(&path_str).await;
+            }
+            Ok(())
+        }
+        .boxed()
+    }
+
+    fn copy<'a>(&'a self, from_dav: &'a DavPath, to_dav: &'a DavPath) -> FsFuture<()> {
+        let from = self.normalize_dav_path(from_dav);
+        let to = self.normalize_dav_path(to_dav);
+        debug!(from = %from.display(), to = %to.display(), "fs: copy");
+        async move {
+            let file = self
+                .get_file(from.clone())
+                .await?
+                .ok_or(FsError::NotFound)?;
+            let to_parent_file = self
+                .get_file(to.parent().unwrap().to_path_buf())
+                .await?
+                .ok_or(FsError::NotFound)?;
+            let new_name = to_dav.file_name();
+            self.drive
+                .copy_file(&file.id, &to_parent_file.id, new_name)
+                .await
+                .map_err(|_| FsError::GeneralFailure)?;
+
+            if let Some(parent) = from.parent() {
+                let path_str = parent.to_string_lossy().into_owned();
+                self.dir_cache.invalidate(&path_str).await;
+            }
+            if let Some(parent) = to.parent() {
                 let path_str = parent.to_string_lossy().into_owned();
                 self.dir_cache.invalidate(&path_str).await;
             }
