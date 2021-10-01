@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
 use futures_util::future::FutureExt;
@@ -12,13 +11,18 @@ use reqwest::{
     StatusCode,
 };
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::Serialize;
 use tokio::{
     sync::{oneshot, RwLock},
     time,
 };
 use tracing::{debug, error, info, warn};
 use webdav_handler::fs::{DavDirEntry, DavMetaData, FsFuture, FsResult};
+
+mod model;
+
+use model::*;
+pub use model::{AliyunFile, DateTime, FileType};
 
 const API_BASE_URL: &str = "https://api.aliyundrive.com";
 const ORIGIN: &str = "https://www.aliyundrive.com";
@@ -536,212 +540,13 @@ impl AliyunDrive {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct RefreshTokenResponse {
-    access_token: String,
-    refresh_token: String,
-    expires_in: u64,
-    token_type: String,
-    user_id: String,
-    nick_name: String,
-    default_drive_id: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct ListFileRequest<'a> {
-    drive_id: &'a str,
-    parent_file_id: &'a str,
-    limit: u64,
-    all: bool,
-    image_thumbnail_process: &'a str,
-    image_url_process: &'a str,
-    video_thumbnail_process: &'a str,
-    fields: &'a str,
-    order_by: &'a str,
-    order_direction: &'a str,
-    marker: Option<&'a str>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ListFileResponse {
-    pub items: Vec<AliyunFile>,
-    pub next_marker: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct GetFileByPathRequest<'a> {
-    drive_id: &'a str,
-    file_path: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct GetFileDownloadUrlRequest<'a> {
-    drive_id: &'a str,
-    file_id: &'a str,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-struct GetFileDownloadUrlResponse {
-    url: String,
-    size: u64,
-    expiration: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct TrashRequest<'a> {
-    drive_id: &'a str,
-    file_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct DeleteFileRequest<'a> {
-    drive_id: &'a str,
-    file_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct CreateFolderRequest<'a> {
-    check_name_mode: &'a str,
-    drive_id: &'a str,
-    name: &'a str,
-    parent_file_id: &'a str,
-    r#type: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct RenameFileRequest<'a> {
-    check_name_mode: &'a str,
-    drive_id: &'a str,
-    file_id: &'a str,
-    name: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct MoveFileRequest<'a> {
-    drive_id: &'a str,
-    file_id: &'a str,
-    to_drive_id: &'a str,
-    to_parent_file_id: &'a str,
-    new_name: Option<&'a str>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct CopyFileRequest<'a> {
-    drive_id: &'a str,
-    file_id: &'a str,
-    to_parent_file_id: &'a str,
-    new_name: Option<&'a str>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PartInfo {
-    pub part_number: u64,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub upload_url: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct CreateFileWithProofRequest<'a> {
-    check_name_mode: &'a str,
-    content_hash: &'a str,
-    content_hash_name: &'a str,
-    drive_id: &'a str,
-    name: &'a str,
-    parent_file_id: &'a str,
-    proof_code: &'a str,
-    proof_version: &'a str,
-    size: u64,
-    part_info_list: Vec<PartInfo>,
-    r#type: &'a str,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct CreateFileWithProofResponse {
-    #[serde(default)]
-    pub part_info_list: Vec<PartInfo>,
-    pub file_id: String,
-    pub upload_id: String,
-    pub file_name: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct CompleteUploadRequest<'a> {
-    drive_id: &'a str,
-    file_id: &'a str,
-    upload_id: &'a str,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct GetUploadUrlRequest<'a> {
-    drive_id: &'a str,
-    file_id: &'a str,
-    upload_id: &'a str,
-    part_info_list: Vec<PartInfo>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct GetDriveResponse {
-    total_size: u64,
-    used_size: u64,
-}
-
-#[derive(Debug, Clone)]
-pub struct DateTime(SystemTime);
-
-impl DateTime {
-    pub fn new(st: SystemTime) -> Self {
-        Self(st)
-    }
-}
-
-impl<'a> Deserialize<'a> for DateTime {
-    fn deserialize<D: Deserializer<'a>>(deserializer: D) -> Result<Self, D::Error> {
-        let dt = OffsetDateTime::parse(<&str>::deserialize(deserializer)?, &Rfc3339)
-            .map_err(serde::de::Error::custom)?;
-        Ok(Self(dt.into()))
-    }
-}
-
-#[derive(Debug, Clone, Copy, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum FileType {
-    Folder,
-    File,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct AliyunFile {
-    pub name: String,
-    #[serde(rename = "file_id")]
-    pub id: String,
-    pub r#type: FileType,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
-    #[serde(default)]
-    pub size: u64,
-}
-
-impl AliyunFile {
-    pub fn new_root() -> Self {
-        let now = SystemTime::now();
-        Self {
-            name: "/".to_string(),
-            id: "root".to_string(),
-            r#type: FileType::Folder,
-            created_at: DateTime(now),
-            updated_at: DateTime(now),
-            size: 0,
-        }
-    }
-}
-
 impl DavMetaData for AliyunFile {
     fn len(&self) -> u64 {
         self.size
     }
 
     fn modified(&self) -> FsResult<SystemTime> {
-        Ok(self.updated_at.0)
+        Ok(*self.updated_at)
     }
 
     fn is_dir(&self) -> bool {
@@ -749,7 +554,7 @@ impl DavMetaData for AliyunFile {
     }
 
     fn created(&self) -> FsResult<SystemTime> {
-        Ok(self.created_at.0)
+        Ok(*self.created_at)
     }
 }
 
