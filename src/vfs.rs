@@ -367,9 +367,9 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn rename<'a>(&'a self, from: &'a DavPath, to: &'a DavPath) -> FsFuture<()> {
-        let from = self.normalize_dav_path(from);
-        let to = self.normalize_dav_path(to);
+    fn rename<'a>(&'a self, from_dav: &'a DavPath, to_dav: &'a DavPath) -> FsFuture<()> {
+        let from = self.normalize_dav_path(from_dav);
+        let to = self.normalize_dav_path(to_dav);
         debug!(from = %from.display(), to = %to.display(), "fs: rename");
         async move {
             if from.parent() == to.parent() {
@@ -397,15 +397,21 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     .get_file(to.parent().unwrap().to_path_buf())
                     .await?
                     .ok_or(FsError::NotFound)?;
+                let new_name = to_dav.file_name();
                 self.drive
-                    .move_file(&file.id, &to_parent_file.id)
+                    .move_file(&file.id, &to_parent_file.id, new_name)
                     .await
                     .map_err(|_| FsError::GeneralFailure)?;
             }
-            let path_str = from.to_string_lossy().into_owned();
-            self.dir_cache.invalidate(&path_str).await;
-            let path_str = to.to_string_lossy().into_owned();
-            self.dir_cache.invalidate(&path_str).await;
+
+            if let Some(parent) = from.parent() {
+                let path_str = parent.to_string_lossy().into_owned();
+                self.dir_cache.invalidate(&path_str).await;
+            }
+            if let Some(parent) = to.parent() {
+                let path_str = parent.to_string_lossy().into_owned();
+                self.dir_cache.invalidate(&path_str).await;
+            }
             Ok(())
         }
         .boxed()

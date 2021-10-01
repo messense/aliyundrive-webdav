@@ -403,7 +403,12 @@ impl AliyunDrive {
         Ok(())
     }
 
-    pub async fn move_file(&self, file_id: &str, to_parent_file_id: &str) -> Result<()> {
+    pub async fn move_file(
+        &self,
+        file_id: &str,
+        to_parent_file_id: &str,
+        new_name: Option<&str>,
+    ) -> Result<()> {
         debug!(file_id = %file_id, to_parent_file_id = %to_parent_file_id, "move file");
         let drive_id = self.drive_id()?;
         let req = MoveFileRequest {
@@ -411,6 +416,7 @@ impl AliyunDrive {
             file_id,
             to_drive_id: drive_id,
             to_parent_file_id,
+            new_name,
         };
         let _res: Option<serde::de::IgnoredAny> = self
             .request(format!("{}/v3/file/move", API_BASE_URL), &req)
@@ -589,6 +595,7 @@ struct MoveFileRequest<'a> {
     file_id: &'a str,
     to_drive_id: &'a str,
     to_parent_file_id: &'a str,
+    new_name: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Serialize)]
