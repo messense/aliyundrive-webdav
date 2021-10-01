@@ -28,6 +28,7 @@ pub struct AliyunDriveFileSystem {
     dir_cache: Cache<String, Vec<AliyunFile>>,
     uploading: Arc<DashMap<String, Vec<AliyunFile>>>,
     root: PathBuf,
+    no_trash: bool,
 }
 
 impl AliyunDriveFileSystem {
@@ -36,6 +37,7 @@ impl AliyunDriveFileSystem {
         root: String,
         cache_size: usize,
         workdir: Option<PathBuf>,
+        no_trash: bool,
     ) -> Result<Self> {
         let drive = AliyunDrive::new(refresh_token, workdir).await?;
         let dir_cache = CacheBuilder::new(cache_size)
@@ -52,6 +54,7 @@ impl AliyunDriveFileSystem {
             dir_cache,
             uploading: Arc::new(DashMap::new()),
             root,
+            no_trash,
         })
     }
 
@@ -301,7 +304,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 return Err(FsError::Forbidden);
             }
             self.drive
-                .trash(&file.id)
+                .remove_file(&file.id, !self.no_trash)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
             let path_str = path.to_string_lossy().into_owned();
@@ -323,7 +326,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 return Err(FsError::Forbidden);
             }
             self.drive
-                .trash(&file.id)
+                .remove_file(&file.id, !self.no_trash)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
             if let Some(parent) = path.parent() {
@@ -497,7 +500,12 @@ impl AliyunDavFile {
             debug!(file_name = %self.file.name, "prepare for upload");
             if !self.file.id.is_empty() {
                 // existing file, delete before upload
-                if let Err(err) = self.fs.drive.trash(&self.file.id).await {
+                if let Err(err) = self
+                    .fs
+                    .drive
+                    .remove_file(&self.file.id, !self.fs.no_trash)
+                    .await
+                {
                     error!(file_name = %self.file.name, error = %err, "delete file before upload failed");
                 }
             }

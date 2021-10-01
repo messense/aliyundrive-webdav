@@ -359,7 +359,7 @@ impl AliyunDrive {
         Ok(res.url)
     }
 
-    pub async fn trash(&self, file_id: &str) -> Result<()> {
+    async fn trash(&self, file_id: &str) -> Result<()> {
         debug!(file_id = %file_id, "trash file");
         let req = TrashRequest {
             drive_id: self.drive_id()?,
@@ -368,6 +368,27 @@ impl AliyunDrive {
         let _res: Option<serde::de::IgnoredAny> = self
             .request(format!("{}/v2/recyclebin/trash", API_BASE_URL), &req)
             .await?;
+        Ok(())
+    }
+
+    async fn delete_file(&self, file_id: &str) -> Result<()> {
+        debug!(file_id = %file_id, "delete file");
+        let req = TrashRequest {
+            drive_id: self.drive_id()?,
+            file_id,
+        };
+        let _res: Option<serde::de::IgnoredAny> = self
+            .request(format!("{}/v2/file/delete", API_BASE_URL), &req)
+            .await?;
+        Ok(())
+    }
+
+    pub async fn remove_file(&self, file_id: &str, trash: bool) -> Result<()> {
+        if trash {
+            self.trash(file_id).await?;
+        } else {
+            self.delete_file(file_id).await?;
+        }
         Ok(())
     }
 
@@ -568,6 +589,12 @@ struct GetFileDownloadUrlResponse {
 
 #[derive(Debug, Clone, Serialize)]
 struct TrashRequest<'a> {
+    drive_id: &'a str,
+    file_id: &'a str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct DeleteFileRequest<'a> {
     drive_id: &'a str,
     file_id: &'a str,
 }

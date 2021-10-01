@@ -45,6 +45,9 @@ struct Opt {
     /// Working directory, refresh_token will be stored in there if specified
     #[structopt(short = "w", long)]
     workdir: Option<PathBuf>,
+    /// Delete file permanently instead of trashing it
+    #[structopt(long)]
+    no_trash: bool,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -64,14 +67,20 @@ async fn main() -> anyhow::Result<()> {
         anyhow::bail!("auth-user and auth-password should be specified together.");
     }
 
-    let fs = AliyunDriveFileSystem::new(opt.refresh_token, opt.root, opt.cache_size, opt.workdir)
-        .await
-        .map_err(|_| {
-            io::Error::new(
-                io::ErrorKind::Other,
-                "initialize aliyundrive file system failed",
-            )
-        })?;
+    let fs = AliyunDriveFileSystem::new(
+        opt.refresh_token,
+        opt.root,
+        opt.cache_size,
+        opt.workdir,
+        opt.no_trash,
+    )
+    .await
+    .map_err(|_| {
+        io::Error::new(
+            io::ErrorKind::Other,
+            "initialize aliyundrive file system failed",
+        )
+    })?;
     debug!("aliyundrive file system initialized");
 
     let dav_server = DavHandler::builder()
