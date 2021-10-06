@@ -284,6 +284,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     .create_folder(&parent_file.id, &name)
                     .await
                     .map_err(|_| FsError::GeneralFailure)?;
+                let path_str = parent_path.to_string_lossy().into_owned();
+                self.dir_cache.invalidate(&path_str).await;
                 Ok(())
             } else {
                 Err(FsError::Forbidden)
@@ -307,8 +309,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .remove_file(&file.id, !self.no_trash)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
-            let path_str = path.to_string_lossy().into_owned();
-            self.dir_cache.invalidate(&path_str).await;
+            if let Some(parent) = path.parent() {
+                let path_str = parent.to_string_lossy().into_owned();
+                self.dir_cache.invalidate(&path_str).await;
+            }
             Ok(())
         }
         .boxed()
@@ -543,8 +547,11 @@ impl AliyunDavFile {
         } else {
             UPLOAD_CHUNK_SIZE as usize
         };
-        if chunk_size > 0 && self.upload_state.buffer.remaining() >= chunk_size {
-            let current_chunk = self.upload_state.chunk;
+        let current_chunk = self.upload_state.chunk;
+        if chunk_size > 0
+            && self.upload_state.buffer.remaining() >= chunk_size
+            && current_chunk <= self.upload_state.chunk_count
+        {
             let chunk_data = self.upload_state.buffer.split_to(chunk_size);
             debug!(
                 file_id = %self.file.id,
