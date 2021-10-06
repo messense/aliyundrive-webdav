@@ -23,12 +23,12 @@ pip install aliyundrive-webdav
 目前提供了 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，比如
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.1/aliyundrive-webdav_0.4.1-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.1/luci-app-aliyundrive-webdav_0.4.1_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.1/luci-i18n-aliyundrive-webdav-zh-cn_0.4.1-1_all.ipk
-opkg install aliyundrive-webdav_0.4.1-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_0.4.1_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.4.1-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.2/aliyundrive-webdav_0.4.2-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.2/luci-app-aliyundrive-webdav_0.4.2_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.2/luci-i18n-aliyundrive-webdav-zh-cn_0.4.2-1_all.ipk
+opkg install aliyundrive-webdav_0.4.2-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_0.4.2_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.4.2-1_all.ipk
 ```
 
 ![OpenWrt 配置界面](./doc/openwrt.png)
@@ -76,7 +76,7 @@ services:
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 0.4.1
+aliyundrive-webdav 0.4.2
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
