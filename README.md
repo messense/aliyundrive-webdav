@@ -4,14 +4,12 @@
 [![PyPI](https://img.shields.io/pypi/v/aliyundrive-webdav.svg)](https://pypi.org/project/aliyundrive-webdav)
 [![Docker Image](https://img.shields.io/docker/pulls/messense/aliyundrive-webdav.svg?maxAge=2592000)](https://hub.docker.com/r/messense/aliyundrive-webdav/)
 
-阿里云盘 WebDAV 服务，主要使用场景为配合支持 WebDAV 协议的客户端 App
-如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com) 等实现在电视上直接观看云盘视频内容，
-支持上传文件，但受限于 WebDAV 协议不支持文件秒传。
+阿里云盘 WebDAV 服务，主要使用场景为配合支持 WebDAV 协议的客户端 App 如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com)
+等实现在电视上直接观看云盘视频内容， 支持上传文件，但受限于 WebDAV 协议不支持文件秒传。
 
 ## 安装
 
-可以从 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面下载预先构建的二进制包，
-也可以使用 pip 从 PyPI 下载:
+可以从 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面下载预先构建的二进制包， 也可以使用 pip 从 PyPI 下载:
 
 ```bash
 pip install aliyundrive-webdav
@@ -19,8 +17,8 @@ pip install aliyundrive-webdav
 
 ### OpenWrt 路由器
 
-[GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译的 ipk 文件，
-目前提供了 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，比如
+[GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译的 ipk 文件， 目前提供了
+aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，以 nanopi r4s 为例：
 
 ```bash
 wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.2/aliyundrive-webdav_0.4.2-1_aarch64_generic.ipk
@@ -31,12 +29,23 @@ opkg install luci-app-aliyundrive-webdav_0.4.2_all.ipk
 opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.4.2-1_all.ipk
 ```
 
+其它 CPU 架构的路由器可在 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面中查找对应的架构的主程序 ipk 文件下载安装， 常见
+OpenWrt 路由器 CPU 架构如下表（欢迎补充）：
+
+|      路由器     |        CPU 架构       |
+|----------------|----------------------|
+| nanopi r4s     | aarch64_generic      |
+| 小米 AX3600     | aarch64_cortex-a53  |
+| 斐讯 N1 盒子    | aarch64_cortex-a53   |
+| Newifi D2      | mipsel_24kc          |
+| Pogoplug       | arm_mpcore           |
+
 ![OpenWrt 配置界面](./doc/openwrt.png)
 
 ### Koolshare 梅林固件
 
-[GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译包 `aliyundrivewebdav-merlin-arm*.tar.gz`，
-目前提供了旧的 arm380 和兼容 arm384/386 固件的版本，可在下载后在软件中心离线安装。
+[GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 中有预编译包 `aliyundrivewebdav-merlin-arm*.tar.gz`
+， 目前提供了旧的 arm380 和兼容 arm384/386 固件的版本，可在下载后在软件中心离线安装。
 
 ![梅林配置界面](./doc/merlin.png)
 
@@ -68,9 +77,9 @@ services:
 点击 Create (创建)后启动，访问 http://nas地址:8080/ 即可看到你网盘的自动生成索引网页文件。
 
 参考文档
+
 - https://docs.docker.com/compose/
 - https://www.composerize.com/
-
 
 ## 命令行用法
 
