@@ -14,7 +14,7 @@ msgid "Refresh Token"
 msgstr "Refresh Token"
 
 msgid "Root Directory"
-msgstr "根目录"
+msgstr "云盘根目录"
 
 msgid "Host"
 msgstr "监听主机"
