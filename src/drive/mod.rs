@@ -176,7 +176,7 @@ impl AliyunDrive {
                         }
                     }
                     if should_retry {
-                        warn!(error = %err, "refresh token failed, will wait and try");
+                        warn!(error = %err, "refresh token failed, will wait and retry");
                         last_err = Some(err);
                         time::sleep(Duration::from_secs(1)).await;
                         continue;

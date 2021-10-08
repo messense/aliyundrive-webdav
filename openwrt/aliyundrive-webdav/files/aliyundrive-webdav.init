@@ -52,5 +52,5 @@ start_service() {
 }
 
 service_triggers() {
-	procd_add_reload_trigger "/etc/config/$NAME"
+	procd_add_reload_trigger "aliyundrive-webdav"
 }

@@ -45,8 +45,4 @@ no_trash.rmempty = false
 debug = e:option(Flag, "debug", translate("Debug Mode"))
 debug.rmempty = false
 
-local e = luci.http.formvalue("cbi.apply")
-if e then
-    io.popen("/etc/init.d/aliyundrive-webdav restart")
-end
 return m
