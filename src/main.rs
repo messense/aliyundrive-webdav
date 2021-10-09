@@ -9,6 +9,7 @@ use webdav_handler::{body::Body, memls::MemLs, DavConfig, DavHandler};
 
 use vfs::AliyunDriveFileSystem;
 
+mod cache;
 mod drive;
 mod vfs;
 

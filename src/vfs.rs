@@ -2,13 +2,12 @@ use std::fmt::{Debug, Formatter};
 use std::io::SeekFrom;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use dashmap::DashMap;
 use futures_util::future::FutureExt;
-use moka::future::{Cache, CacheBuilder};
 use tracing::{debug, error, trace};
 use webdav_handler::{
     davpath::DavPath,
@@ -18,14 +17,17 @@ use webdav_handler::{
     },
 };
 
-use crate::drive::{AliyunDrive, AliyunFile, DateTime, FileType};
+use crate::{
+    cache::Cache,
+    drive::{AliyunDrive, AliyunFile, DateTime, FileType},
+};
 
 const UPLOAD_CHUNK_SIZE: u64 = 16 * 1024 * 1024; // 16MB
 
 #[derive(Clone)]
 pub struct AliyunDriveFileSystem {
     drive: AliyunDrive,
-    dir_cache: Cache<String, Vec<AliyunFile>>,
+    dir_cache: Cache,
     uploading: Arc<DashMap<String, Vec<AliyunFile>>>,
     root: PathBuf,
     no_trash: bool,
@@ -40,9 +42,7 @@ impl AliyunDriveFileSystem {
         no_trash: bool,
     ) -> Result<Self> {
         let drive = AliyunDrive::new(refresh_token, workdir).await?;
-        let dir_cache = CacheBuilder::new(cache_size)
-            .time_to_live(Duration::from_secs(10 * 60))
-            .build();
+        let dir_cache = Cache::new(cache_size);
         debug!("dir cache initialized");
         let root = if root.starts_with('/') {
             PathBuf::from(root)
@@ -137,7 +137,7 @@ impl AliyunDriveFileSystem {
                 .map_err(|_| FsError::NotFound)?
         };
         let uploading_files = self.list_uploading_files(&parent_file_id);
-        if uploading_files.len() > 0 {
+        if !uploading_files.is_empty() {
             debug!("added {} uploading files", uploading_files.len());
         }
         files.extend(uploading_files);
@@ -284,8 +284,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     .create_folder(&parent_file.id, &name)
                     .await
                     .map_err(|_| FsError::GeneralFailure)?;
-                let path_str = parent_path.to_string_lossy().into_owned();
-                self.dir_cache.invalidate(&path_str).await;
+                self.dir_cache.invalidate(parent_path).await;
                 Ok(())
             } else {
                 Err(FsError::Forbidden)
@@ -309,10 +308,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .remove_file(&file.id, !self.no_trash)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
-            if let Some(parent) = path.parent() {
-                let path_str = parent.to_string_lossy().into_owned();
-                self.dir_cache.invalidate(&path_str).await;
-            }
+            self.dir_cache.invalidate_parent(&path).await;
             Ok(())
         }
         .boxed()
@@ -333,10 +329,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .remove_file(&file.id, !self.no_trash)
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
-            if let Some(parent) = path.parent() {
-                let path_str = parent.to_string_lossy().into_owned();
-                self.dir_cache.invalidate(&path_str).await;
-            }
+            self.dir_cache.invalidate_parent(&path).await;
             Ok(())
         }
         .boxed()
@@ -361,14 +354,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
 
-            if let Some(parent) = from.parent() {
-                let path_str = parent.to_string_lossy().into_owned();
-                self.dir_cache.invalidate(&path_str).await;
-            }
-            if let Some(parent) = to.parent() {
-                let path_str = parent.to_string_lossy().into_owned();
-                self.dir_cache.invalidate(&path_str).await;
-            }
+            self.dir_cache.invalidate_parent(&from).await;
+            self.dir_cache.invalidate_parent(&to).await;
             Ok(())
         }
         .boxed()
@@ -411,14 +398,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     .map_err(|_| FsError::GeneralFailure)?;
             }
 
-            if let Some(parent) = from.parent() {
-                let path_str = parent.to_string_lossy().into_owned();
-                self.dir_cache.invalidate(&path_str).await;
-            }
-            if let Some(parent) = to.parent() {
-                let path_str = parent.to_string_lossy().into_owned();
-                self.dir_cache.invalidate(&path_str).await;
-            }
+            self.dir_cache.invalidate_parent(&from).await;
+            self.dir_cache.invalidate_parent(&to).await;
             Ok(())
         }
         .boxed()
