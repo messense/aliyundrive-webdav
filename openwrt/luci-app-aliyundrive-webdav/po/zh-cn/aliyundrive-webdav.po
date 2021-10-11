@@ -34,6 +34,9 @@ msgstr "下载缓冲大小(bytes)"
 msgid "Cache Size"
 msgstr "目录缓存大小"
 
+msgid "Cache Expiration Time (seconds)"
+msgstr "目录缓存过期时间（单位为秒）"
+
 msgid "Collecting data..."
 msgstr "获取数据中..."
 

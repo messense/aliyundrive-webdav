@@ -40,6 +40,9 @@ struct Opt {
     /// Directory entries cache size
     #[structopt(long, default_value = "1000")]
     cache_size: usize,
+    /// Directory entries cache expiration time in seconds
+    #[structopt(long, default_value = "600")]
+    cache_ttl: u64,
     /// Root directory path
     #[structopt(long, default_value = "/")]
     root: String,
@@ -72,6 +75,7 @@ async fn main() -> anyhow::Result<()> {
         opt.refresh_token,
         opt.root,
         opt.cache_size,
+        opt.cache_ttl,
         opt.workdir,
         opt.no_trash,
     )

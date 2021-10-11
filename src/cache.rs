@@ -11,9 +11,9 @@ pub struct Cache {
 }
 
 impl Cache {
-    pub fn new(max_capacity: usize) -> Self {
+    pub fn new(max_capacity: usize, ttl: u64) -> Self {
         let inner = CacheBuilder::new(max_capacity)
-            .time_to_live(Duration::from_secs(10 * 60))
+            .time_to_live(Duration::from_secs(ttl))
             .build();
         Self { inner }
     }

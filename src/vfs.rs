@@ -38,11 +38,12 @@ impl AliyunDriveFileSystem {
         refresh_token: String,
         root: String,
         cache_size: usize,
+        cache_ttl: u64,
         workdir: Option<PathBuf>,
         no_trash: bool,
     ) -> Result<Self> {
         let drive = AliyunDrive::new(refresh_token, workdir).await?;
-        let dir_cache = Cache::new(cache_size);
+        let dir_cache = Cache::new(cache_size, cache_ttl);
         debug!("dir cache initialized");
         let root = if root.starts_with('/') {
             PathBuf::from(root)

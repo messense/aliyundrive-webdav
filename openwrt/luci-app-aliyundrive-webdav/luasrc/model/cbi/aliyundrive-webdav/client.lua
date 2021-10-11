@@ -39,6 +39,10 @@ cache_size = e:option(Value, "cache_size", translate("Cache Size"))
 cache_size.default = "1000"
 cache_size.datatype = "uinteger"
 
+cache_ttl = e:option(Value, "cache_ttl", translate("Cache Expiration Time (seconds)"))
+cache_ttl.default = "600"
+cache_ttl.datatype = "uinteger"
+
 no_trash = e:option(Flag, "no_trash", translate("Delete file permanently instead of trashing"))
 no_trash.rmempty = false
 
