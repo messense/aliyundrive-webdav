@@ -21,12 +21,12 @@ pip install aliyundrive-webdav
 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，以 nanopi r4s 为例：
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.3/aliyundrive-webdav_0.4.3-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.3/luci-app-aliyundrive-webdav_0.4.3_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.3/luci-i18n-aliyundrive-webdav-zh-cn_0.4.3-1_all.ipk
-opkg install aliyundrive-webdav_0.4.3-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_0.4.3_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.4.3-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.4/aliyundrive-webdav_0.4.4-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.4/luci-app-aliyundrive-webdav_0.4.4_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v0.4.4/luci-i18n-aliyundrive-webdav-zh-cn_0.4.4-1_all.ipk
+opkg install aliyundrive-webdav_0.4.4-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_0.4.4_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_0.4.4-1_all.ipk
 ```
 
 其它 CPU 架构的路由器可在 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面中查找对应的架构的主程序 ipk 文件下载安装， 常见
@@ -85,7 +85,7 @@ services:
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 0.4.3
+aliyundrive-webdav 0.4.4
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
@@ -100,6 +100,7 @@ OPTIONS:
     -W, --auth-password <auth-password>          WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
     -U, --auth-user <auth-user>                  WebDAV authentication username [env: WEBDAV_AUTH_USER=]
         --cache-size <cache-size>                Directory entries cache size [default: 1000]
+        --cache-ttl <cache-ttl>                  Directory entries cache expiration time in seconds [default: 600]
         --host <host>                            Listen host [default: 0.0.0.0]
     -p, --port <port>                            Listen port [default: 8080]
     -S, --read-buffer-size <read-buffer-size>
