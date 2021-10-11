@@ -136,7 +136,7 @@ async fn main() -> anyhow::Result<()> {
                                         "WWW-Authenticate",
                                         "Basic realm=\"aliyundrive-webdav\"",
                                     )
-                                    .body(Body::from("Authenticate required".to_string()))
+                                    .body(Body::from("Authentication required".to_string()))
                                     .unwrap();
                                 return Ok(response);
                             }
