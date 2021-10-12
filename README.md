@@ -52,8 +52,16 @@ OpenWrt 路由器 CPU 架构如下表（欢迎补充）：
 ## Docker 运行
 
 ```bash
-docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 -v /etc/aliyundrive-webdav/:/etc/aliyundrive-webdav/ -e REFRESH_TOKEN='refresh token' messense/aliyundrive-webdav
+docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 \
+  -v /etc/aliyundrive-webdav/:/etc/aliyundrive-webdav/ \
+  -e REFRESH_TOKEN='your refresh token' \
+  -e WEBDAV_AUTH_USER=admin \
+  -e WEBDAV_AUTH_PASSWORD=admin \
+  messense/aliyundrive-webdav
 ```
+
+其中，`REFRESH_TOKEN` 环境变量为你的阿里云盘 `refresh_token`，`WEBDAV_AUTH_USER`
+和 `WEBDAV_AUTH_PASSWORD` 为连接 WebDAV 服务的用户名和密码。
 
 ### QNAP 威联通 NAS
 
