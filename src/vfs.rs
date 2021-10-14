@@ -482,8 +482,11 @@ impl AliyunDavFile {
     }
 
     async fn prepare_for_upload(&mut self) -> Result<(), FsError> {
+        if self.file.name.clone().as_bytes().starts_with(b"._") || self.file.size == 0 {
+            return Ok(())
+        }
         if self.upload_state.chunk_count == 0 {
-            debug!(file_name = %self.file.name, "prepare for upload");
+            debug!(file_name = %self.file.name, file_size=%self.file.size, "prepare for upload");
             if !self.file.id.is_empty() {
                 // existing file, delete before upload
                 if let Err(err) = self
@@ -523,6 +526,9 @@ impl AliyunDavFile {
     }
 
     async fn maybe_upload_chunk(&mut self, remaining: bool) -> Result<(), FsError> {
+        if self.file.name.clone().as_bytes().starts_with(b"._") {
+            return Ok(())
+        }
         let chunk_size = if remaining {
             // last chunk size maybe less than UPLOAD_CHUNK_SIZE
             self.upload_state.buffer.remaining()
@@ -577,10 +583,11 @@ impl DavFile for AliyunDavFile {
     }
 
     fn write_bytes(&mut self, buf: Bytes) -> FsFuture<()> {
-        debug!(file_id = %self.file.id, file_name = %self.file.name, "file: write_bytes");
+        debug!(file_id = %self.file.id, file_name = %self.file.name, buf_size = %buf.len(), "file: write_bytes");
         async move {
             self.prepare_for_upload().await?;
             self.upload_state.buffer.extend_from_slice(&buf);
+            self.file.size += buf.len() as u64;
             self.maybe_upload_chunk(false).await?;
             Ok(())
         }
