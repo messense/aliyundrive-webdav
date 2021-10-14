@@ -482,7 +482,7 @@ impl AliyunDavFile {
     }
 
     async fn prepare_for_upload(&mut self) -> Result<(), FsError> {
-        if self.file.name.clone().as_bytes().starts_with(b"._") || self.file.size == 0 {
+        if self.file.name.starts_with("._") || self.file.size == 0 {
             return Ok(());
         }
         if self.upload_state.chunk_count == 0 {
@@ -526,7 +526,7 @@ impl AliyunDavFile {
     }
 
     async fn maybe_upload_chunk(&mut self, remaining: bool) -> Result<(), FsError> {
-        if self.file.name.clone().as_bytes().starts_with(b"._") {
+        if self.file.name.starts_with("._") {
             return Ok(());
         }
         let chunk_size = if remaining {
