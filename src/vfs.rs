@@ -195,7 +195,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
         options: OpenOptions,
     ) -> FsFuture<Box<dyn DavFile>> {
         let path = self.normalize_dav_path(dav_path);
-        debug!(path = %path.display(), "fs: open");
+        let mode = if options.write { "write" } else { "read" };
+        debug!(path = %path.display(), mode = %mode, "fs: open");
         async move {
             if options.append {
                 // Can't support open in write-append mode
@@ -207,9 +208,15 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .get_file(parent_path.to_path_buf())
                 .await?
                 .ok_or(FsError::NotFound)?;
-            let dav_file = if let Some(file) = self.get_file(path.clone()).await? {
+            let dav_file = if let Some(mut file) = self.get_file(path.clone()).await? {
                 if options.write && options.create_new {
                     return Err(FsError::Exists);
+                }
+                if let Some(size) = options.size {
+                    // 上传中的文件刚开始 size 可能为 0，更新为正确的 size
+                    if file.size == 0 {
+                        file.size = size;
+                    }
                 }
                 AliyunDavFile::new(self.clone(), file, parent_file.id)
             } else if options.write && (options.create || options.create_new) {
@@ -218,6 +225,12 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     .file_name()
                     .ok_or(FsError::GeneralFailure)?
                     .to_string();
+
+                // 忽略 macOS 上的一些特殊文件
+                if name == ".DS_Store" || name.starts_with("._") {
+                    return Err(FsError::NotFound);
+                }
+
                 let now = SystemTime::now();
                 let file = AliyunFile {
                     name,
@@ -483,7 +496,8 @@ impl AliyunDavFile {
 
     async fn prepare_for_upload(&mut self) -> Result<(), FsError> {
         if self.upload_state.chunk_count == 0 {
-            debug!(file_name = %self.file.name, "prepare for upload");
+            let size = self.file.size;
+            debug!(file_name = %self.file.name, size = size, "prepare for upload");
             if !self.file.id.is_empty() {
                 // existing file, delete before upload
                 if let Err(err) = self
@@ -496,7 +510,6 @@ impl AliyunDavFile {
                 }
             }
             // TODO: create parent folders
-            let size = self.file.size;
             let chunk_count =
                 size / UPLOAD_CHUNK_SIZE + if size % UPLOAD_CHUNK_SIZE != 0 { 1 } else { 0 };
             self.upload_state.chunk_count = chunk_count;
@@ -538,6 +551,7 @@ impl AliyunDavFile {
             debug!(
                 file_id = %self.file.id,
                 file_name = %self.file.name,
+                size = self.file.size,
                 "upload part {}/{}",
                 current_chunk,
                 self.upload_state.chunk_count
