@@ -44,18 +44,19 @@ jobs:
           name: wheels
           path: dist
           if-no-files-found: error
-      - name: Archive binary
-        run: |
-          cd target/release
-          tar czvf aliyundrive-webdav-apple-darwin.tar.gz aliyundrive-webdav
-          shasum -a 256 aliyundrive-webdav-apple-darwin.tar.gz > aliyundrive-webdav-apple-darwin.tar.gz.sha256
-          cd -
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v2
         with:
           name: apple-darwin-bin
-          path: target/release/aliyundrive-webdav-apple-darwin.tar.gz
+          path: target/release/aliyundrive-webdav
           if-no-files-found: error
+      - name: Archive binary
+        if: "startsWith(github.ref, 'refs/tags/')"
+        run: |
+          cd target/release
+          tar czvf aliyundrive-webdav-${{ github.ref }}.apple-darwin.tar.gz aliyundrive-webdav
+          shasum -a 256 aliyundrive-webdav-${{ github.ref }}.apple-darwin.tar.gz > aliyundrive-webdav-${{ github.ref }}.apple-darwin.tar.gz.sha256
+          cd -
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
@@ -102,23 +103,24 @@ jobs:
           name: wheels
           path: dist
           if-no-files-found: error
-      - name: Archive binary
-        run: |
-          cd target/${{ matrix.platform.target }}/release
-          7z a aliyundrive-webdav.zip aliyundrive-webdav.exe
-          cd -
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v2
         with:
           name: windows-${{ matrix.platform.arch }}-bin
-          path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.zip
+          path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.exe
           if-no-files-found: error
+      - name: Archive binary
+        if: "startsWith(github.ref, 'refs/tags/')"
+        run: |
+          cd target/${{ matrix.platform.target }}/release
+          7z a aliyundrive-webdav.zip aliyundrive-webdav.exe
+          cd -
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
         if: "startsWith(github.ref, 'refs/tags/')"
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          asset_name: aliyundrive-webdav-windows-${{ matrix.platform.arch }}.zip
+          asset_name: aliyundrive-webdav-${{ github.ref }}.windows-${{ matrix.platform.arch }}.zip
           file: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.zip
           overwrite: true
           tag: ${{ github.ref }}
@@ -168,10 +170,11 @@ jobs:
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
           if-no-files-found: error
       - name: Archive binary
+        if: "startsWith(github.ref, 'refs/tags/')"
         run: |
           cd target/${{ matrix.platform.target }}/release
-          tar czvf aliyundrive-webdav-${{ matrix.platform.target }}.tar.gz aliyundrive-webdav
-          shasum -a 256 aliyundrive-webdav-${{ matrix.platform.target }}.tar.gz > aliyundrive-webdav-${{ matrix.platform.target }}.tar.gz.sha256
+          tar czvf aliyundrive-webdav-${{ github.ref }}.${{ matrix.platform.target }}.tar.gz aliyundrive-webdav
+          shasum -a 256 aliyundrive-webdav-${{ github.ref }}.${{ matrix.platform.target }}.tar.gz > aliyundrive-webdav-${{ github.ref }}.${{ matrix.platform.target }}.tar.gz.sha256
           cd -
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
@@ -218,10 +221,11 @@ jobs:
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
           if-no-files-found: error
       - name: Archive binary
+        if: "startsWith(github.ref, 'refs/tags/')"
         run: |
           cd target/${{ matrix.platform.target }}/release
-          tar czvf aliyundrive-webdav-${{ matrix.platform.target }}.tar.gz aliyundrive-webdav
-          shasum -a 256 aliyundrive-webdav-${{ matrix.platform.target }}.tar.gz > aliyundrive-webdav-${{ matrix.platform.target }}.tar.gz.sha256
+          tar czvf aliyundrive-webdav-${{ github.ref }}.${{ matrix.platform.target }}.tar.gz aliyundrive-webdav
+          shasum -a 256 aliyundrive-webdav-${{ github.ref }}.${{ matrix.platform.target }}.tar.gz > aliyundrive-webdav-${{ github.ref }}.${{ matrix.platform.target }}.tar.gz.sha256
           cd -
       - name: Upload binary to GitHub Release
         uses: svenstaro/upload-release-action@v2
