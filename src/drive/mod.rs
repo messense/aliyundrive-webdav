@@ -479,7 +479,7 @@ impl AliyunDrive {
         debug!(name = %name, parent_file_id = %parent_file_id, size = size, "create file with proof");
         let drive_id = self.drive_id()?;
         let part_info_list = (1..=chunk_count)
-            .map(|part_number| PartInfo {
+            .map(|part_number| UploadPartInfo {
                 part_number,
                 upload_url: String::new(),
             })
@@ -526,6 +526,33 @@ impl AliyunDrive {
             .await?
             .error_for_status()?;
         Ok(())
+    }
+
+    pub async fn get_upload_url(
+        &self,
+        file_id: &str,
+        upload_id: &str,
+        chunk_count: u64,
+    ) -> Result<Vec<UploadPartInfo>> {
+        debug!(file_id = %file_id, upload_id = %upload_id, "get upload url");
+        let drive_id = self.drive_id()?;
+        let part_info_list = (1..=chunk_count)
+            .map(|part_number| UploadPartInfo {
+                part_number,
+                upload_url: String::new(),
+            })
+            .collect();
+        let req = GetUploadUrlRequest {
+            drive_id,
+            file_id,
+            upload_id,
+            part_info_list,
+        };
+        let res: CreateFileWithProofResponse = self
+            .request(format!("{}/v2/file/get_upload_url", API_BASE_URL), &req)
+            .await?
+            .context("expect response")?;
+        Ok(res.part_info_list)
     }
 
     pub async fn get_quota(&self) -> Result<(u64, u64)> {

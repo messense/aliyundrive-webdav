@@ -102,7 +102,7 @@ pub struct CopyFileRequest<'a> {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PartInfo {
+pub struct UploadPartInfo {
     pub part_number: u64,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub upload_url: String,
@@ -119,14 +119,14 @@ pub struct CreateFileWithProofRequest<'a> {
     pub proof_code: &'a str,
     pub proof_version: &'a str,
     pub size: u64,
-    pub part_info_list: Vec<PartInfo>,
+    pub part_info_list: Vec<UploadPartInfo>,
     pub r#type: &'a str,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CreateFileWithProofResponse {
     #[serde(default)]
-    pub part_info_list: Vec<PartInfo>,
+    pub part_info_list: Vec<UploadPartInfo>,
     pub file_id: String,
     pub upload_id: String,
     pub file_name: String,
@@ -144,7 +144,7 @@ pub struct GetUploadUrlRequest<'a> {
     pub drive_id: &'a str,
     pub file_id: &'a str,
     pub upload_id: &'a str,
-    pub part_info_list: Vec<PartInfo>,
+    pub part_info_list: Vec<UploadPartInfo>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

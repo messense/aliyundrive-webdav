@@ -509,7 +509,7 @@ impl AliyunDavFile {
                     error!(file_name = %self.file.name, error = %err, "delete file before upload failed");
                 }
             }
-            // TODO: create parent folders
+            // TODO: create parent folders?
             let chunk_count =
                 size / UPLOAD_CHUNK_SIZE + if size % UPLOAD_CHUNK_SIZE != 0 { 1 } else { 0 };
             self.upload_state.chunk_count = chunk_count;
@@ -556,13 +556,29 @@ impl AliyunDavFile {
                 current_chunk,
                 self.upload_state.chunk_count
             );
-            let upload_url = &self.upload_state.upload_urls[current_chunk as usize - 1];
+            let mut upload_url = &self.upload_state.upload_urls[current_chunk as usize - 1];
+            if is_url_expired(upload_url) {
+                if let Ok(part_info_list) = self
+                    .fs
+                    .drive
+                    .get_upload_url(
+                        &self.file.id,
+                        &self.upload_state.upload_id,
+                        self.upload_state.chunk_count,
+                    )
+                    .await
+                {
+                    let upload_urls: Vec<_> =
+                        part_info_list.into_iter().map(|x| x.upload_url).collect();
+                    self.upload_state.upload_urls = upload_urls;
+                    upload_url = &self.upload_state.upload_urls[current_chunk as usize - 1];
+                }
+            }
             self.fs
                 .drive
                 .upload(upload_url, chunk_data.freeze())
                 .await
                 .map_err(|_| FsError::GeneralFailure)?;
-            // TODO: refresh upload url if expired
             self.upload_state.chunk += 1;
         }
         Ok(())
@@ -617,25 +633,9 @@ impl DavFile for AliyunDavFile {
             }
             let download_url = self.download_url.take();
             let download_url = if let Some(mut url) = download_url {
-                if let Ok(download_url) = ::url::Url::parse(&url) {
-                    let expires = download_url.query_pairs().find_map(|(k, v)| {
-                        if k == "x-oss-expires" {
-                            if let Ok(expires) = v.parse::<u64>() {
-                                return Some(expires);
-                            }
-                        }
-                        None
-                    });
-                    if let Some(expires) = expires {
-                        let current_ts = SystemTime::now()
-                            .duration_since(UNIX_EPOCH)
-                            .expect("Time went backwards")
-                            .as_secs();
-                        if current_ts >= expires {
-                            debug!(url = %url, "download url expired");
-                            url = self.get_download_url().await?;
-                        }
-                    }
+                if is_url_expired(&url) {
+                    debug!(url = %url, "download url expired");
+                    url = self.get_download_url().await?;
                 }
                 url
             } else {
@@ -693,4 +693,26 @@ impl DavFile for AliyunDavFile {
         }
         .boxed()
     }
+}
+
+fn is_url_expired(url: &str) -> bool {
+    if let Ok(oss_url) = ::url::Url::parse(&url) {
+        let expires = oss_url.query_pairs().find_map(|(k, v)| {
+            if k == "x-oss-expires" {
+                if let Ok(expires) = v.parse::<u64>() {
+                    return Some(expires);
+                }
+            }
+            None
+        });
+        if let Some(expires) = expires {
+            let current_ts = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_secs();
+            // 预留 1s
+            return current_ts >= expires - 1;
+        }
+    }
+    false
 }
