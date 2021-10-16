@@ -4,18 +4,23 @@ XHR.poll(3, '<%=url([[admin]], [[services]], [[aliyundrive-webdav]], [[status]])
 		var tb = document.getElementById('aliyundrive-webdav_status');
 		if (data && tb) {
 			if (data.running) {
-				tb.innerHTML = '<em><b><font color=green>' + data.application + '<%:RUNNING%></font></b></em>';
+				tb.innerHTML = '<em><b><font color=green>' + data.application + '<%:RUNNING%></font></b></em><input class="btn cbi-button mar-10" type="button" value=' + data.application + ' onclick="openwebui();" />';
 			} else {
 				tb.innerHTML = '<em><b><font color=red>' + data.application + '<%:NOT RUNNING%></font></b></em>';
 			}
 		}
 	}
 );
+	
+function openwebui(){
+	var url = window.location.host+":<%=luci.sys.exec("uci -q get aliyundrive-webdav.config.config.port"):gsub("^%s*(.-)%s*$", "%1")%>";
+	window.open('http://'+url,'target','');
+}
 //]]>
 </script>
 <style>.mar-10 {margin-left: 50px; margin-right: 10px;}</style>
 <fieldset class="cbi-section">
-	<p id="aliyundrive-webdav_status">
+	<p id="v2raya_status">
 		<em><%:Collecting data...%></em>
 	</p>
 </fieldset>
