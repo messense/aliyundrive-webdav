@@ -13,7 +13,7 @@ XHR.poll(3, '<%=url([[admin]], [[services]], [[aliyundrive-webdav]], [[status]])
 );
 	
 function openwebui(){
-	var url = window.location.host+":<%=luci.sys.exec("uci -q get aliyundrive-webdav.config.config.port"):gsub("^%s*(.-)%s*$", "%1")%>";
+	var url = window.location.host+":<%=luci.sys.exec("uci -q get aliyundrive-webdav.config.port"):gsub("^%s*(.-)%s*$", "%1")%>";
 	window.open('http://'+url,'target','');
 }
 //]]>
