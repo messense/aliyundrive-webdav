@@ -2,9 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 0.4.6
 
 * 自动尝试刷新过期的上传地址
+* GitHub Release 产物文件名增加版本号
 
 ## 0.4.5
 
