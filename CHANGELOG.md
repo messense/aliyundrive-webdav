@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.4.7
+
+* 发布 musllinux wheel 二进制包至 PyPI
+
 ## 0.4.6
 
 * 自动尝试刷新过期的上传地址
