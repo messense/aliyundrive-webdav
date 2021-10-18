@@ -17,10 +17,10 @@ mod vfs;
 #[structopt(name = "aliyundrive-webdav")]
 struct Opt {
     /// Listen host
-    #[structopt(long, default_value = "0.0.0.0")]
+    #[structopt(long, env = "HOST", default_value = "0.0.0.0")]
     host: String,
     /// Listen port
-    #[structopt(short, long, default_value = "8080")]
+    #[structopt(short, env = "PORT", long, default_value = "8080")]
     port: u16,
     /// Aliyun drive refresh token
     #[structopt(short, long, env = "REFRESH_TOKEN")]
