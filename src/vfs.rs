@@ -696,7 +696,7 @@ impl DavFile for AliyunDavFile {
 }
 
 fn is_url_expired(url: &str) -> bool {
-    if let Ok(oss_url) = ::url::Url::parse(&url) {
+    if let Ok(oss_url) = ::url::Url::parse(url) {
         let expires = oss_url.query_pairs().find_map(|(k, v)| {
             if k == "x-oss-expires" {
                 if let Ok(expires) = v.parse::<u64>() {
