@@ -25,7 +25,7 @@ structopt = "0.3.22"
 time = { version = "0.3", features = ["formatting", "parsing"] }
 tokio = { version = "1.10.0", features = ["rt-multi-thread", "io-util", "net", "time", "sync", "macros", "parking_lot", "fs"] }
 tracing = "0.1"
-tracing-subscriber = "0.2"
+tracing-subscriber = "0.3"
 url = "2.2.2"
 webdav-handler = { version = "0.2.0", default-features = false, features = ["hyper"] }
 
