@@ -51,7 +51,7 @@ struct Opt {
     #[structopt(short = "w", long)]
     workdir: Option<PathBuf>,
     /// Delete file permanently instead of trashing it
-    #[structopt(long)]
+    #[structopt(long, conflicts_with = "domain-id")]
     no_trash: bool,
     /// Aliyun PDS domain id
     #[structopt(long)]
@@ -75,20 +75,29 @@ async fn main() -> anyhow::Result<()> {
         anyhow::bail!("auth-user and auth-password should be specified together.");
     }
 
-    let drive_config = if let Some(domain_id) = opt.domain_id {
-        DriveConfig {
-            api_base_url: format!("https://{}.api.aliyunpds.com", domain_id),
-            refresh_token_url: format!("https://{}.auth.aliyunpds.com/v2/account/token", domain_id),
-            workdir: opt.workdir,
-            app_id: Some("BasicUI".to_string()),
-        }
+    let (drive_config, no_trash) = if let Some(domain_id) = opt.domain_id {
+        (
+            DriveConfig {
+                api_base_url: format!("https://{}.api.aliyunpds.com", domain_id),
+                refresh_token_url: format!(
+                    "https://{}.auth.aliyunpds.com/v2/account/token",
+                    domain_id
+                ),
+                workdir: opt.workdir,
+                app_id: Some("BasicUI".to_string()),
+            },
+            true, // PDS doesn't have trash support
+        )
     } else {
-        DriveConfig {
-            api_base_url: "https://api.aliyundrive.com".to_string(),
-            refresh_token_url: "https://websv.aliyundrive.com/token/refresh".to_string(),
-            workdir: opt.workdir,
-            app_id: None,
-        }
+        (
+            DriveConfig {
+                api_base_url: "https://api.aliyundrive.com".to_string(),
+                refresh_token_url: "https://websv.aliyundrive.com/token/refresh".to_string(),
+                workdir: opt.workdir,
+                app_id: None,
+            },
+            opt.no_trash,
+        )
     };
     let fs = AliyunDriveFileSystem::new(
         drive_config,
@@ -96,7 +105,7 @@ async fn main() -> anyhow::Result<()> {
         opt.root,
         opt.cache_size,
         opt.cache_ttl,
-        opt.no_trash,
+        no_trash,
     )
     .await
     .map_err(|_| {
