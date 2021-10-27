@@ -132,17 +132,11 @@ impl AliyunDrive {
         match res.error_for_status_ref() {
             Ok(_) => {
                 let res = res.json::<RefreshTokenResponse>().await?;
-                let mut cred = self.credentials.write().await;
-                cred.refresh_token = res.refresh_token.clone();
-                cred.access_token = Some(res.access_token.clone());
                 info!(
                     refresh_token = %res.refresh_token,
                     nick_name = %res.nick_name,
                     "refresh token succeed"
                 );
-                if let Err(err) = self.save_refresh_token(&res.refresh_token).await {
-                    error!(error = %err, "save refresh token failed");
-                }
                 Ok(res)
             }
             Err(err) => {
@@ -161,7 +155,15 @@ impl AliyunDrive {
         let mut refresh_token = self.refresh_token().await;
         for _ in 0..10 {
             match self.do_refresh_token(&refresh_token).await {
-                Ok(res) => return Ok(res),
+                Ok(res) => {
+                    let mut cred = self.credentials.write().await;
+                    cred.refresh_token = res.refresh_token.clone();
+                    cred.access_token = Some(res.access_token.clone());
+                    if let Err(err) = self.save_refresh_token(&res.refresh_token).await {
+                        error!(error = %err, "save refresh token failed");
+                    }
+                    return Ok(res);
+                }
                 Err(err) => {
                     let mut should_retry = match err.downcast_ref::<reqwest::Error>() {
                         Some(e) => e.is_connect() || e.is_timeout(),
