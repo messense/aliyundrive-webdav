@@ -297,7 +297,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 self.drive
                     .create_folder(&parent_file.id, &name)
                     .await
-                    .map_err(|_| FsError::GeneralFailure)?;
+                    .map_err(|err| {
+                        error!(path = %path.display(), error = %err, "create folder failed");
+                        FsError::GeneralFailure
+                    })?;
                 self.dir_cache.invalidate(parent_path).await;
                 Ok(())
             } else {
@@ -321,7 +324,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
             self.drive
                 .remove_file(&file.id, !self.no_trash)
                 .await
-                .map_err(|_| FsError::GeneralFailure)?;
+                .map_err(|err| {
+                    error!(path = %path.display(), error = %err, "remove directory failed");
+                    FsError::GeneralFailure
+                })?;
             self.dir_cache.invalidate_parent(&path).await;
             Ok(())
         }
@@ -342,7 +348,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
             self.drive
                 .remove_file(&file.id, !self.no_trash)
                 .await
-                .map_err(|_| FsError::GeneralFailure)?;
+                .map_err(|err| {
+                    error!(path = %path.display(), error = %err, "remove file failed");
+                    FsError::GeneralFailure
+                })?;
             self.dir_cache.invalidate_parent(&path).await;
             Ok(())
         }
@@ -366,7 +375,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
             self.drive
                 .copy_file(&file.id, &to_parent_file.id, new_name)
                 .await
-                .map_err(|_| FsError::GeneralFailure)?;
+                .map_err(|err| {
+                    error!(from = %from.display(), to = %to.display(), error = %err, "copy file failed");
+                    FsError::GeneralFailure
+                })?;
 
             self.dir_cache.invalidate_parent(&from).await;
             self.dir_cache.invalidate_parent(&to).await;
@@ -391,7 +403,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     self.drive
                         .rename_file(&file.id, &name)
                         .await
-                        .map_err(|_| FsError::GeneralFailure)?;
+                        .map_err(|err| {
+                            error!(from = %from.display(), to = %to.display(), error = %err, "rename file failed");
+                            FsError::GeneralFailure
+                        })?;
                 } else {
                     return Err(FsError::Forbidden);
                 }
@@ -409,7 +424,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 self.drive
                     .move_file(&file.id, &to_parent_file.id, new_name)
                     .await
-                    .map_err(|_| FsError::GeneralFailure)?;
+                    .map_err(|err| {
+                        error!(from = %from.display(), to = %to.display(), error = %err, "move file failed");
+                        FsError::GeneralFailure
+                    })?;
             }
 
             self.dir_cache.invalidate_parent(&from).await;
@@ -422,11 +440,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
     fn get_quota(&self) -> FsFuture<(u64, Option<u64>)> {
         debug!("fs: get_quota");
         async move {
-            let (used, total) = self
-                .drive
-                .get_quota()
-                .await
-                .map_err(|_| FsError::GeneralFailure)?;
+            let (used, total) = self.drive.get_quota().await.map_err(|err| {
+                error!(error = %err, "get quota failed");
+                FsError::GeneralFailure
+            })?;
             Ok((used, Some(total)))
         }
         .boxed()
@@ -518,7 +535,10 @@ impl AliyunDavFile {
                 .drive
                 .create_file_with_proof(&self.file.name, &self.parent_file_id, size, chunk_count)
                 .await
-                .map_err(|_| FsError::GeneralFailure)?;
+                .map_err(|err| {
+                    error!(file_name = %self.file.name, error = %err, "create file with proof failed");
+                    FsError::GeneralFailure
+                })?;
             self.file.id = res.file_id.clone();
             self.upload_state.upload_id = res.upload_id.clone();
             let upload_urls: Vec<_> = res
@@ -578,7 +598,17 @@ impl AliyunDavFile {
                 .drive
                 .upload(upload_url, chunk_data.freeze())
                 .await
-                .map_err(|_| FsError::GeneralFailure)?;
+                .map_err(|err| {
+                    error!(
+                        file_id = %self.file.id,
+                        file_name = %self.file.name,
+                        size = self.file.size,
+                        error = %err,
+                        "upload file chunk {} failed",
+                        current_chunk
+                    );
+                    FsError::GeneralFailure
+                })?;
             self.upload_state.chunk += 1;
         }
         Ok(())
@@ -647,7 +677,10 @@ impl DavFile for AliyunDavFile {
                 .drive
                 .download(&download_url, self.current_pos, count)
                 .await
-                .map_err(|_| FsError::NotFound)?;
+                .map_err(|err| {
+                    error!(url = %download_url, error = %err, "download file failed");
+                    FsError::NotFound
+                })?;
             self.current_pos += content.len() as u64;
             self.download_url = Some(download_url);
             Ok(content)
@@ -684,7 +717,15 @@ impl DavFile for AliyunDavFile {
                     .drive
                     .complete_file_upload(&self.file.id, &self.upload_state.upload_id)
                     .await
-                    .map_err(|_| FsError::GeneralFailure)?;
+                    .map_err(|err| {
+                        error!(
+                            file_id = %self.file.id,
+                            file_name = %self.file.name,
+                            error = %err,
+                            "complete file upload failed"
+                        );
+                        FsError::GeneralFailure
+                    })?;
             }
             self.fs
                 .remove_uploading_file(&self.parent_file_id, &self.file.name);
