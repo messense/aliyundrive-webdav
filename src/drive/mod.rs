@@ -24,10 +24,16 @@ mod model;
 use model::*;
 pub use model::{AliyunFile, DateTime, FileType};
 
-const API_BASE_URL: &str = "https://api.aliyundrive.com";
 const ORIGIN: &str = "https://www.aliyundrive.com";
 const REFERER: &str = "https://www.aliyundrive.com/";
 const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
+
+#[derive(Debug, Clone)]
+pub struct DriveConfig {
+    pub api_base_url: String,
+    pub refresh_token_url: String,
+    pub workdir: Option<PathBuf>,
+}
 
 #[derive(Debug, Clone)]
 struct Credentials {
@@ -37,14 +43,14 @@ struct Credentials {
 
 #[derive(Debug, Clone)]
 pub struct AliyunDrive {
+    config: DriveConfig,
     client: reqwest::Client,
     credentials: Arc<RwLock<Credentials>>,
     drive_id: Option<String>,
-    workdir: Option<PathBuf>,
 }
 
 impl AliyunDrive {
-    pub async fn new(refresh_token: String, workdir: Option<PathBuf>) -> Result<Self> {
+    pub async fn new(config: DriveConfig, refresh_token: String) -> Result<Self> {
         let credentials = Credentials {
             refresh_token,
             access_token: None,
@@ -59,16 +65,16 @@ impl AliyunDrive {
             .timeout(Duration::from_secs(30))
             .build()?;
         let mut drive = Self {
+            config,
             client,
             credentials: Arc::new(RwLock::new(credentials)),
             drive_id: None,
-            workdir,
         };
 
         let (tx, rx) = oneshot::channel();
         // schedule update token task
         let client = drive.clone();
-        let refresh_token_from_file = if let Some(dir) = drive.workdir.as_ref() {
+        let refresh_token_from_file = if let Some(dir) = drive.config.workdir.as_ref() {
             tokio::fs::read_to_string(dir.join("refresh_token"))
                 .await
                 .ok()
@@ -112,7 +118,7 @@ impl AliyunDrive {
     }
 
     async fn save_refresh_token(&self, refresh_token: &str) -> Result<()> {
-        if let Some(dir) = self.workdir.as_ref() {
+        if let Some(dir) = self.config.workdir.as_ref() {
             tokio::fs::create_dir_all(dir).await?;
             let refresh_token_file = dir.join("refresh_token");
             tokio::fs::write(refresh_token_file, refresh_token).await?;
@@ -125,7 +131,7 @@ impl AliyunDrive {
         data.insert("refresh_token", refresh_token);
         let res = self
             .client
-            .post("https://websv.aliyundrive.com/token/refresh")
+            .post(&self.config.refresh_token_url)
             .json(&data)
             .send()
             .await?;
@@ -278,7 +284,10 @@ impl AliyunDrive {
             file_path: path,
         };
         let res: Result<AliyunFile> = self
-            .request(format!("{}/v2/file/get_by_path", API_BASE_URL), &req)
+            .request(
+                format!("{}/v2/file/get_by_path", self.config.api_base_url),
+                &req,
+            )
             .await
             .and_then(|res| res.context("expect response"));
         match res {
@@ -331,9 +340,12 @@ impl AliyunDrive {
             order_direction: "DESC",
             marker,
         };
-        self.request(format!("{}/adrive/v3/file/list", API_BASE_URL), &req)
-            .await
-            .and_then(|res| res.context("expect response"))
+        self.request(
+            format!("{}/adrive/v3/file/list", self.config.api_base_url),
+            &req,
+        )
+        .await
+        .and_then(|res| res.context("expect response"))
     }
 
     pub async fn download(&self, url: &str, start_pos: u64, size: usize) -> Result<Bytes> {
@@ -359,7 +371,10 @@ impl AliyunDrive {
             file_id,
         };
         let res: GetFileDownloadUrlResponse = self
-            .request(format!("{}/v2/file/get_download_url", API_BASE_URL), &req)
+            .request(
+                format!("{}/v2/file/get_download_url", self.config.api_base_url),
+                &req,
+            )
             .await?
             .context("expect response")?;
         Ok(res.url)
@@ -372,7 +387,10 @@ impl AliyunDrive {
             file_id,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v2/recyclebin/trash", API_BASE_URL), &req)
+            .request(
+                format!("{}/v2/recyclebin/trash", self.config.api_base_url),
+                &req,
+            )
             .await?;
         Ok(())
     }
@@ -384,7 +402,7 @@ impl AliyunDrive {
             file_id,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v2/file/delete", API_BASE_URL), &req)
+            .request(format!("{}/v2/file/delete", self.config.api_base_url), &req)
             .await?;
         Ok(())
     }
@@ -409,7 +427,10 @@ impl AliyunDrive {
         };
         let _res: Option<serde::de::IgnoredAny> = self
             .request(
-                format!("{}/adrive/v2/file/createWithFolders", API_BASE_URL),
+                format!(
+                    "{}/adrive/v2/file/createWithFolders",
+                    self.config.api_base_url
+                ),
                 &req,
             )
             .await?;
@@ -425,7 +446,7 @@ impl AliyunDrive {
             name,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v3/file/update", API_BASE_URL), &req)
+            .request(format!("{}/v3/file/update", self.config.api_base_url), &req)
             .await?;
         Ok(())
     }
@@ -446,7 +467,7 @@ impl AliyunDrive {
             new_name,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v3/file/move", API_BASE_URL), &req)
+            .request(format!("{}/v3/file/move", self.config.api_base_url), &req)
             .await?;
         Ok(())
     }
@@ -466,7 +487,7 @@ impl AliyunDrive {
             new_name,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v2/file/copy", API_BASE_URL), &req)
+            .request(format!("{}/v2/file/copy", self.config.api_base_url), &req)
             .await?;
         Ok(())
     }
@@ -500,7 +521,10 @@ impl AliyunDrive {
             r#type: "file",
         };
         let res: CreateFileWithProofResponse = self
-            .request(format!("{}/v2/file/create_with_proof", API_BASE_URL), &req)
+            .request(
+                format!("{}/v2/file/create_with_proof", self.config.api_base_url),
+                &req,
+            )
             .await?
             .context("expect response")?;
         Ok(res)
@@ -515,7 +539,10 @@ impl AliyunDrive {
             upload_id,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v2/file/complete", API_BASE_URL), &req)
+            .request(
+                format!("{}/v2/file/complete", self.config.api_base_url),
+                &req,
+            )
             .await?;
         Ok(())
     }
@@ -551,7 +578,10 @@ impl AliyunDrive {
             part_info_list,
         };
         let res: CreateFileWithProofResponse = self
-            .request(format!("{}/v2/file/get_upload_url", API_BASE_URL), &req)
+            .request(
+                format!("{}/v2/file/get_upload_url", self.config.api_base_url),
+                &req,
+            )
             .await?
             .context("expect response")?;
         Ok(res.part_info_list)
@@ -562,7 +592,7 @@ impl AliyunDrive {
         let mut data = HashMap::new();
         data.insert("drive_id", drive_id);
         let res: GetDriveResponse = self
-            .request(format!("{}/v2/drive/get", API_BASE_URL), &data)
+            .request(format!("{}/v2/drive/get", self.config.api_base_url), &data)
             .await?
             .context("expect response")?;
         Ok((res.used_size, res.total_size))
