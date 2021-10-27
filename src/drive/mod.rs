@@ -33,6 +33,7 @@ pub struct DriveConfig {
     pub api_base_url: String,
     pub refresh_token_url: String,
     pub workdir: Option<PathBuf>,
+    pub app_id: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -129,6 +130,10 @@ impl AliyunDrive {
     async fn do_refresh_token(&self, refresh_token: &str) -> Result<RefreshTokenResponse> {
         let mut data = HashMap::new();
         data.insert("refresh_token", refresh_token);
+        data.insert("grant_type", "refresh_token");
+        if let Some(app_id) = self.config.app_id.as_ref() {
+            data.insert("app_id", app_id);
+        }
         let res = self
             .client
             .post(&self.config.refresh_token_url)
@@ -340,12 +345,9 @@ impl AliyunDrive {
             order_direction: "DESC",
             marker,
         };
-        self.request(
-            format!("{}/adrive/v3/file/list", self.config.api_base_url),
-            &req,
-        )
-        .await
-        .and_then(|res| res.context("expect response"))
+        self.request(format!("{}/v2/file/list", self.config.api_base_url), &req)
+            .await
+            .and_then(|res| res.context("expect response"))
     }
 
     pub async fn download(&self, url: &str, start_pos: u64, size: usize) -> Result<Bytes> {

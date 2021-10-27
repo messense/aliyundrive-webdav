@@ -35,18 +35,13 @@ pub struct AliyunDriveFileSystem {
 
 impl AliyunDriveFileSystem {
     pub async fn new(
+        config: DriveConfig,
         refresh_token: String,
         root: String,
         cache_size: usize,
         cache_ttl: u64,
-        workdir: Option<PathBuf>,
         no_trash: bool,
     ) -> Result<Self> {
-        let config = DriveConfig {
-            api_base_url: "https://api.aliyundrive.com".to_string(),
-            refresh_token_url: "https://websv.aliyundrive.com/token/refresh".to_string(),
-            workdir,
-        };
         let drive = AliyunDrive::new(config, refresh_token).await?;
         let dir_cache = Cache::new(cache_size, cache_ttl);
         debug!("dir cache initialized");

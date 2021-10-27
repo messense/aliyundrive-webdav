@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+* 增加实验性[阿里云相册与网盘服务（PDS）](https://www.aliyun.com/product/storage/pds)支持
+
 ## 0.4.8
 
 * 支持通过环境变量 `HOST` 和 `PORT` 配置监听地址和端口

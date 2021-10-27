@@ -7,6 +7,7 @@ use structopt::StructOpt;
 use tracing::{debug, error, info};
 use webdav_handler::{body::Body, memls::MemLs, DavConfig, DavHandler};
 
+use drive::DriveConfig;
 use vfs::AliyunDriveFileSystem;
 
 mod cache;
@@ -52,6 +53,9 @@ struct Opt {
     /// Delete file permanently instead of trashing it
     #[structopt(long)]
     no_trash: bool,
+    /// Aliyun PDS domain id
+    #[structopt(long)]
+    domain_id: Option<String>,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -71,12 +75,27 @@ async fn main() -> anyhow::Result<()> {
         anyhow::bail!("auth-user and auth-password should be specified together.");
     }
 
+    let drive_config = if let Some(domain_id) = opt.domain_id {
+        DriveConfig {
+            api_base_url: format!("https://{}.api.aliyunpds.com", domain_id),
+            refresh_token_url: format!("https://{}.auth.aliyunpds.com/v2/account/token", domain_id),
+            workdir: opt.workdir,
+            app_id: Some("BasicUI".to_string()),
+        }
+    } else {
+        DriveConfig {
+            api_base_url: "https://api.aliyundrive.com".to_string(),
+            refresh_token_url: "https://websv.aliyundrive.com/token/refresh".to_string(),
+            workdir: opt.workdir,
+            app_id: None,
+        }
+    };
     let fs = AliyunDriveFileSystem::new(
+        drive_config,
         opt.refresh_token,
         opt.root,
         opt.cache_size,
         opt.cache_ttl,
-        opt.workdir,
         opt.no_trash,
     )
     .await
