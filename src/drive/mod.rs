@@ -448,7 +448,7 @@ impl AliyunDrive {
             name,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v3/file/update", self.config.api_base_url), &req)
+            .request(format!("{}/v2/file/update", self.config.api_base_url), &req)
             .await?;
         Ok(())
     }
@@ -469,7 +469,7 @@ impl AliyunDrive {
             new_name,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v3/file/move", self.config.api_base_url), &req)
+            .request(format!("{}/v2/file/move", self.config.api_base_url), &req)
             .await?;
         Ok(())
     }
