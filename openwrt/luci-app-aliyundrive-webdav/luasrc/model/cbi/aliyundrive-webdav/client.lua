@@ -46,6 +46,9 @@ cache_ttl.datatype = "uinteger"
 no_trash = e:option(Flag, "no_trash", translate("Delete file permanently instead of trashing"))
 no_trash.rmempty = false
 
+domain_id = e:option(Value, "domain_id", translate("Domain ID"),
+        translate("Input domain_id option will use <a href=\"https://www.aliyun.com/product/storage/pds\" target=\"_blank\">Aliyun PDS</a> instead of <a href=\"https://www.aliyundrive.com\" target=\"_blank\">AliyunDrive</a>"))
+
 debug = e:option(Flag, "debug", translate("Debug Mode"))
 debug.rmempty = false
 
