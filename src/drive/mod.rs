@@ -428,13 +428,7 @@ impl AliyunDrive {
             r#type: "folder",
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(
-                format!(
-                    "{}/adrive/v2/file/createWithFolders",
-                    self.config.api_base_url
-                ),
-                &req,
-            )
+            .request(format!("{}/v2/file/create", self.config.api_base_url), &req)
             .await?;
         Ok(())
     }
