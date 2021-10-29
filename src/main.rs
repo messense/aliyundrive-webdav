@@ -7,7 +7,7 @@ use structopt::StructOpt;
 use tracing::{debug, error, info};
 use webdav_handler::{body::Body, memls::MemLs, DavConfig, DavHandler};
 
-use drive::DriveConfig;
+use drive::{AliyunDrive, DriveConfig};
 use vfs::AliyunDriveFileSystem;
 
 mod cache;
@@ -99,21 +99,19 @@ async fn main() -> anyhow::Result<()> {
             opt.no_trash,
         )
     };
-    let fs = AliyunDriveFileSystem::new(
-        drive_config,
-        opt.refresh_token,
-        opt.root,
-        opt.cache_size,
-        opt.cache_ttl,
-        no_trash,
-    )
-    .await
-    .map_err(|_| {
-        io::Error::new(
-            io::ErrorKind::Other,
-            "initialize aliyundrive file system failed",
-        )
-    })?;
+    let drive = AliyunDrive::new(drive_config, opt.refresh_token)
+        .await
+        .map_err(|_| {
+            io::Error::new(io::ErrorKind::Other, "initialize aliyundrive client failed")
+        })?;
+    let fs = AliyunDriveFileSystem::new(drive, opt.root, opt.cache_size, opt.cache_ttl, no_trash)
+        .await
+        .map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::Other,
+                "initialize aliyundrive file system failed",
+            )
+        })?;
     debug!("aliyundrive file system initialized");
 
     let dav_server = DavHandler::builder()

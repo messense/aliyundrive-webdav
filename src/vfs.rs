@@ -19,7 +19,7 @@ use webdav_handler::{
 
 use crate::{
     cache::Cache,
-    drive::{AliyunDrive, AliyunFile, DateTime, DriveConfig, FileType},
+    drive::{AliyunDrive, AliyunFile, DateTime, FileType},
 };
 
 const UPLOAD_CHUNK_SIZE: u64 = 16 * 1024 * 1024; // 16MB
@@ -35,14 +35,12 @@ pub struct AliyunDriveFileSystem {
 
 impl AliyunDriveFileSystem {
     pub async fn new(
-        config: DriveConfig,
-        refresh_token: String,
+        drive: AliyunDrive,
         root: String,
         cache_size: usize,
         cache_ttl: u64,
         no_trash: bool,
     ) -> Result<Self> {
-        let drive = AliyunDrive::new(config, refresh_token).await?;
         let dir_cache = Cache::new(cache_size, cache_ttl);
         debug!("dir cache initialized");
         let root = if root.starts_with('/') {
