@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+* 增加 `arm_cortex-a5_vfpv4` 架构 OpenWrt 包（玩客云适用）
+
 ## 0.5.1
 
 * 修复 OpenWrt Luci 界面语言翻译问题
