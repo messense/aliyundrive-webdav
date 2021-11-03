@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 0.5.2
 
 * 增加 `arm_cortex-a5_vfpv4` 架构 OpenWrt 包（玩客云适用）
 
