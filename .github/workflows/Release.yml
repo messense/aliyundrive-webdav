@@ -284,6 +284,8 @@ jobs:
             sdk: "https://downloads.openwrt.org/snapshots/targets/ramips/mt7621/openwrt-sdk-ramips-mt7621_gcc-11.2.0_musl.Linux-x86_64.tar.xz"
           - cpu: "ox820"
             sdk: "https://downloads.openwrt.org/snapshots/targets/oxnas/ox820/openwrt-sdk-oxnas-ox820_gcc-11.2.0_musl_eabi.Linux-x86_64.tar.xz"
+          - cpu: "sama5"
+            sdk: "https://downloads.openwrt.org/snapshots/targets/at91/sama5/openwrt-sdk-at91-sama5_gcc-11.2.0_musl_eabi.Linux-x86_64.tar.xz"
     steps:
       - uses: actions/checkout@v2
       - name: Install build requirements
