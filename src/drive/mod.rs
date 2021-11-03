@@ -195,6 +195,7 @@ impl AliyunDrive {
                         continue;
                     } else {
                         last_err = Some(err);
+                        break;
                     }
                 }
             }
