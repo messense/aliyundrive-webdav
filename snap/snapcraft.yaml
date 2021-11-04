@@ -1,0 +1,25 @@
+name: aliyundrive-webdav
+version: '0.5.2'
+summary: 阿里云盘 WebDAV
+description: |
+  阿里云盘 WebDAV 服务
+
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+base: core18
+
+architectures:
+  - build-on: amd64
+  - build-on: i386
+  - build-on: arm64
+  - build-on: armhf
+
+parts:
+  aliyundrive-webdav:
+    plugin: rust
+    source: .
+
+apps:
+  aliyundrive-webdav:
+    command: bin/aliyundrive-webdav
