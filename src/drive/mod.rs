@@ -245,7 +245,11 @@ impl AliyunDrive {
                     Some(
                         status_code
                         @
+                        // 4xx
                         (StatusCode::UNAUTHORIZED
+                        | StatusCode::REQUEST_TIMEOUT
+                        | StatusCode::TOO_MANY_REQUESTS
+                        // 5xx
                         | StatusCode::INTERNAL_SERVER_ERROR
                         | StatusCode::BAD_GATEWAY
                         | StatusCode::SERVICE_UNAVAILABLE
