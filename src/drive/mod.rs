@@ -176,8 +176,13 @@ impl AliyunDrive {
                     return Ok(res);
                 }
                 Err(err) => {
+                    let mut should_warn = true;
                     let mut should_retry = match err.downcast_ref::<reqwest::Error>() {
-                        Some(e) => e.is_connect() || e.is_timeout(),
+                        Some(e) => {
+                            e.is_connect()
+                                || e.is_timeout()
+                                || matches!(e.status(), Some(StatusCode::TOO_MANY_REQUESTS))
+                        }
                         None => false,
                     };
                     // retry if command line refresh_token is invalid but we also have
@@ -186,10 +191,14 @@ impl AliyunDrive {
                         if !should_retry && &refresh_token != refresh_token_from_file {
                             refresh_token = refresh_token_from_file.trim().to_string();
                             should_retry = true;
+                            // don't warn if we are gonna try refresh_token from file
+                            should_warn = false;
                         }
                     }
                     if should_retry {
-                        warn!(error = %err, "refresh token failed, will wait and retry");
+                        if should_warn {
+                            warn!(error = %err, "refresh token failed, will wait and retry");
+                        }
                         last_err = Some(err);
                         time::sleep(Duration::from_secs(1)).await;
                         continue;
