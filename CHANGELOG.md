@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.5.3
+
+* 完善请求重试，处理请求 408、429 报错
+
 ## 0.5.2
 
 * 增加 `arm_cortex-a5_vfpv4` 架构 OpenWrt 包（玩客云适用）
@@ -12,7 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ## 0.5.0
 
-* 增加实验性[阿里云相册与网盘服务（PDS）](https://www.aliyun.com/product/storage/pds)支持，阿里云网站开通 PDS 服务后可通过传入 `domain_id` 和对应用户的 `refresh_token`（可通过访问 BasicUI 获取） 使用企业。
+* 增加实验性[阿里云相册与网盘服务（PDS）](https://www.aliyun.com/product/storage/pds)支持，阿里云网站开通 PDS 服务后可通过传入 `domain_id` 和对应用户的 `refresh_token`（可通过访问 BasicUI 获取） 使用。
 
 ## 0.4.8
 
