@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.5.4
+
+* 刷新 refresh token 增加 429 状态码重试
+
 ## 0.5.3
 
 * 完善请求重试，处理请求 408、429 报错
