@@ -1,0 +1,47 @@
+name: 🐛 问题反馈
+description: 请通过这里反馈遇到的 Bug 类问题
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈，请填写以下表单
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 请提供问题的简要描述
+      placeholder: The bug is...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 重现步骤
+      description: 请提供重现该问题的详细步骤
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: 运行平台
+      placeholder: 什么路由器/盒子？Docker？Windows/Linux/macOS？
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: 日志
+      description: 提供程序相关的报错日志
+    validations:
+      required: false
