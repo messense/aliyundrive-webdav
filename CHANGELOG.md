@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.5.5
+
+* 降级 OpenSSL 修复 MIPS 架构二进制文件无法正常运行的问题
+
 ## 0.5.4
 
 * 刷新 refresh token 增加 429 状态码重试
