@@ -24,7 +24,7 @@ body:
         2.
         3.
     validations:
-      required: false
+      required: true
   - type: input
     id: version
     attributes:
@@ -44,4 +44,4 @@ body:
       label: 日志
       description: 提供程序相关的报错日志
     validations:
-      required: false
+      required: true
