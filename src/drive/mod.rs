@@ -62,6 +62,10 @@ impl AliyunDrive {
         let client = reqwest::Client::builder()
             .user_agent(UA)
             .default_headers(headers)
+            // OSS closes idle connections after 60 seconds,
+            // so we can close idle connections ahead of time to prevent re-using them.
+            // See also https://github.com/hyperium/hyper/issues/2136
+            .pool_idle_timeout(Duration::from_secs(50))
             .connect_timeout(Duration::from_secs(10))
             .timeout(Duration::from_secs(30))
             .build()?;
