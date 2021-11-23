@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0
+
+* 调整连接池 idle 检测时间，避免下载文件时出现 `connection closed before message
+  completed` 报错
+* 功能相对稳定，发布 1.0 版本。
+
 ## 0.5.5
 
 * 降级 OpenSSL 修复 MIPS 架构二进制文件无法正常运行的问题
