@@ -76,6 +76,13 @@ docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 \
 
 ### QNAP 威联通 NAS
 
+#### QNAP 插件
+
+[qnap-aliyunpan-webdav](https://github.com/iranee/qnap-aliyunpan-webdav) by
+[@iranee](https://github.com/iranee).
+
+#### ContainerStation (Docker)
+
 管理员登陆 NAS 后安装 ContainerStation 并启动服务，在 Management (管理) 标签中 Create Application (新建应用)，配置如下
 
 ```yaml
