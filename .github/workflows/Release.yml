@@ -281,14 +281,16 @@ jobs:
             sdk: "https://downloads.openwrt.org/snapshots/targets/x86/64/openwrt-sdk-x86-64_gcc-11.2.0_musl.Linux-x86_64.tar.xz"
           - arch: "i386_pentium4"
             sdk: "https://downloads.openwrt.org/snapshots/targets/x86/generic/openwrt-sdk-x86-generic_gcc-11.2.0_musl.Linux-x86_64.tar.xz"
-          - arch: "mipsel_24kc"
-            sdk: "https://downloads.openwrt.org/snapshots/targets/ramips/mt7621/openwrt-sdk-ramips-mt7621_gcc-11.2.0_musl.Linux-x86_64.tar.xz"
           - arch: "arm_mpcore"
             sdk: "https://downloads.openwrt.org/snapshots/targets/oxnas/ox820/openwrt-sdk-oxnas-ox820_gcc-11.2.0_musl_eabi.Linux-x86_64.tar.xz"
           - arch: "arm_cortex-a5_vfpv4"
             sdk: "https://downloads.openwrt.org/snapshots/targets/at91/sama5/openwrt-sdk-at91-sama5_gcc-11.2.0_musl_eabi.Linux-x86_64.tar.xz"
           - arch: "arm_cortex-a7_neon-vfpv4"
             sdk: "https://downloads.openwrt.org/snapshots/targets/ipq40xx/generic/openwrt-sdk-ipq40xx-generic_gcc-11.2.0_musl_eabi.Linux-x86_64.tar.xz"
+          - arch: "mipsel_24kc"
+            sdk: "https://downloads.openwrt.org/snapshots/targets/ramips/mt7621/openwrt-sdk-ramips-mt7621_gcc-11.2.0_musl.Linux-x86_64.tar.xz"
+          - arch: "mips_24kc"
+            sdk: "https://archive.openwrt.org/releases/19.07.7/targets/ar71xx/nand/openwrt-sdk-19.07.7-ar71xx-nand_gcc-7.5.0_musl.Linux-x86_64.tar.xz"
     steps:
       - uses: actions/checkout@v2
       - name: Install build requirements
@@ -317,7 +319,7 @@ jobs:
           ./scripts/feeds update -a > /dev/null
           make defconfig
 
-          ./scripts/feeds install -d y -p "aliyundrive" -f -a
+          ./scripts/feeds install -d y -f -a
           make package/aliyundrive-webdav/compile V=s
           make package/luci-app-aliyundrive-webdav/compile V=s
           tree bin/packages/
