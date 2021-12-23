@@ -113,7 +113,7 @@ services:
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 1.0.0
+aliyundrive-webdav 1.1.0
 
 USAGE:
     aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
@@ -122,6 +122,7 @@ FLAGS:
     -I, --auto-index    Automatically generate index.html
     -h, --help          Prints help information
         --no-trash      Delete file permanently instead of trashing it
+	--read-only     Enable read only mode
     -V, --version       Prints version information
 
 OPTIONS:

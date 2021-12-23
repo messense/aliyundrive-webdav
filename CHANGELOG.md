@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.1.0
+
+* 增加只读模式，防止误操作删除文件
+
 ## 1.0.0
 
 * 调整连接池 idle 检测时间，避免下载文件时出现 `connection closed before message
