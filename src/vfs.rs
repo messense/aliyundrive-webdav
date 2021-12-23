@@ -31,6 +31,7 @@ pub struct AliyunDriveFileSystem {
     uploading: Arc<DashMap<String, Vec<AliyunFile>>>,
     root: PathBuf,
     no_trash: bool,
+    read_only: bool,
 }
 
 impl AliyunDriveFileSystem {
@@ -40,6 +41,7 @@ impl AliyunDriveFileSystem {
         cache_size: usize,
         cache_ttl: u64,
         no_trash: bool,
+        read_only: bool,
     ) -> Result<Self> {
         let dir_cache = Cache::new(cache_size, cache_ttl);
         debug!("dir cache initialized");
@@ -54,6 +56,7 @@ impl AliyunDriveFileSystem {
             uploading: Arc::new(DashMap::new()),
             root,
             no_trash,
+            read_only,
         })
     }
 
@@ -210,6 +213,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 if options.write && options.create_new {
                     return Err(FsError::Exists);
                 }
+                if options.write && self.read_only {
+                    return Err(FsError::Forbidden);
+                }
+
                 if let Some(size) = options.size {
                     // 上传中的文件刚开始 size 可能为 0，更新为正确的 size
                     if file.size == 0 {
@@ -218,6 +225,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 }
                 AliyunDavFile::new(self.clone(), file, parent_file.id)
             } else if options.write && (options.create || options.create_new) {
+                if self.read_only {
+                    return Err(FsError::Forbidden);
+                }
+
                 let size = options.size;
                 let name = dav_path
                     .file_name()
@@ -282,6 +293,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
         let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: create_dir");
         async move {
+            if self.read_only {
+                return Err(FsError::Forbidden);
+            }
+
             let parent_path = path.parent().ok_or(FsError::NotFound)?;
             let parent_file = self
                 .get_file(parent_path.to_path_buf())
@@ -312,6 +327,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
         let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: remove_dir");
         async move {
+            if self.read_only {
+                return Err(FsError::Forbidden);
+            }
+
             let file = self
                 .get_file(path.clone())
                 .await?
@@ -336,6 +355,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
         let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: remove_file");
         async move {
+            if self.read_only {
+                return Err(FsError::Forbidden);
+            }
+
             let file = self
                 .get_file(path.clone())
                 .await?
@@ -361,6 +384,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
         let to = self.normalize_dav_path(to_dav);
         debug!(from = %from.display(), to = %to.display(), "fs: copy");
         async move {
+            if self.read_only {
+                return Err(FsError::Forbidden);
+            }
+
             let file = self
                 .get_file(from.clone())
                 .await?
@@ -390,6 +417,10 @@ impl DavFileSystem for AliyunDriveFileSystem {
         let to = self.normalize_dav_path(to_dav);
         debug!(from = %from.display(), to = %to.display(), "fs: rename");
         async move {
+            if self.read_only {
+                return Err(FsError::Forbidden);
+            }
+
             if from.parent() == to.parent() {
                 // rename
                 if let Some(name) = to.file_name() {

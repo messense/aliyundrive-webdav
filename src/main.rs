@@ -56,6 +56,9 @@ struct Opt {
     /// Aliyun PDS domain id
     #[structopt(long)]
     domain_id: Option<String>,
+    /// Enable read only mode
+    #[structopt(long)]
+    read_only: bool,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -104,14 +107,21 @@ async fn main() -> anyhow::Result<()> {
         .map_err(|_| {
             io::Error::new(io::ErrorKind::Other, "initialize aliyundrive client failed")
         })?;
-    let fs = AliyunDriveFileSystem::new(drive, opt.root, opt.cache_size, opt.cache_ttl, no_trash)
-        .await
-        .map_err(|_| {
-            io::Error::new(
-                io::ErrorKind::Other,
-                "initialize aliyundrive file system failed",
-            )
-        })?;
+    let fs = AliyunDriveFileSystem::new(
+        drive,
+        opt.root,
+        opt.cache_size,
+        opt.cache_ttl,
+        no_trash,
+        opt.read_only,
+    )
+    .await
+    .map_err(|_| {
+        io::Error::new(
+            io::ErrorKind::Other,
+            "initialize aliyundrive file system failed",
+        )
+    })?;
     debug!("aliyundrive file system initialized");
 
     let dav_server = DavHandler::builder()
