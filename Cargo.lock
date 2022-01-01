@@ -838,9 +838,9 @@ dependencies = [
 
 [[package]]
 name = "moka"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9025173a26b78b605c3bb8af17cccc7f711f1f9433c5a4dc7f052c0fa8c5d106"
+checksum = "45eecb3b79090ea842cd369c6a735fa5923913cb4b51aa6c7f513037fe9c4abd"
 dependencies = [
  "async-io",
  "async-lock",
