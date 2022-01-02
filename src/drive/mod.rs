@@ -5,6 +5,7 @@ use std::time::{Duration, SystemTime};
 
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
+use dav_server::fs::{DavDirEntry, DavMetaData, FsFuture, FsResult};
 use futures_util::future::FutureExt;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -17,7 +18,6 @@ use tokio::{
     time,
 };
 use tracing::{debug, error, info, warn};
-use webdav_handler::fs::{DavDirEntry, DavMetaData, FsFuture, FsResult};
 
 mod model;
 

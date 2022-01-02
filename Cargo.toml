@@ -27,7 +27,7 @@ tokio = { version = "1.10.0", features = ["rt-multi-thread", "io-util", "net", "
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "local-time"] }
 url = "2.2.2"
-webdav-handler = { version = "0.2.0", default-features = false, features = ["hyper"] }
+dav-server = { version = "0.3.0", default-features = false, features = ["hyper"] }
 
 [features]
 default = ["rustls-tls", "atomic64"]
@@ -35,9 +35,6 @@ rustls-tls = ["reqwest/rustls-tls"]
 native-tls = ["reqwest/native-tls"]
 native-tls-vendored = ["reqwest/native-tls-vendored", "openssl-probe"]
 atomic64 = ["moka/atomic64"]
-
-[patch.crates-io]
-webdav-handler = { git = "https://github.com/messense/webdav-handler-rs.git", branch = "aliyundrive" }
 
 [profile.release]
 lto = true

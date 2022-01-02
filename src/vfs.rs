@@ -7,15 +7,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::Result;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use dashmap::DashMap;
-use futures_util::future::FutureExt;
-use tracing::{debug, error, trace};
-use webdav_handler::{
+use dav_server::{
     davpath::DavPath,
     fs::{
         DavDirEntry, DavFile, DavFileSystem, DavMetaData, FsError, FsFuture, FsStream, OpenOptions,
         ReadDirMeta,
     },
 };
+use futures_util::future::FutureExt;
+use tracing::{debug, error, trace};
 
 use crate::{
     cache::Cache,
