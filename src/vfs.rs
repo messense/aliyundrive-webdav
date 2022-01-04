@@ -38,7 +38,7 @@ impl AliyunDriveFileSystem {
     pub async fn new(
         drive: AliyunDrive,
         root: String,
-        cache_size: usize,
+        cache_size: u64,
         cache_ttl: u64,
         no_trash: bool,
         read_only: bool,

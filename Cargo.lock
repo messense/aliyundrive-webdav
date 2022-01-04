@@ -880,13 +880,14 @@ dependencies = [
 
 [[package]]
 name = "moka"
-version = "0.6.3"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45eecb3b79090ea842cd369c6a735fa5923913cb4b51aa6c7f513037fe9c4abd"
+checksum = "9139ba5bca4d1a230b18a77d716adc165ae1c7e89ef0a315b7a652f7299f28f9"
 dependencies = [
  "async-io",
  "async-lock",
  "crossbeam-channel",
+ "crossbeam-utils 0.8.5",
  "futures-util",
  "moka-cht",
  "num_cpus",
@@ -895,6 +896,7 @@ dependencies = [
  "quanta",
  "scheduled-thread-pool",
  "skeptic",
+ "smallvec",
  "thiserror",
  "uuid",
 ]

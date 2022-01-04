@@ -40,7 +40,7 @@ struct Opt {
     read_buffer_size: usize,
     /// Directory entries cache size
     #[clap(long, default_value = "1000")]
-    cache_size: usize,
+    cache_size: u64,
     /// Directory entries cache expiration time in seconds
     #[clap(long, default_value = "600")]
     cache_ttl: u64,

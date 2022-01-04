@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::time::Duration;
 
-use moka::future::{Cache as MokaCache, CacheBuilder};
+use moka::future::Cache as MokaCache;
 use tracing::trace;
 
 use crate::drive::AliyunFile;
@@ -12,8 +12,9 @@ pub struct Cache {
 }
 
 impl Cache {
-    pub fn new(max_capacity: usize, ttl: u64) -> Self {
-        let inner = CacheBuilder::new(max_capacity)
+    pub fn new(max_capacity: u64, ttl: u64) -> Self {
+        let inner = MokaCache::builder()
+            .max_capacity(max_capacity)
             .time_to_live(Duration::from_secs(ttl))
             .build();
         Self { inner }
