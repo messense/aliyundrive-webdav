@@ -21,6 +21,8 @@ jobs:
           target: aarch64-apple-darwin
           profile: minimal
           default: true
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v1
       - name: Build wheels - x86_64
         uses: messense/maturin-action@v1
         with:
@@ -92,6 +94,8 @@ jobs:
           toolchain: stable
           profile: minimal
           default: true
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v1
       - name: Build wheels
         uses: messense/maturin-action@v1
         with:
@@ -152,6 +156,10 @@ jobs:
         CFLAGS_armv7_unknown_linux_musleabihf: '-mfpu=vfpv3-d16'
     steps:
       - uses: actions/checkout@v2
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: ${{ matrix.platform.target }}
       - name: Build wheels - manylinux
         uses: messense/maturin-action@main
         with:
@@ -224,6 +232,10 @@ jobs:
       image: docker://messense/rust-musl-cross:${{ matrix.platform.image_tag }}
     steps:
       - uses: actions/checkout@v2
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: ${{ matrix.platform.target }}
       - name: Build
         env:
           RUSTFLAGS: -C target-feature=+crt-static -C link-arg=-s
