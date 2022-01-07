@@ -1,0 +1,14 @@
+image: freebsd/latest
+packages:
+  - rust
+  - gmake
+  - cmake
+sources:
+  - https://github.com/messense/aliyundrive-webdav
+tasks:
+  - test: |
+      cd aliyundrive-webdav
+      cargo build --release
+      tar czvf aliyundrive-webdav-freebsd.tar.gz target/release/aliyundrive-webdav
+artifacts:
+  - aliyundrive-webdav/aliyundrive-webdav-freebsd.tar.gz
