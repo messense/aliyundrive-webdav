@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.1.1
+
+* 修复潜在的内存泄漏问题
+
 ## 1.1.0
 
 * 增加只读模式，防止误操作删除文件
