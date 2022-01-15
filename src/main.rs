@@ -141,7 +141,6 @@ async fn main() -> anyhow::Result<()> {
         .unwrap()
         .next()
         .ok_or_else(|| io::Error::from(io::ErrorKind::AddrNotAvailable))?;
-    info!("listening on {:?}", addr);
 
     let make_service = hyper::service::make_service_fn(move |_| {
         let auth_user = auth_user.clone();
@@ -188,9 +187,8 @@ async fn main() -> anyhow::Result<()> {
         }
     });
 
-    let _ = hyper::Server::bind(&addr)
-        .serve(make_service)
-        .await
-        .map_err(|e| error!("server error: {}", e));
+    let server = hyper::Server::bind(&addr).serve(make_service);
+    info!("listening on {:?}", server.local_addr());
+    let _ = server.await.map_err(|e| error!("server error: {}", e));
     Ok(())
 }
