@@ -140,7 +140,7 @@ async fn main() -> anyhow::Result<()> {
         .to_socket_addrs()
         .unwrap()
         .next()
-        .unwrap();
+        .ok_or_else(|| io::Error::from(io::ErrorKind::AddrNotAvailable))?;
     info!("listening on {:?}", addr);
 
     let make_service = hyper::service::make_service_fn(move |_| {
