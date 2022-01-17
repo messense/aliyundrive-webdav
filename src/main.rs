@@ -1,10 +1,13 @@
-use std::convert::Infallible;
+use std::future::Future;
 use std::net::ToSocketAddrs;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 use std::{env, io, path::PathBuf};
 
 use clap::Parser;
 use dav_server::{body::Body, memls::MemLs, DavConfig, DavHandler};
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
+use hyper::{service::Service, Request, Response};
 use tracing::{debug, error, info};
 
 use drive::{AliyunDrive, DriveConfig};
@@ -73,8 +76,10 @@ async fn main() -> anyhow::Result<()> {
 
     let opt = Opt::parse();
     let auth_user = opt.auth_user;
-    let auth_pwd = opt.auth_password;
-    if (auth_user.is_some() && auth_pwd.is_none()) || (auth_user.is_none() && auth_pwd.is_some()) {
+    let auth_password = opt.auth_password;
+    if (auth_user.is_some() && auth_password.is_none())
+        || (auth_user.is_none() && auth_password.is_some())
+    {
         anyhow::bail!("auth-user and auth-password should be specified together.");
     }
 
@@ -142,53 +147,94 @@ async fn main() -> anyhow::Result<()> {
         .next()
         .ok_or_else(|| io::Error::from(io::ErrorKind::AddrNotAvailable))?;
 
-    let make_service = hyper::service::make_service_fn(move |_| {
-        let auth_user = auth_user.clone();
-        let auth_pwd = auth_pwd.clone();
-        let should_auth = auth_user.is_some() && auth_pwd.is_some();
-        let dav_server = dav_server.clone();
-        async move {
-            let func = move |req: hyper::Request<hyper::Body>| {
-                let dav_server = dav_server.clone();
-                let auth_user = auth_user.clone();
-                let auth_pwd = auth_pwd.clone();
-                async move {
-                    if should_auth {
-                        let auth_user = auth_user.unwrap();
-                        let auth_pwd = auth_pwd.unwrap();
-                        let user = match req.headers().typed_get::<Authorization<Basic>>() {
-                            Some(Authorization(basic))
-                                if basic.username() == auth_user
-                                    && basic.password() == auth_pwd =>
-                            {
-                                basic.username().to_string()
-                            }
-                            Some(_) | None => {
-                                // return a 401 reply.
-                                let response = hyper::Response::builder()
-                                    .status(401)
-                                    .header(
-                                        "WWW-Authenticate",
-                                        "Basic realm=\"aliyundrive-webdav\"",
-                                    )
-                                    .body(Body::from("Authentication required".to_string()))
-                                    .unwrap();
-                                return Ok(response);
-                            }
-                        };
-                        let config = DavConfig::new().principal(user);
-                        Ok::<_, Infallible>(dav_server.handle_with(config, req).await)
-                    } else {
-                        Ok::<_, Infallible>(dav_server.handle(req).await)
-                    }
-                }
-            };
-            Ok::<_, Infallible>(hyper::service::service_fn(func))
-        }
+    let server = hyper::Server::bind(&addr).serve(MakeSvc {
+        auth_user,
+        auth_password,
+        handler: dav_server,
     });
-
-    let server = hyper::Server::bind(&addr).serve(make_service);
     info!("listening on {:?}", server.local_addr());
     let _ = server.await.map_err(|e| error!("server error: {}", e));
     Ok(())
+}
+
+#[derive(Clone)]
+struct AliyunDriveWebDav {
+    auth_user: Option<String>,
+    auth_password: Option<String>,
+    handler: DavHandler,
+}
+
+impl Service<Request<hyper::Body>> for AliyunDriveWebDav {
+    type Response = Response<Body>;
+    type Error = hyper::Error;
+    #[allow(clippy::type_complexity)]
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, _: &mut Context) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: Request<hyper::Body>) -> Self::Future {
+        let should_auth = self.auth_user.is_some() && self.auth_password.is_some();
+        let dav_server = self.handler.clone();
+        let auth_user = self.auth_user.clone();
+        let auth_pwd = self.auth_password.clone();
+        Box::pin(async move {
+            if should_auth {
+                let auth_user = auth_user.unwrap();
+                let auth_pwd = auth_pwd.unwrap();
+                let user = match req.headers().typed_get::<Authorization<Basic>>() {
+                    Some(Authorization(basic))
+                        if basic.username() == auth_user && basic.password() == auth_pwd =>
+                    {
+                        basic.username().to_string()
+                    }
+                    Some(_) | None => {
+                        // return a 401 reply.
+                        let response = hyper::Response::builder()
+                            .status(401)
+                            .header("WWW-Authenticate", "Basic realm=\"aliyundrive-webdav\"")
+                            .body(Body::from("Authentication required".to_string()))
+                            .unwrap();
+                        return Ok(response);
+                    }
+                };
+                let config = DavConfig::new().principal(user);
+                Ok(dav_server.handle_with(config, req).await)
+            } else {
+                Ok(dav_server.handle(req).await)
+            }
+        })
+    }
+}
+
+struct MakeSvc {
+    auth_user: Option<String>,
+    auth_password: Option<String>,
+    handler: DavHandler,
+}
+
+impl<T> Service<T> for MakeSvc {
+    type Response = AliyunDriveWebDav;
+    type Error = hyper::Error;
+    #[allow(clippy::type_complexity)]
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, _: &mut Context) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _: T) -> Self::Future {
+        let auth_user = self.auth_user.clone();
+        let auth_password = self.auth_password.clone();
+        let handler = self.handler.clone();
+        let fut = async move {
+            Ok(AliyunDriveWebDav {
+                auth_user,
+                auth_password,
+                handler,
+            })
+        };
+        Box::pin(fut)
+    }
 }
