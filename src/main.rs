@@ -10,6 +10,17 @@ use headers::{authorization::Basic, Authorization, HeaderMapExt};
 use hyper::{service::Service, Request, Response};
 use tracing::{debug, error, info};
 
+#[cfg(feature = "rustls-tls")]
+use {
+    futures_util::stream::StreamExt,
+    hyper::server::accept,
+    hyper::server::conn::AddrIncoming,
+    rustls::{Certificate, PrivateKey, ServerConfig},
+    std::fs::File,
+    std::future::ready,
+    tls_listener::TlsListener,
+};
+
 use drive::{AliyunDrive, DriveConfig};
 use vfs::AliyunDriveFileSystem;
 
@@ -62,6 +73,14 @@ struct Opt {
     /// Enable read only mode
     #[clap(long)]
     read_only: bool,
+    /// TLS certificate file path
+    #[cfg(feature = "rustls-tls")]
+    #[clap(long, env = "TLS_CERT")]
+    tls_cert: Option<String>,
+    /// TLS private key file path
+    #[cfg(feature = "rustls-tls")]
+    #[clap(long, env = "TLS_KEY")]
+    tls_key: Option<String>,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -80,8 +99,15 @@ async fn main() -> anyhow::Result<()> {
     if (auth_user.is_some() && auth_password.is_none())
         || (auth_user.is_none() && auth_password.is_some())
     {
-        anyhow::bail!("auth-user and auth-password should be specified together.");
+        anyhow::bail!("auth-user and auth-password must be specified together.");
     }
+
+    #[cfg(feature = "rustls-tls")]
+    let use_tls = match (opt.tls_cert.as_ref(), opt.tls_key.as_ref()) {
+        (Some(_), Some(_)) => true,
+        (None, None) => false,
+        _ => anyhow::bail!("tls-cert and tls-key must be specified together."),
+    };
 
     let (drive_config, no_trash) = if let Some(domain_id) = opt.domain_id {
         (
@@ -147,12 +173,37 @@ async fn main() -> anyhow::Result<()> {
         .next()
         .ok_or_else(|| io::Error::from(io::ErrorKind::AddrNotAvailable))?;
 
+    #[cfg(feature = "rustls-tls")]
+    if use_tls {
+        let tls_key = opt.tls_key.as_ref().unwrap();
+        let tls_cert = opt.tls_cert.as_ref().unwrap();
+        let incoming = TlsListener::new(
+            rustls_server_config(tls_key, tls_cert)?,
+            AddrIncoming::bind(&addr)?,
+        )
+        .filter(|conn| {
+            if let Err(err) = conn {
+                error!("TLS error: {:?}", err);
+                ready(false)
+            } else {
+                ready(true)
+            }
+        });
+        let server = hyper::Server::builder(accept::from_stream(incoming)).serve(MakeSvc {
+            auth_user: auth_user.clone(),
+            auth_password: auth_password.clone(),
+            handler: dav_server.clone(),
+        });
+        info!("listening on https://{}", addr);
+        let _ = server.await.map_err(|e| error!("server error: {}", e));
+        return Ok(());
+    }
     let server = hyper::Server::bind(&addr).serve(MakeSvc {
         auth_user,
         auth_password,
         handler: dav_server,
     });
-    info!("listening on {:?}", server.local_addr());
+    info!("listening on http://{}", server.local_addr());
     let _ = server.await.map_err(|e| error!("server error: {}", e));
     Ok(())
 }
@@ -237,4 +288,25 @@ impl<T> Service<T> for MakeSvc {
         };
         Box::pin(fut)
     }
+}
+
+#[cfg(feature = "rustls-tls")]
+fn rustls_server_config(key: &str, cert: &str) -> anyhow::Result<ServerConfig> {
+    let mut key_reader = io::BufReader::new(File::open(key)?);
+    let mut cert_reader = io::BufReader::new(File::open(cert)?);
+
+    let key = PrivateKey(rustls_pemfile::pkcs8_private_keys(&mut key_reader)?.remove(0));
+    let certs = rustls_pemfile::certs(&mut cert_reader)?
+        .into_iter()
+        .map(Certificate)
+        .collect();
+
+    let mut config = ServerConfig::builder()
+        .with_safe_defaults()
+        .with_no_client_auth()
+        .with_single_cert(certs, key)?;
+
+    config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
+
+    Ok(config)
 }
