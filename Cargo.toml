@@ -28,9 +28,11 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "local-time"] }
 url = "2.2.2"
 dav-server = { version = "0.3.0", default-features = false, features = ["hyper"] }
+
+# TLS server support
 rustls = { version = "0.20.2", optional = true }
 rustls-pemfile = { version = "0.2.1", optional = true }
-tls-listener = { version = "0.2.1", features = ["hyper-h1", "hyper-h2"], optional = true }
+tls-listener = { version = "0.3.0", features = ["hyper-h1", "hyper-h2"], optional = true }
 
 [features]
 default = ["rustls-tls", "atomic64"]
@@ -42,6 +44,3 @@ atomic64 = ["moka/atomic64"]
 [profile.release]
 lto = true
 opt-level = "z"  # Optimize for size
-
-[patch.crates-io]
-tls-listener = { git = "https://github.com/tmccombs/tls-listener.git", branch = "main" }

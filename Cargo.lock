@@ -1635,8 +1635,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tls-listener"
-version = "0.2.1"
-source = "git+https://github.com/tmccombs/tls-listener.git?branch=main#75d5b5a7d92b398b30c6dc86fe1c62573b22b2b2"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82d86ddfafe587bf2072d81d89bcb4af4b6f8e47378b35eb19a50dcc11293492"
 dependencies = [
  "futures-util",
  "hyper",
