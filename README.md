@@ -35,12 +35,12 @@ sudo snap install aliyundrive-webdav
 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，以 nanopi r4s 为例：
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.1.1/aliyundrive-webdav_1.1.1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.1.1/luci-app-aliyundrive-webdav_1.1.1_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.1.1/luci-i18n-aliyundrive-webdav-zh-cn_1.1.1-1_all.ipk
-opkg install aliyundrive-webdav_1.1.1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_1.1.1_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.1.1-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.0/aliyundrive-webdav_1.2.0_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.0/luci-app-aliyundrive-webdav_1.2.0_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.0/luci-i18n-aliyundrive-webdav-zh-cn_1.2.0-1_all.ipk
+opkg install aliyundrive-webdav_1.2.0_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_1.2.0_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.2.0-1_all.ipk
 ```
 
 其它 CPU 架构的路由器可在 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面中查找对应的架构的主程序 ipk 文件下载安装， 常见
@@ -116,33 +116,33 @@ services:
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 1.1.1
+aliyundrive-webdav 1.2.0
 
 USAGE:
-    aliyundrive-webdav [FLAGS] [OPTIONS] --refresh-token <refresh-token>
-
-FLAGS:
-    -I, --auto-index    Automatically generate index.html
-    -h, --help          Prints help information
-        --no-trash      Delete file permanently instead of trashing it
-	--read-only     Enable read only mode
-    -V, --version       Prints version information
+    aliyundrive-webdav [OPTIONS] --refresh-token <REFRESH_TOKEN>
 
 OPTIONS:
-    -W, --auth-password <auth-password>          WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
-    -U, --auth-user <auth-user>                  WebDAV authentication username [env: WEBDAV_AUTH_USER=]
-        --cache-size <cache-size>                Directory entries cache size [default: 1000]
-        --cache-ttl <cache-ttl>                  Directory entries cache expiration time in seconds [default: 600]
-        --domain-id <domain-id>                  Aliyun PDS domain id
-        --host <host>                            Listen host [env: HOST=]  [default: 0.0.0.0]
-    -p, --port <port>                            Listen port [env: PORT=]  [default: 8080]
-    -S, --read-buffer-size <read-buffer-size>
-            Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
-
-    -r, --refresh-token <refresh-token>          Aliyun drive refresh token [env: REFRESH_TOKEN=]
-        --root <root>                            Root directory path [default: /]
-    -w, --workdir <workdir>                      Working directory, refresh_token will be stored in there if specified
+        --cache-size <CACHE_SIZE>                Directory entries cache size [default: 1000]
+        --cache-ttl <CACHE_TTL>                  Directory entries cache expiration time in seconds [default: 600]
+        --domain-id <DOMAIN_ID>                  Aliyun PDS domain id
+    -h, --help                                   Print help information
+        --host <HOST>                            Listen host [env: HOST=] [default: 0.0.0.0]
+    -I, --auto-index                             Automatically generate index.html
+        --no-trash                               Delete file permanently instead of trashing it
+    -p, --port <PORT>                            Listen port [env: PORT=] [default: 8080]
+    -r, --refresh-token <REFRESH_TOKEN>          Aliyun drive refresh token [env: REFRESH_TOKEN=]
+        --read-only                              Enable read only mode
+        --root <ROOT>                            Root directory path [default: /]
+    -S, --read-buffer-size <READ_BUFFER_SIZE>    Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
+        --tls-cert <TLS_CERT>                    TLS certificate file path [env: TLS_CERT=]
+        --tls-key <TLS_KEY>                      TLS private key file path [env: TLS_KEY=]
+    -U, --auth-user <AUTH_USER>                  WebDAV authentication username [env: WEBDAV_AUTH_USER=]
+    -V, --version                                Print version information
+    -w, --workdir <WORKDIR>                      Working directory, refresh_token will be stored in there if specified
+    -W, --auth-password <AUTH_PASSWORD>          WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
 ```
+
+> 注意：TLS/HTTPS 暂不支持 MIPS 架构。
 
 ### 获取 refresh_token
 

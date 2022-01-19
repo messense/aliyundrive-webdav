@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.0
+
+* 增加 TLS/HTTPS 支持（暂不支持 MIPS 架构）
+* 增加 HTTP 2.0 支持
+* 修复 Docker 容器设置 `HOST` 环境变量不生效的问题
+* 增加构建发布 deb 和 rpm 包
+
 ## 1.1.1
 
 * 修复潜在的内存泄漏问题
