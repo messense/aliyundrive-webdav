@@ -142,13 +142,13 @@ jobs:
     strategy:
       matrix:
         platform: [
-          { target: "x86_64-unknown-linux-musl", image_tag: "x86_64-musl", wheel: true },
-          { target: "i686-unknown-linux-musl", image_tag: "i686-musl", wheel: true },
-          { target: "aarch64-unknown-linux-musl", image_tag: "aarch64-musl", wheel: true },
-          { target: "armv7-unknown-linux-musleabihf", image_tag: "armv7-musleabihf", wheel: true },
-          { target: "armv7-unknown-linux-musleabi", image_tag: "armv7-musleabi", wheel: false },
-          { target: "arm-unknown-linux-musleabihf", image_tag: "arm-musleabihf", wheel: false },
-          { target: "arm-unknown-linux-musleabi", image_tag: "arm-musleabi", wheel: false },
+          { target: "x86_64-unknown-linux-musl", image_tag: "x86_64-musl", wheel: true, deb: true },
+          { target: "i686-unknown-linux-musl", image_tag: "i686-musl", wheel: true, deb: true },
+          { target: "aarch64-unknown-linux-musl", image_tag: "aarch64-musl", wheel: true, deb: true },
+          { target: "armv7-unknown-linux-musleabihf", image_tag: "armv7-musleabihf", wheel: true, deb: true },
+          { target: "armv7-unknown-linux-musleabi", image_tag: "armv7-musleabi", wheel: false, deb: true },
+          { target: "arm-unknown-linux-musleabihf", image_tag: "arm-musleabihf", wheel: false, deb: false },
+          { target: "arm-unknown-linux-musleabi", image_tag: "arm-musleabi", wheel: false, deb: false },
         ]
     container:
       image: docker://messense/rust-musl-cross:${{ matrix.platform.image_tag }}
@@ -175,6 +175,17 @@ jobs:
           manylinux: musllinux_1_1
           container: off
           args: --release --out dist --no-sdist --strip
+      - name: Install cargo packages
+        if: matrix.platform.deb
+        run: |
+          which cargo-deb > /dev/null || cargo install --target `rustc -vV | grep host: | awk '{print $2}'` cargo-deb
+          which cargo-generate-rpm > /dev/null || cargo install --target `rustc -vV | grep host: | awk '{print $2}'` cargo-generate-rpm
+      - name: Build Debian package
+        if: matrix.platform.deb
+        run: cargo deb --target=${{ matrix.platform.target }} --no-build --no-strip
+      - name: Build RPM package
+        if: matrix.platform.deb
+        run: cargo generate-rpm --target=${{ matrix.platform.target }} --payload-compress none
       - name: Upload wheels
         if: matrix.platform.wheel
         uses: actions/upload-artifact@v2
@@ -192,6 +203,20 @@ jobs:
         with:
           name: ${{ matrix.platform.target }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
+          if-no-files-found: error
+      - name: Upload deb artifacts
+        if: matrix.platform.deb
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.platform.target }}-deb
+          path: target/${{ matrix.platform.target }}/debian/aliyundrive-webdav_*.deb
+          if-no-files-found: error
+      - name: Upload RPM artifacts
+        if: matrix.platform.deb
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.platform.target }}-rpm
+          path: target/${{ matrix.platform.target }}/generate-rpm/aliyundrive-webdav*.rpm
           if-no-files-found: error
       - name: Get tag
         if: "startsWith(github.ref, 'refs/tags/')"
@@ -213,6 +238,29 @@ jobs:
           file_glob: true
           overwrite: true
           tag: ${{ github.ref }}
+      - name: Upload deb to GitHub Release
+        uses: svenstaro/upload-release-action@v2
+        if: "startsWith(github.ref, 'refs/tags/') && matrix.platform.deb"
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/${{ matrix.platform.target }}/debian/aliyundrive-webdav_*.deb
+          file_glob: true
+          overwrite: true
+          tag: ${{ github.ref }}
+      - name: Upload RPM to GitHub Release
+        uses: svenstaro/upload-release-action@v2
+        if: "startsWith(github.ref, 'refs/tags/') && matrix.platform.deb"
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/${{ matrix.platform.target }}/generate-rpm/aliyundrive-webdav*.rpm
+          file_glob: true
+          overwrite: true
+          tag: ${{ github.ref }}
+      - name: Remove cached deb and RPM packages
+        if: matrix.platform.deb
+        run: |
+          rm -rf target/${{ matrix.platform.target }}/debian
+          rm -rf target/${{ matrix.platform.target }}/generate-rpm
 
   linux-others:
     runs-on: ubuntu-latest

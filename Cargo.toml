@@ -44,3 +44,23 @@ atomic64 = ["moka/atomic64"]
 [profile.release]
 lto = true
 opt-level = "z"  # Optimize for size
+
+[package.metadata.deb]
+maintainer = "messense <messense@icloud.com>"
+copyright = "2021-present, messense <messense@icloud.com>"
+license-file = ["LICENSE", "4"]
+extended-description = """\
+WebDAV server for AliyunDrive"""
+section = "utility"
+priority = "optional"
+assets = [
+    ["target/release/aliyundrive-webdav", "usr/bin/", "755"],
+    ["systemd.service", "etc/systemd/system/aliyundrive-webdav.service", "644"],
+]
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/release/aliyundrive-webdav", dest = "/usr/bin/aliyundrive-webdav", mode = "0755" },
+    { source = "LICENSE", dest = "/usr/share/doc/aliyundrive-webdav/LICENSE", doc = true, mode = "0644" },
+    { source = "systemd.service", dest = "/etc/systemd/system/aliyundrive-webdav.service", config = true, mode = "0644" },
+]

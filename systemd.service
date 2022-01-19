@@ -1,0 +1,13 @@
+[Unit]
+Description=AliyunDrive WebDAV
+After=network.target
+
+[Service]
+Type=simple
+Environment="REFRESH_TOKEN="
+ExecStart=/usr/bin/aliyundrive-webdav --auto-index -w /etc/aliyundrive-webdav
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
