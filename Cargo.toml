@@ -17,7 +17,7 @@ clap = { version = "3.0.1", features = ["derive", "env", "wrap_help"] }
 dashmap = "5.0.0"
 futures-util = "0.3"
 headers = "0.3.4"
-hyper = { version = "0.14.11", features = ["server"] }
+hyper = { version = "0.14.11", features = ["server", "http2"] }
 moka = { version = "0.7.1", default-features = false, features = ["future"] }
 openssl-probe = { version = "0.1.4", optional = true }
 reqwest = { version = "0.11.7", default-features = false, features = ["json", "gzip"] }
@@ -30,7 +30,7 @@ url = "2.2.2"
 dav-server = { version = "0.3.0", default-features = false, features = ["hyper"] }
 rustls = { version = "0.20.2", optional = true }
 rustls-pemfile = { version = "0.2.1", optional = true }
-tls-listener = { version = "0.2.1", features = ["hyper-h1"], optional = true }
+tls-listener = { version = "0.2.1", features = ["hyper-h1", "hyper-h2"], optional = true }
 
 [features]
 default = ["rustls-tls", "atomic64"]
