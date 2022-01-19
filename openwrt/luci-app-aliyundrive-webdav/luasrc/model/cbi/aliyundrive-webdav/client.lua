@@ -28,6 +28,9 @@ port = e:option(Value, "port", translate("Port"))
 port.default = "8080"
 port.datatype = "port"
 
+tls_cert = e:option(Value, "tls_cert", translate("TLS certificate file path"))
+tls_key = e:option(Value, "tls_key", translate("TLS private key file path"))
+
 auth_user = e:option(Value, "auth_user", translate("Username"))
 auth_password = e:option(Value, "auth_password", translate("Password"))
 auth_password.password = true
