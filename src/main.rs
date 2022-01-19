@@ -1,8 +1,9 @@
 use std::future::Future;
 use std::net::ToSocketAddrs;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::task::{Context, Poll};
-use std::{env, io, path::PathBuf};
+use std::{env, io};
 
 use clap::Parser;
 use dav_server::{body::Body, memls::MemLs, DavConfig, DavHandler};
@@ -76,11 +77,11 @@ struct Opt {
     /// TLS certificate file path
     #[cfg(feature = "rustls-tls")]
     #[clap(long, env = "TLS_CERT")]
-    tls_cert: Option<String>,
+    tls_cert: Option<PathBuf>,
     /// TLS private key file path
     #[cfg(feature = "rustls-tls")]
     #[clap(long, env = "TLS_KEY")]
-    tls_key: Option<String>,
+    tls_key: Option<PathBuf>,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -291,7 +292,7 @@ impl<T> Service<T> for MakeSvc {
 }
 
 #[cfg(feature = "rustls-tls")]
-fn rustls_server_config(key: &str, cert: &str) -> anyhow::Result<ServerConfig> {
+fn rustls_server_config(key: &Path, cert: &Path) -> anyhow::Result<ServerConfig> {
     let mut key_reader = io::BufReader::new(File::open(key)?);
     let mut cert_reader = io::BufReader::new(File::open(cert)?);
 
