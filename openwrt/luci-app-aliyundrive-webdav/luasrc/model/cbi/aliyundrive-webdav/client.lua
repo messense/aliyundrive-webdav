@@ -1,6 +1,3 @@
-local uci = luci.model.uci.cursor()
-local m, e
-
 m = Map("aliyundrive-webdav")
 m.title = translate("AliyunDrive WebDAV")
 m.description = translate("<a href=\"https://github.com/messense/aliyundrive-webdav\" target=\"_blank\">Project GitHub URL</a>")
