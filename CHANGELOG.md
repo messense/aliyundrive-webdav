@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.1
+
+* 支持 OpenWrt 19.07
+
 ## 1.2.0
 
 * 增加 TLS/HTTPS 支持（暂不支持 MIPS 架构）
