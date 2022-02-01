@@ -16,7 +16,7 @@ bytes = "1.0.1"
 clap = { version = "3.0.1", features = ["derive", "env", "wrap_help"] }
 dashmap = "5.0.0"
 futures-util = "0.3"
-headers = "0.3.4"
+headers = "0.3.6"
 hyper = { version = "0.14.11", features = ["server", "http2"] }
 moka = { version = "0.7.1", default-features = false, features = ["future"] }
 openssl-probe = { version = "0.1.4", optional = true }
