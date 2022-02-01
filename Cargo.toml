@@ -23,7 +23,7 @@ openssl-probe = { version = "0.1.4", optional = true }
 reqwest = { version = "0.11.7", default-features = false, features = ["json", "gzip"] }
 serde = { version = "1.0.134", features = ["derive"] }
 time = { version = "0.3", features = ["formatting", "parsing"] }
-tokio = { version = "1.10.0", features = ["rt-multi-thread", "io-util", "net", "time", "sync", "macros", "parking_lot", "fs"] }
+tokio = { version = "1.16.1", features = ["rt-multi-thread", "io-util", "net", "time", "sync", "macros", "parking_lot", "fs"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "local-time"] }
 url = "2.2.2"
