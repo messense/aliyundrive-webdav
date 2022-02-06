@@ -296,7 +296,7 @@ fn rustls_server_config(key: &Path, cert: &Path) -> anyhow::Result<ServerConfig>
     let mut key_reader = io::BufReader::new(File::open(key)?);
     let mut cert_reader = io::BufReader::new(File::open(cert)?);
 
-    let key = PrivateKey(rustls_pemfile::pkcs8_private_keys(&mut key_reader)?.remove(0));
+    let key = PrivateKey(private_keys(&mut key_reader)?.remove(0));
     let certs = rustls_pemfile::certs(&mut cert_reader)?
         .into_iter()
         .map(Certificate)
@@ -310,4 +310,20 @@ fn rustls_server_config(key: &Path, cert: &Path) -> anyhow::Result<ServerConfig>
     config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
 
     Ok(config)
+}
+
+#[cfg(feature = "rustls-tls")]
+fn private_keys(rd: &mut dyn io::BufRead) -> Result<Vec<Vec<u8>>, io::Error> {
+    use rustls_pemfile::{read_one, Item};
+
+    let mut keys = Vec::<Vec<u8>>::new();
+    loop {
+        match read_one(rd)? {
+            None => return Ok(keys),
+            Some(Item::RSAKey(key)) => keys.push(key),
+            Some(Item::PKCS8Key(key)) => keys.push(key),
+            Some(Item::ECKey(key)) => keys.push(key),
+            _ => {}
+        };
+    }
 }
