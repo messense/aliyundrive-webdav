@@ -82,9 +82,12 @@ jobs:
             target: x86_64-pc-windows-msvc
           - arch: x86
             target: i686-pc-windows-msvc
+          - arch: arm64
+            target: aarch64-pc-windows-msvc
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+        if: matrix.platform.arch != 'arm64'
         with:
           python-version: 3.9
           architecture: ${{ matrix.platform.arch }}
@@ -97,11 +100,19 @@ jobs:
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v1
       - name: Build wheels
+        if: matrix.platform.arch != 'arm64'
         uses: messense/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --no-sdist --strip
+      - name: Build wheels
+        if: matrix.platform.arch == 'arm64'
+        uses: messense/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --no-sdist --strip --cargo-extra-args="--no-default-features" --cargo-extra-args="--features atomic64,native-tls"
       - name: Install built wheel
+        if: matrix.platform.arch != 'arm64'
         run: |
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
           aliyundrive-webdav --help

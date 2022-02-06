@@ -1,6 +1,6 @@
 use std::future::Future;
 use std::net::ToSocketAddrs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{env, io};
@@ -19,6 +19,7 @@ use {
     rustls::{Certificate, PrivateKey, ServerConfig},
     std::fs::File,
     std::future::ready,
+    std::path::Path,
     tls_listener::TlsListener,
 };
 
