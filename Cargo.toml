@@ -14,7 +14,7 @@ readme = "README.md"
 anyhow = "1.0.52"
 bytes = "1.0.1"
 clap = { version = "3.0.1", features = ["derive", "env", "wrap_help"] }
-dashmap = "5.0.0"
+dashmap = "4.0.2"
 futures-util = "0.3"
 headers = "0.3.6"
 hyper = { version = "0.14.11", features = ["server", "http2"] }
