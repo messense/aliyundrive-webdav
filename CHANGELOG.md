@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.2
+
+* TLS/HTTPS 支持 RSA 私钥格式
+
 ## 1.2.1
 
 * 支持 OpenWrt 19.07
