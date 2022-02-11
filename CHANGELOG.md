@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.3
+
+* 增加 Windows arm64 架构支持
+
 ## 1.2.2
 
 * TLS/HTTPS 支持 RSA 私钥格式
