@@ -595,7 +595,7 @@ function js_beautify(js_source_text, indent_size, indent_character, indent_level
 
 	function print_space() {
 		var last_output = output.length ? output[output.length - 1] : ' ';
-		if (last_output !== ' ' && last_output !== '\n' && last_output !== indent_string) { // prevent occassional duplicate space
+		if (last_output !== ' ' && last_output !== '\n' && last_output !== indent_string) { // prevent occasional duplicate space
 			output.push(' ');
 		}
 	}
