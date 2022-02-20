@@ -20,6 +20,7 @@ headers = "0.3.6"
 hyper = { version = "0.14.11", features = ["server", "http2"] }
 moka = { version = "0.7.1", default-features = false, features = ["future"] }
 openssl-probe = { version = "0.1.4", optional = true }
+path-slash = "0.1.4"
 reqwest = { version = "0.11.7", default-features = false, features = ["json", "gzip"] }
 serde = { version = "1.0.134", features = ["derive"] }
 time = { version = "0.3", features = ["formatting", "parsing"] }
@@ -33,7 +34,6 @@ dav-server = { version = "0.3.0", default-features = false, features = ["hyper"]
 rustls = { version = "0.20.3", optional = true }
 rustls-pemfile = { version = "0.3.0", optional = true }
 tls-listener = { version = "0.3.0", features = ["hyper-h1", "hyper-h2"], optional = true }
-path-slash = "0.1.4"
 
 [features]
 default = ["rustls-tls", "atomic64"]
