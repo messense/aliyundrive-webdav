@@ -15,6 +15,7 @@ use dav_server::{
     },
 };
 use futures_util::future::FutureExt;
+use path_slash::PathBufExt;
 use tracing::{debug, error, trace};
 
 use crate::{
@@ -84,7 +85,7 @@ impl AliyunDriveFileSystem {
     }
 
     async fn get_file(&self, path: PathBuf) -> Result<Option<AliyunFile>, FsError> {
-        let path_str = path.to_string_lossy().into_owned();
+        let path_str = path.to_slash_lossy();
         let file = self.find_in_cache(&path)?;
         if let Some(file) = file {
             trace!(path = %path.display(), file_id = %file.id, "file found in cache");
@@ -115,7 +116,7 @@ impl AliyunDriveFileSystem {
     }
 
     async fn read_dir_and_cache(&self, path: PathBuf) -> Result<Vec<AliyunFile>, FsError> {
-        let path_str = path.to_string_lossy().into_owned();
+        let path_str = path.to_slash_lossy();
         debug!(path = %path_str, "read_dir and cache");
         let parent_file_id = if path_str == "/" {
             "root".to_string()
