@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.2.3
+## 1.2.5
+
+* 修复 Windows 版本访问文件 404 问题
+
+## 1.2.4
 
 * 修正 OpenWrt package autorelease 版本号
 
