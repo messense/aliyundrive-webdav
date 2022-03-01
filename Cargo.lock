@@ -1684,15 +1684,15 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tls-listener"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82d86ddfafe587bf2072d81d89bcb4af4b6f8e47378b35eb19a50dcc11293492"
+checksum = "42257668593ac35c772fa8bfb4bfd4d357298d5a6b816cb9a4462ec3b7627d26"
 dependencies = [
  "futures-util",
  "hyper",
- "pin-project",
+ "pin-project-lite",
+ "thiserror",
  "tokio",
- "tokio-rustls",
 ]
 
 [[package]]
