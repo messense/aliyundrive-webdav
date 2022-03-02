@@ -2,6 +2,7 @@ use std::future::Future;
 use std::net::ToSocketAddrs;
 use std::path::PathBuf;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::{env, io};
 
@@ -16,11 +17,12 @@ use {
     futures_util::stream::StreamExt,
     hyper::server::accept,
     hyper::server::conn::AddrIncoming,
-    rustls::{Certificate, PrivateKey, ServerConfig},
     std::fs::File,
     std::future::ready,
     std::path::Path,
     tls_listener::TlsListener,
+    tokio_rustls::rustls::{Certificate, PrivateKey, ServerConfig},
+    tokio_rustls::TlsAcceptor,
 };
 
 use drive::{AliyunDrive, DriveConfig};
@@ -179,18 +181,17 @@ async fn main() -> anyhow::Result<()> {
     if use_tls {
         let tls_key = opt.tls_key.as_ref().unwrap();
         let tls_cert = opt.tls_cert.as_ref().unwrap();
-        let incoming = TlsListener::new(
-            rustls_server_config(tls_key, tls_cert)?,
-            AddrIncoming::bind(&addr)?,
-        )
-        .filter(|conn| {
-            if let Err(err) = conn {
-                error!("TLS error: {:?}", err);
-                ready(false)
-            } else {
-                ready(true)
-            }
-        });
+        let incoming =
+            TlsListener::new(tls_acceptor(tls_key, tls_cert)?, AddrIncoming::bind(&addr)?).filter(
+                |conn| {
+                    if let Err(err) = conn {
+                        error!("TLS error: {:?}", err);
+                        ready(false)
+                    } else {
+                        ready(true)
+                    }
+                },
+            );
         let server = hyper::Server::builder(accept::from_stream(incoming)).serve(MakeSvc {
             auth_user: auth_user.clone(),
             auth_password: auth_password.clone(),
@@ -293,7 +294,7 @@ impl<T> Service<T> for MakeSvc {
 }
 
 #[cfg(feature = "rustls-tls")]
-fn rustls_server_config(key: &Path, cert: &Path) -> anyhow::Result<ServerConfig> {
+fn tls_acceptor(key: &Path, cert: &Path) -> anyhow::Result<TlsAcceptor> {
     let mut key_reader = io::BufReader::new(File::open(key)?);
     let mut cert_reader = io::BufReader::new(File::open(cert)?);
 
@@ -310,7 +311,7 @@ fn rustls_server_config(key: &Path, cert: &Path) -> anyhow::Result<ServerConfig>
 
     config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
 
-    Ok(config)
+    Ok(Arc::new(config).into())
 }
 
 #[cfg(feature = "rustls-tls")]

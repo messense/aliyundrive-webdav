@@ -31,13 +31,13 @@ url = "2.2.2"
 dav-server = { version = "0.3.0", default-features = false, features = ["hyper"] }
 
 # TLS server support
-rustls = { version = "0.20.3", optional = true }
 rustls-pemfile = { version = "0.3.0", optional = true }
-tls-listener = { version = "0.3.0", features = ["hyper-h1", "hyper-h2"], optional = true }
+tls-listener = { version = "0.4.0", features = ["hyper-h1", "hyper-h2"], optional = true }
+tokio-rustls = { version = "0.23.2", optional = true }
 
 [features]
 default = ["rustls-tls", "atomic64"]
-rustls-tls = ["reqwest/rustls-tls", "rustls", "rustls-pemfile", "tls-listener", "hyper/stream"]
+rustls-tls = ["reqwest/rustls-tls", "rustls-pemfile", "tls-listener/rustls", "hyper/stream", "tokio-rustls"]
 native-tls = ["reqwest/native-tls"]
 native-tls-vendored = ["reqwest/native-tls-vendored", "openssl-probe"]
 atomic64 = ["moka/atomic64"]
