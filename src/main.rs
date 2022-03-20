@@ -42,8 +42,13 @@ struct Opt {
     #[clap(short, env = "PORT", long, default_value = "8080")]
     port: u16,
     /// Aliyun drive refresh token
-    #[clap(short, long, env = "REFRESH_TOKEN")]
-    refresh_token: String,
+    #[clap(
+        short,
+        long,
+        env = "REFRESH_TOKEN",
+        required_unless_present = "workdir"
+    )]
+    refresh_token: Option<String>,
     /// WebDAV authentication username
     #[clap(short = 'U', long, env = "WEBDAV_AUTH_USER")]
     auth_user: Option<String>,
@@ -137,11 +142,7 @@ async fn main() -> anyhow::Result<()> {
             opt.no_trash,
         )
     };
-    let drive = AliyunDrive::new(drive_config, opt.refresh_token)
-        .await
-        .map_err(|_| {
-            io::Error::new(io::ErrorKind::Other, "initialize aliyundrive client failed")
-        })?;
+    let drive = AliyunDrive::new(drive_config, opt.refresh_token.unwrap_or_default()).await?;
     let fs = AliyunDriveFileSystem::new(
         drive,
         opt.root,
@@ -150,13 +151,7 @@ async fn main() -> anyhow::Result<()> {
         no_trash,
         opt.read_only,
     )
-    .await
-    .map_err(|_| {
-        io::Error::new(
-            io::ErrorKind::Other,
-            "initialize aliyundrive file system failed",
-        )
-    })?;
+    .await?;
     debug!("aliyundrive file system initialized");
 
     let dav_server = DavHandler::builder()
