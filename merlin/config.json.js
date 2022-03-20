@@ -4,5 +4,5 @@
     "md5": "c0bac93db83f87293a1e4efb7aa5a97c",
     "module": "aliyundrivewebdav",
     "title": "阿里云盘 WebDAV",
-    "version": "1.2.5"
+    "version": "1.2.6"
 }

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.6
+
+* 指定 `--workdir` 参数时 `--refresh-token` 参数可选
+
 ## 1.2.5
 
 * 修复 Windows 版本访问文件 404 问题
