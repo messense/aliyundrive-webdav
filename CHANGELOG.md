@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.7
+
+* 修复下载部分文件类型如 `.livp` 500 报错问题，由于阿里云盘接口没有返回 `.livp` 文件格式下载地址，暂时无法下载该格式文件
+
 ## 1.2.6
 
 * 指定 `--workdir` 参数时 `--refresh-token` 参数可选

@@ -35,12 +35,12 @@ sudo snap install aliyundrive-webdav
 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，以 nanopi r4s 为例：
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.6/aliyundrive-webdav_1.2.6-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.6/luci-app-aliyundrive-webdav_1.2.6_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.6/luci-i18n-aliyundrive-webdav-zh-cn_1.2.6-1_all.ipk
-opkg install aliyundrive-webdav_1.2.6-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_1.2.6_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.2.6-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.7/aliyundrive-webdav_1.2.7-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.7/luci-app-aliyundrive-webdav_1.2.7_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.2.7/luci-i18n-aliyundrive-webdav-zh-cn_1.2.7-1_all.ipk
+opkg install aliyundrive-webdav_1.2.7-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_1.2.7_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.2.7-1_all.ipk
 ```
 
 其它 CPU 架构的路由器可在 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面中查找对应的架构的主程序 ipk 文件下载安装， 常见
@@ -116,7 +116,7 @@ services:
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 1.2.6
+aliyundrive-webdav 1.2.7
 
 USAGE:
     aliyundrive-webdav [OPTIONS]
@@ -124,6 +124,7 @@ USAGE:
 OPTIONS:
         --cache-size <CACHE_SIZE>                Directory entries cache size [default: 1000]
         --cache-ttl <CACHE_TTL>                  Directory entries cache expiration time in seconds [default: 600]
+	--debug                                  Enable debug log
         --domain-id <DOMAIN_ID>                  Aliyun PDS domain id
     -h, --help                                   Print help information
         --host <HOST>                            Listen host [env: HOST=] [default: 0.0.0.0]
