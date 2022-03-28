@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ops;
 use std::time::SystemTime;
 
@@ -43,6 +44,64 @@ pub struct GetFileByPathRequest<'a> {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct GetFileRequest<'a> {
+    pub drive_id: &'a str,
+    pub file_id: &'a str,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct StreamInfo {
+    pub size: u64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GetFileResponse {
+    pub name: String,
+    pub file_extension: String,
+    #[serde(rename = "file_id")]
+    pub id: String,
+    pub r#type: FileType,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
+    #[serde(default)]
+    pub size: u64,
+    pub streams_info: HashMap<String, StreamInfo>,
+}
+
+impl From<GetFileResponse> for AliyunFile {
+    fn from(res: GetFileResponse) -> AliyunFile {
+        let size = if res.file_extension != "livp" || res.streams_info.is_empty() {
+            res.size
+        } else {
+            let name = res.name.replace(".livp", "");
+            let mut zip_size = 0;
+            for (typ, info) in &res.streams_info {
+                let name_len = format!("{}.{}", name, typ).len() as u64;
+                // local file header size
+                zip_size += 30;
+                zip_size += name_len;
+                // file size
+                zip_size += info.size;
+                // central directory entry size
+                zip_size += 46;
+                zip_size += name_len;
+            }
+            // End of central directory size
+            zip_size += 22;
+            zip_size
+        };
+        AliyunFile {
+            name: res.name,
+            id: res.id,
+            r#type: res.r#type,
+            created_at: res.created_at,
+            updated_at: res.updated_at,
+            size,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct GetFileDownloadUrlRequest<'a> {
     pub drive_id: &'a str,
     pub file_id: &'a str,
@@ -51,6 +110,8 @@ pub struct GetFileDownloadUrlRequest<'a> {
 #[derive(Debug, Clone, Deserialize)]
 pub struct GetFileDownloadUrlResponse {
     pub url: String,
+    #[serde(default)]
+    pub streams_url: HashMap<String, String>,
     pub size: u64,
     pub expiration: String,
 }

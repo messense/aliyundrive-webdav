@@ -19,7 +19,7 @@ use tokio::{
 };
 use tracing::{debug, error, info, warn};
 
-mod model;
+pub mod model;
 
 use model::*;
 pub use model::{AliyunFile, DateTime, FileType};
@@ -304,6 +304,30 @@ impl AliyunDrive {
         }
     }
 
+    pub async fn get_file(&self, file_id: &str) -> Result<Option<AliyunFile>> {
+        let drive_id = self.drive_id()?;
+        debug!(drive_id = %drive_id, file_id = %file_id, "get file");
+        let req = GetFileRequest { drive_id, file_id };
+        let res: Result<GetFileResponse> = self
+            .request(format!("{}/v2/file/get", self.config.api_base_url), &req)
+            .await
+            .and_then(|res| res.context("expect response"));
+        match res {
+            Ok(file) => Ok(Some(file.into())),
+            Err(err) => {
+                if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
+                    if matches!(req_err.status(), Some(StatusCode::NOT_FOUND)) {
+                        Ok(None)
+                    } else {
+                        Err(err)
+                    }
+                } else {
+                    Err(err)
+                }
+            }
+        }
+    }
+
     pub async fn get_by_path(&self, path: &str) -> Result<Option<AliyunFile>> {
         let drive_id = self.drive_id()?;
         debug!(drive_id = %drive_id, path = %path, "get file by path");
@@ -376,23 +400,27 @@ impl AliyunDrive {
             .and_then(|res| res.context("expect response"))
     }
 
-    pub async fn download(&self, url: &str, start_pos: u64, size: usize) -> Result<Bytes> {
+    pub async fn download(&self, url: &str, range: Option<(u64, usize)>) -> Result<Bytes> {
         use reqwest::header::RANGE;
 
-        let end_pos = start_pos + size as u64 - 1;
-        debug!(url = %url, start = start_pos, end = end_pos, "download file");
-        let range = format!("bytes={}-{}", start_pos, end_pos);
-        let res = self
-            .client
-            .get(url)
-            .header(RANGE, range)
-            .send()
-            .await?
-            .error_for_status()?;
+        let res = if let Some((start_pos, size)) = range {
+            let end_pos = start_pos + size as u64 - 1;
+            debug!(url = %url, start = start_pos, end = end_pos, "download file");
+            let range = format!("bytes={}-{}", start_pos, end_pos);
+            self.client
+                .get(url)
+                .header(RANGE, range)
+                .send()
+                .await?
+                .error_for_status()?
+        } else {
+            debug!(url = %url, "download file");
+            self.client.get(url).send().await?.error_for_status()?
+        };
         Ok(res.bytes().await?)
     }
 
-    pub async fn get_download_url(&self, file_id: &str) -> Result<String> {
+    pub async fn get_download_url(&self, file_id: &str) -> Result<GetFileDownloadUrlResponse> {
         debug!(file_id = %file_id, "get download url");
         let req = GetFileDownloadUrlRequest {
             drive_id: self.drive_id()?,
@@ -405,7 +433,7 @@ impl AliyunDrive {
             )
             .await?
             .context("expect response")?;
-        Ok(res.url)
+        Ok(res)
     }
 
     async fn trash(&self, file_id: &str) -> Result<()> {

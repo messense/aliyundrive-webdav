@@ -1,5 +1,6 @@
+use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::io::SeekFrom;
+use std::io::{Cursor, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -17,10 +18,11 @@ use dav_server::{
 use futures_util::future::FutureExt;
 use path_slash::PathBufExt;
 use tracing::{debug, error, trace};
+use zip::write::{FileOptions, ZipWriter};
 
 use crate::{
     cache::Cache,
-    drive::{AliyunDrive, AliyunFile, DateTime, FileType},
+    drive::{model::GetFileDownloadUrlResponse, AliyunDrive, AliyunFile, DateTime, FileType},
 };
 
 const UPLOAD_CHUNK_SIZE: u64 = 16 * 1024 * 1024; // 16MB
@@ -534,7 +536,7 @@ impl AliyunDavFile {
         }
     }
 
-    async fn get_download_url(&self) -> Result<String, FsError> {
+    async fn get_download_url(&self) -> Result<GetFileDownloadUrlResponse, FsError> {
         self.fs.drive.get_download_url(&self.file.id).await.map_err(|err| {
             error!(file_id = %self.file.id, file_name = %self.file.name, error = %err, "get download url failed");
             FsError::GeneralFailure
@@ -649,8 +651,25 @@ impl DavFile for AliyunDavFile {
     fn metadata(&'_ mut self) -> FsFuture<'_, Box<dyn DavMetaData>> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: metadata");
         async move {
-            let file = self.file.clone();
-            Ok(Box::new(file) as Box<dyn DavMetaData>)
+            // 阿里云盘接口没有 .livp 格式文件下载地址
+            // 我们用 heic 和 mov 文件生成 zip 文件还原 .livp 文件
+            // 故需要重新计算文件大小
+            if self.file.name.ends_with(".livp") {
+                if let Some(file) = self
+                    .fs
+                    .drive
+                    .get_file(&self.file.id)
+                    .await
+                    .map_err(|_| FsError::GeneralFailure)?
+                {
+                    Ok(Box::new(file) as Box<dyn DavMetaData>)
+                } else {
+                    Err(FsError::NotFound)
+                }
+            } else {
+                let file = self.file.clone();
+                Ok(Box::new(file) as Box<dyn DavMetaData>)
+            }
         }
         .boxed()
     }
@@ -692,33 +711,56 @@ impl DavFile for AliyunDavFile {
                 return Err(FsError::NotFound);
             }
             let download_url = self.download_url.take();
-            let download_url = if let Some(mut url) = download_url {
+            let (download_url, streams_url) = if let Some(mut url) = download_url {
                 if is_url_expired(&url) {
                     debug!(url = %url, "download url expired");
-                    url = self.get_download_url().await?;
+                    url = self.get_download_url().await?.url;
                 }
-                url
+                (url, HashMap::new())
             } else {
-                self.get_download_url().await?
+                let res = self.get_download_url().await?;
+                (res.url, res.streams_url)
             };
 
-            // TODO: Add support for downloading .livp files
-            if download_url.is_empty() {
-                return Err(FsError::NotFound);
+            if !download_url.is_empty() {
+                let content = self
+                    .fs
+                    .drive
+                    .download(&download_url, Some((self.current_pos, count)))
+                    .await
+                    .map_err(|err| {
+                        error!(url = %download_url, error = %err, "download file failed");
+                        FsError::NotFound
+                    })?;
+                self.current_pos += content.len() as u64;
+                self.download_url = Some(download_url);
+                Ok(content)
+            } else if streams_url.is_empty() {
+                Err(FsError::NotFound)
+            } else {
+                // Generate .livp file on the fly
+                let buf = Vec::new();
+                let mut zip = ZipWriter::new(Cursor::new(buf));
+                for (typ, url) in streams_url {
+                    let content = self.fs.drive.download(&url, None).await.map_err(|err| {
+                        error!(url = %download_url, error = %err, "download file failed");
+                        FsError::NotFound
+                    })?;
+                    let name = self.file.name.replace(".livp", &format!(".{}", typ));
+                    zip.start_file(
+                        name,
+                        FileOptions::default().compression_method(zip::CompressionMethod::Stored),
+                    )
+                    .map_err(|_| FsError::GeneralFailure)?;
+                    zip.write(&content).map_err(|_| FsError::GeneralFailure)?;
+                    self.current_pos += content.len() as u64;
+                }
+                let zip_buf = zip
+                    .finish()
+                    .map_err(|_| FsError::GeneralFailure)?
+                    .into_inner();
+                Ok(Bytes::from(zip_buf))
             }
-
-            let content = self
-                .fs
-                .drive
-                .download(&download_url, self.current_pos, count)
-                .await
-                .map_err(|err| {
-                    error!(url = %download_url, error = %err, "download file failed");
-                    FsError::NotFound
-                })?;
-            self.current_pos += content.len() as u64;
-            self.download_url = Some(download_url);
-            Ok(content)
         }
         .boxed()
     }
