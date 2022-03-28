@@ -2,7 +2,6 @@ use std::future::Future;
 use std::net::ToSocketAddrs;
 use std::path::PathBuf;
 use std::pin::Pin;
-use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::{env, io};
 
@@ -20,6 +19,7 @@ use {
     std::fs::File,
     std::future::ready,
     std::path::Path,
+    std::sync::Arc,
     tls_listener::TlsListener,
     tokio_rustls::rustls::{Certificate, PrivateKey, ServerConfig},
     tokio_rustls::TlsAcceptor,
