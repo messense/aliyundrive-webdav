@@ -26,7 +26,7 @@ pub use model::{AliyunFile, DateTime, FileType};
 
 const ORIGIN: &str = "https://www.aliyundrive.com";
 const REFERER: &str = "https://www.aliyundrive.com/";
-const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36";
+const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36";
 
 #[derive(Debug, Clone)]
 pub struct DriveConfig {
@@ -60,6 +60,10 @@ impl AliyunDrive {
         let mut headers = HeaderMap::new();
         headers.insert("Origin", HeaderValue::from_static(ORIGIN));
         headers.insert("Referer", HeaderValue::from_static(REFERER));
+        headers.insert(
+            "x-canary",
+            HeaderValue::from_static("client=web,app=adrive,version=v3.0.0"),
+        );
         let client = reqwest::Client::builder()
             .user_agent(UA)
             .default_headers(headers)
