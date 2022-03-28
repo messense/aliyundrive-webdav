@@ -702,6 +702,11 @@ impl DavFile for AliyunDavFile {
                 self.get_download_url().await?
             };
 
+            // TODO: Add support for downloading .livp files
+            if download_url.is_empty() {
+                return Err(FsError::NotFound);
+            }
+
             let content = self
                 .fs
                 .drive
