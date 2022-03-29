@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.3.0
+
+* 支持下载 `.livp` 格式文件
+
 ## 1.2.7
 
 * 修复下载部分文件类型如 `.livp` 500 报错问题，由于阿里云盘接口没有返回 `.livp` 文件格式下载地址，暂时无法下载该格式文件
