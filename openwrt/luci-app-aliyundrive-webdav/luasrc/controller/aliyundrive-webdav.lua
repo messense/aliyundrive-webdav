@@ -10,7 +10,7 @@ function index()
 	page.dependent = true
 	page.acl_depends = { "luci-app-aliyundrive-webdav" }
 
-	entry({"admin", "services", "aliyundrive-webdav", "client"}, cbi("aliyundrive-webdav/client"), _("Settings"), 10).leaf = true  -- 客户端配置
+	entry({"admin", "services", "aliyundrive-webdav", "client"}, cbi("aliyundrive-webdav/client"), _("Settings"), 10).leaf = true -- 客户端配置
 	entry({"admin", "services", "aliyundrive-webdav", "log"}, form("aliyundrive-webdav/log"), _("Log"), 30).leaf = true -- 日志页面
 
 	entry({"admin", "services", "aliyundrive-webdav", "status"}, call("action_status")).leaf = true -- 运行状态
