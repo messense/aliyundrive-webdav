@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.3.1
+
+* 降低获取文件下载地址接口调用次数
+
 ## 1.3.0
 
 * 支持下载 `.livp` 格式文件
