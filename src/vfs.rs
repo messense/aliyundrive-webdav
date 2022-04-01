@@ -251,6 +251,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     created_at: DateTime::new(now),
                     updated_at: DateTime::new(now),
                     size: size.unwrap_or(0),
+                    url: None,
                 };
                 let mut uploading = self.uploading.entry(parent_file.id.clone()).or_default();
                 uploading.push(file.clone());
@@ -509,7 +510,6 @@ struct AliyunDavFile {
     file: AliyunFile,
     parent_file_id: String,
     current_pos: u64,
-    download_url: Option<String>,
     upload_state: UploadState,
 }
 
@@ -531,7 +531,6 @@ impl AliyunDavFile {
             file,
             parent_file_id,
             current_pos: 0,
-            download_url: None,
             upload_state: UploadState::default(),
         }
     }
@@ -710,7 +709,7 @@ impl DavFile for AliyunDavFile {
                 // upload in progress
                 return Err(FsError::NotFound);
             }
-            let download_url = self.download_url.take();
+            let download_url = self.file.url.take();
             let (download_url, streams_url) = if let Some(mut url) = download_url {
                 if is_url_expired(&url) {
                     debug!(url = %url, "download url expired");
@@ -733,7 +732,7 @@ impl DavFile for AliyunDavFile {
                         FsError::NotFound
                     })?;
                 self.current_pos += content.len() as u64;
-                self.download_url = Some(download_url);
+                self.file.url = Some(download_url);
                 Ok(content)
             } else if streams_url.is_empty() {
                 Err(FsError::NotFound)

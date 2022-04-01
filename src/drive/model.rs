@@ -97,6 +97,7 @@ impl From<GetFileResponse> for AliyunFile {
             created_at: res.created_at,
             updated_at: res.updated_at,
             size,
+            url: None,
         }
     }
 }
@@ -256,6 +257,7 @@ pub struct AliyunFile {
     pub updated_at: DateTime,
     #[serde(default)]
     pub size: u64,
+    pub url: Option<String>,
 }
 
 impl AliyunFile {
@@ -268,6 +270,7 @@ impl AliyunFile {
             created_at: DateTime(now),
             updated_at: DateTime(now),
             size: 0,
+            url: None,
         }
     }
 }
