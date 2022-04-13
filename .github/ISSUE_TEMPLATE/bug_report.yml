@@ -5,7 +5,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        感谢反馈，请填写以下表单
+        感谢反馈，请填写以下表单。
+        注意请先搜索历史 issue，避免重复反馈相同的问题。
   - type: textarea
     id: description
     attributes:
