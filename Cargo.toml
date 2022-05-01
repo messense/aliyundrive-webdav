@@ -14,7 +14,7 @@ readme = "README.md"
 anyhow = "1.0.55"
 bytes = "1.0.1"
 clap = { version = "3.1.8", features = ["derive", "env", "wrap_help"] }
-dashmap = "5.1.0"
+dashmap = "5.3.2"
 dav-server = { version = "0.3.3", default-features = false, features = ["hyper"] }
 futures-util = "0.3"
 headers = "0.3.6"
