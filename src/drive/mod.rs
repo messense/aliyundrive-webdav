@@ -366,7 +366,7 @@ impl AliyunDrive {
         let mut marker = None;
         loop {
             let res = self.list(parent_file_id, marker.as_deref()).await?;
-            files.extend(res.items.into_iter());
+            files.extend(res.items.into_iter().map(|f| f.into()));
             if res.next_marker.is_empty() {
                 break;
             }
