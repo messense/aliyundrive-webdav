@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.3.2
+
+* 不使用阿里云盘文件列表接口返回的可能有问题的图片下载地址
+
 ## 1.3.1
 
 * 降低获取文件下载地址接口调用次数
