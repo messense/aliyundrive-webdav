@@ -20,7 +20,7 @@ use {
     std::future::ready,
     std::path::Path,
     std::sync::Arc,
-    tls_listener::TlsListener,
+    tls_listener::{SpawningHandshakes, TlsListener},
     tokio_rustls::rustls::{Certificate, PrivateKey, ServerConfig},
     tokio_rustls::TlsAcceptor,
 };
@@ -183,17 +183,18 @@ async fn main() -> anyhow::Result<()> {
     if use_tls {
         let tls_key = opt.tls_key.as_ref().unwrap();
         let tls_cert = opt.tls_cert.as_ref().unwrap();
-        let incoming =
-            TlsListener::new(tls_acceptor(tls_key, tls_cert)?, AddrIncoming::bind(&addr)?).filter(
-                |conn| {
-                    if let Err(err) = conn {
-                        error!("TLS error: {:?}", err);
-                        ready(false)
-                    } else {
-                        ready(true)
-                    }
-                },
-            );
+        let incoming = TlsListener::new(
+            SpawningHandshakes(tls_acceptor(tls_key, tls_cert)?),
+            AddrIncoming::bind(&addr)?,
+        )
+        .filter(|conn| {
+            if let Err(err) = conn {
+                error!("TLS error: {:?}", err);
+                ready(false)
+            } else {
+                ready(true)
+            }
+        });
         let server = hyper::Server::builder(accept::from_stream(incoming)).serve(MakeSvc {
             auth_user: auth_user.clone(),
             auth_password: auth_password.clone(),
