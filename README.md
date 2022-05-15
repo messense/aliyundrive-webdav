@@ -15,6 +15,10 @@
 
 如果项目对你有帮助，请考虑[捐赠支持](https://github.com/messense/aliyundrive-webdav/discussions/126)项目持续维护。
 
+## 特别赞助
+
+* [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.me)
+
 ## 安装
 
 可以从 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面下载预先构建的二进制包， 也可以使用 pip 从 PyPI 下载:
