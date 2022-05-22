@@ -139,6 +139,7 @@ OPTIONS:
         --read-only                              Enable read only mode
         --root <ROOT>                            Root directory path [default: /]
     -S, --read-buffer-size <READ_BUFFER_SIZE>    Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
+        --strip-prefix <STRIP_PREFIX>            Prefix to be stripped off when handling request [env: WEBDAV_STRIP_PREFIX=]
         --tls-cert <TLS_CERT>                    TLS certificate file path [env: TLS_CERT=]
         --tls-key <TLS_KEY>                      TLS private key file path [env: TLS_KEY=]
     -U, --auth-user <AUTH_USER>                  WebDAV authentication username [env: WEBDAV_AUTH_USER=]

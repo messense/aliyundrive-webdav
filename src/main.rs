@@ -90,6 +90,9 @@ struct Opt {
     #[cfg(feature = "rustls-tls")]
     #[clap(long, env = "TLS_KEY")]
     tls_key: Option<PathBuf>,
+    /// Prefix to be stripped off when handling request.
+    #[clap(long, env = "WEBDAV_STRIP_PREFIX")]
+    strip_prefix: Option<String>,
     /// Enable debug log
     #[clap(long)]
     debug: bool,
@@ -161,12 +164,16 @@ async fn main() -> anyhow::Result<()> {
     .await?;
     debug!("aliyundrive file system initialized");
 
-    let dav_server = DavHandler::builder()
+    let mut dav_server_builder = DavHandler::builder()
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
         .read_buf_size(opt.read_buffer_size)
-        .autoindex(opt.auto_index)
-        .build_handler();
+        .autoindex(opt.auto_index);
+    if let Some(prefix) = opt.strip_prefix {
+        dav_server_builder = dav_server_builder.strip_prefix(prefix);
+    }
+
+    let dav_server = dav_server_builder.build_handler();
     debug!(
         read_buffer_size = opt.read_buffer_size,
         auto_index = opt.auto_index,
