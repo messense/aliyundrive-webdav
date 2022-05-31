@@ -30,6 +30,7 @@ use vfs::AliyunDriveFileSystem;
 
 mod cache;
 mod drive;
+mod login;
 mod vfs;
 
 #[derive(Parser, Debug)]
