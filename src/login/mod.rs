@@ -152,7 +152,6 @@ impl ResponseHandler {
 
 #[cfg(test)]
 mod tests {
-
     use crate::login;
     use crate::login::model::{
         AuthorizationCode, AuthorizationToken, Ok, QueryQrCodeCkForm, Token,
@@ -167,12 +166,25 @@ mod tests {
         let qrcode_content = generator_qr_code_result.get_content();
         let ck_form = QueryQrCodeCkForm::from(generator_qr_code_result);
         // 打印二维码
-        qr2term::print_qr(qrcode_content).unwrap();
+        qr2term::print_qr(&qrcode_content).unwrap();
         for _i in 0..10 {
+            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
             // 模拟轮训查询二维码状态
             let query_result = scan.query(&ck_form).await.unwrap();
             if query_result.ok() {
-                // 扫码成功
+                // query_result.is_new() 表示未扫码状态
+                if query_result.is_new() {
+                    println!("new");
+                    // 做点什么..
+                    continue;
+                }
+                // query_result.is_expired() 表示扫码成功，但未点击确认登陆
+                if query_result.is_expired() {
+                    // 做点什么..
+                    println!("expired");
+                    continue;
+                }
+                // 移动端APP扫码成功并确认登陆
                 if query_result.is_confirmed() {
                     // 获取移动端登陆Result
                     let mobile_login_result = query_result.get_mobile_login_result().unwrap();
@@ -190,11 +202,7 @@ mod tests {
                     println!("refresh-token: {:?}", refresh_token);
                     break;
                 }
-                if query_result.is_expired() {
-                    break;
-                }
             }
-            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
         }
     }
 }
