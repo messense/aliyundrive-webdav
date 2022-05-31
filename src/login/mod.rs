@@ -12,7 +12,7 @@ use serde::{de, Deserialize, Deserializer};
 use std::str::FromStr;
 
 // generator qrcode
-const GENERATOR_QRCODE_API: &str = "https://passport.aliyundrive.com/newlogin/qrcode/generate.do?appName=aliyun_drive&fromSite=52&appEntrance=web&lang=zh_CN";
+const GENERATOR_QRCODE_API: &str = "https://passport.aliyundrive.com/newlogin/qrcode/generate.do?appName=aliyun_drive&fromSite=52&appEntrance=web";
 // query scanner result (include mobile token)
 const QUERY_API: &str = "https://passport.aliyundrive.com/newlogin/qrcode/query.do?appName=aliyun_drive&fromSite=52&_bx-v=2.0.31";
 // get session id
@@ -168,7 +168,7 @@ mod tests {
         let ck_form = QueryQrCodeCkForm::from(generator_qr_code_result);
         // 打印二维码
         qr2term::print_qr(qrcode_content).unwrap();
-        for i in 0..10 {
+        for _i in 0..10 {
             // 模拟轮训查询二维码状态
             let query_result = scan.query(&ck_form).await.unwrap();
             if query_result.ok() {
