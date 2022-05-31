@@ -148,6 +148,15 @@ impl Ok for QueryQrCodeResult {
 }
 
 impl QueryQrCodeResult {
+    pub fn is_new(&self) -> bool {
+        if let Some(ref state) = self.get_status() {
+            if State::NEW.eq(state) {
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn is_expired(&self) -> bool {
         if let Some(ref state) = self.get_status() {
             if State::EXPIRED.eq(state) {
