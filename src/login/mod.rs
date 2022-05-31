@@ -168,7 +168,7 @@ mod tests {
         let ck_form = QueryQrCodeCkForm::from(generator_qr_code_result);
         // 打印二维码
         qr2term::print_qr(qrcode_content).unwrap();
-        loop {
+        for i in 0..10 {
             // 模拟轮训查询二维码状态
             let query_result = scan.query(&ck_form).await.unwrap();
             if query_result.ok() {
