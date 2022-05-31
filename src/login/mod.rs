@@ -173,18 +173,17 @@ mod tests {
             let query_result = scan.query(&ck_form).await.unwrap();
             if query_result.ok() {
                 // query_result.is_new() 表示未扫码状态
-                // query_result.is_expired() 表示扫码成功，但未点击确认登陆
                 if query_result.is_new() {
                     println!("new");
                     // 做点什么..
                     continue;
                 }
+                // query_result.is_expired() 表示扫码成功，但未点击确认登陆
                 if query_result.is_expired() {
                     // 做点什么..
                     println!("expired");
                     continue;
                 }
-
                 // 移动端APP扫码成功并确认登陆
                 if query_result.is_confirmed() {
                     // 获取移动端登陆Result
