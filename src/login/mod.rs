@@ -4,7 +4,6 @@ use crate::login::model::{
     AuthorizationCode, CkForm, GeneratorQrCodeResult, GotoResult, QueryQrCodeResult, Token,
     WebLoginResult,
 };
-use crate::login::State::{CONFIRMED, EXPIRED, NEW};
 use anyhow::anyhow;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
@@ -27,20 +26,22 @@ const SESSION_ID_KEY: &str = "SESSIONID";
 
 #[derive(Eq, PartialEq, Clone)]
 pub enum State {
-    CONFIRMED,
-    EXPIRED,
-    NEW,
+    Confirmed,
+    Expired,
+    New,
 }
 
 impl FromStr for State {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use State::*;
+
         match s {
-            "NEW" => Ok(NEW),
-            "EXPIRED" => Ok(EXPIRED),
-            "CONFIRMED" => Ok(CONFIRMED),
-            _ => Ok(EXPIRED),
+            "NEW" => Ok(New),
+            "EXPIRED" => Ok(Expired),
+            "CONFIRMED" => Ok(Confirmed),
+            _ => Ok(Expired),
         }
     }
 }
@@ -146,63 +147,6 @@ impl ResponseHandler {
     async fn response_error_msg_handler(resp: Response) -> String {
         resp.text()
             .await
-            .unwrap_or(String::from("An error occurred while extracting the body."))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::login;
-    use crate::login::model::{
-        AuthorizationCode, AuthorizationToken, Ok, QueryQrCodeCkForm, Token,
-    };
-
-    #[tokio::test]
-    async fn test() {
-        let scan = login::QrCodeScanner::new().await.unwrap();
-        // 返回二维码内容结果集
-        let generator_qr_code_result = scan.generator().await.unwrap();
-        // 需要生成二维码的内容
-        let qrcode_content = generator_qr_code_result.get_content();
-        let ck_form = QueryQrCodeCkForm::from(generator_qr_code_result);
-        // 打印二维码
-        qr2term::print_qr(&qrcode_content).unwrap();
-        for _i in 0..10 {
-            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-            // 模拟轮训查询二维码状态
-            let query_result = scan.query(&ck_form).await.unwrap();
-            if query_result.ok() {
-                // query_result.is_new() 表示未扫码状态
-                if query_result.is_new() {
-                    println!("new");
-                    // 做点什么..
-                    continue;
-                }
-                // query_result.is_expired() 表示扫码成功，但未点击确认登陆
-                if query_result.is_expired() {
-                    // 做点什么..
-                    println!("expired");
-                    continue;
-                }
-                // 移动端APP扫码成功并确认登陆
-                if query_result.is_confirmed() {
-                    // 获取移动端登陆Result
-                    let mobile_login_result = query_result.get_mobile_login_result().unwrap();
-                    // 移动端access-token
-                    let access_token = mobile_login_result.access_token().unwrap_or(String::new());
-                    // 根据移动端access-token获取authorization code（授权码）
-                    let goto_result = scan.token_login(Token::from(&access_token)).await.unwrap();
-                    // 根据授权码登陆获取Web端登陆结果集
-                    let web_login_result = scan
-                        .get_token(AuthorizationCode::from(&goto_result))
-                        .await
-                        .unwrap();
-                    // 获取Web端refresh token
-                    let refresh_token = web_login_result.refresh_token().unwrap();
-                    println!("refresh-token: {:?}", refresh_token);
-                    break;
-                }
-            }
-        }
+            .unwrap_or_else(|e| format!("An error occurred while extracting the body: {:?}", e))
     }
 }

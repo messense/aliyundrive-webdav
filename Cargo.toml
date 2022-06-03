@@ -16,6 +16,7 @@ bytes = "1.0.1"
 clap = { version = "3.1.14", features = ["derive", "env", "wrap_help"] }
 dashmap = "5.3.2"
 dav-server = { version = "0.3.3", default-features = false, features = ["hyper"] }
+dirs = "4.0.0"
 futures-util = "0.3"
 headers = "0.3.6"
 hyper = { version = "0.14.18", features = ["server", "http2"] }

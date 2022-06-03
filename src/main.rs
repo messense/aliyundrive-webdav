@@ -43,12 +43,7 @@ struct Opt {
     #[clap(short, env = "PORT", long, default_value = "8080")]
     port: u16,
     /// Aliyun drive refresh token
-    #[clap(
-        short,
-        long,
-        env = "REFRESH_TOKEN",
-        required_unless_present = "workdir"
-    )]
+    #[clap(short, long, env = "REFRESH_TOKEN")]
     refresh_token: Option<String>,
     /// WebDAV authentication username
     #[clap(short = 'U', long, env = "WEBDAV_AUTH_USER")]
@@ -129,6 +124,9 @@ async fn main() -> anyhow::Result<()> {
         _ => anyhow::bail!("tls-cert and tls-key must be specified together."),
     };
 
+    let workdir = opt
+        .workdir
+        .or_else(|| dirs::cache_dir().map(|c| c.join("aliyundrive-webdav")));
     let (drive_config, no_trash) = if let Some(domain_id) = opt.domain_id {
         (
             DriveConfig {
@@ -137,7 +135,7 @@ async fn main() -> anyhow::Result<()> {
                     "https://{}.auth.aliyunpds.com/v2/account/token",
                     domain_id
                 ),
-                workdir: opt.workdir,
+                workdir,
                 app_id: Some("BasicUI".to_string()),
             },
             true, // PDS doesn't have trash support
@@ -147,13 +145,27 @@ async fn main() -> anyhow::Result<()> {
             DriveConfig {
                 api_base_url: "https://api.aliyundrive.com".to_string(),
                 refresh_token_url: "https://websv.aliyundrive.com/token/refresh".to_string(),
-                workdir: opt.workdir,
+                workdir,
                 app_id: None,
             },
             opt.no_trash,
         )
     };
-    let drive = AliyunDrive::new(drive_config, opt.refresh_token.unwrap_or_default()).await?;
+
+    let refresh_token_from_file = if let Some(dir) = drive_config.workdir.as_ref() {
+        tokio::fs::read_to_string(dir.join("refresh_token"))
+            .await
+            .ok()
+    } else {
+        None
+    };
+    let refresh_token = if opt.refresh_token.is_none() && refresh_token_from_file.is_none() {
+        login().await?
+    } else {
+        opt.refresh_token.unwrap_or_default()
+    };
+
+    let drive = AliyunDrive::new(drive_config, refresh_token).await?;
     let fs = AliyunDriveFileSystem::new(
         drive,
         opt.root,
@@ -339,4 +351,60 @@ fn private_keys(rd: &mut dyn io::BufRead) -> Result<Vec<Vec<u8>>, io::Error> {
             _ => {}
         };
     }
+}
+
+async fn login() -> anyhow::Result<String> {
+    use crate::login::model::{
+        AuthorizationCode, AuthorizationToken, Ok, QueryQrCodeCkForm, Token,
+    };
+    use anyhow::Context;
+
+    let scan = login::QrCodeScanner::new().await?;
+    // 返回二维码内容结果集
+    let generator_qr_code_result = scan.generator().await?;
+    // 需要生成二维码的内容
+    let qrcode_content = generator_qr_code_result.get_content();
+    let ck_form = QueryQrCodeCkForm::from(generator_qr_code_result);
+    // 打印二维码
+    qr2term::print_qr(&qrcode_content)?;
+    info!("Please scan the qrcode to login in 30 seconds");
+    for _i in 0..10 {
+        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+        // 模拟轮训查询二维码状态
+        let query_result = scan.query(&ck_form).await?;
+        if query_result.ok() {
+            // query_result.is_new() 表示未扫码状态
+            if query_result.is_new() {
+                // 做点什么..
+                continue;
+            }
+            // query_result.is_expired() 表示扫码成功，但未点击确认登陆
+            if query_result.is_expired() {
+                // 做点什么..
+                debug!("login expired");
+                continue;
+            }
+            // 移动端APP扫码成功并确认登陆
+            if query_result.is_confirmed() {
+                // 获取移动端登陆Result
+                let mobile_login_result = query_result
+                    .get_mobile_login_result()
+                    .context("failed to get mobile login result")?;
+                // 移动端access-token
+                let access_token = mobile_login_result.access_token().unwrap_or_default();
+                // 根据移动端access-token获取authorization code（授权码）
+                let goto_result = scan.token_login(Token::from(&access_token)).await?;
+                // 根据授权码登陆获取Web端登陆结果集
+                let web_login_result = scan
+                    .get_token(AuthorizationCode::from(&goto_result))
+                    .await?;
+                // 获取Web端refresh token
+                let refresh_token = web_login_result
+                    .refresh_token()
+                    .context("failed to get refresh token")?;
+                return Ok(refresh_token);
+            }
+        }
+    }
+    anyhow::bail!("Login failed")
 }
