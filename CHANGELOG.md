@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.4.0
+
+* 命令行增加阿里云盘扫码登录功能
+
+## 1.3.3
+
+* 增加 `--strip-prefix` 参数
+
 ## 1.3.2
 
 * 不使用阿里云盘文件列表接口返回的可能有问题的图片下载地址
