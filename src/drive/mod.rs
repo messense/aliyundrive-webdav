@@ -52,7 +52,6 @@ pub struct AliyunDrive {
 
 impl AliyunDrive {
     pub async fn new(config: DriveConfig, refresh_token: String) -> Result<Self> {
-        let refresh_token_is_empty = refresh_token.is_empty();
         let credentials = Credentials {
             refresh_token,
             access_token: None,
@@ -91,9 +90,6 @@ impl AliyunDrive {
         } else {
             None
         };
-        if refresh_token_is_empty && refresh_token_from_file.is_none() {
-            bail!("No refresh token provided! \n📝 Please specify refresh token from `--refresh-token` CLI option.");
-        }
         tokio::spawn(async move {
             let mut delay_seconds = 7000;
             match client
@@ -231,7 +227,7 @@ impl AliyunDrive {
 
     async fn access_token(&self) -> Result<String> {
         let cred = self.credentials.read().await;
-        Ok(cred.access_token.clone().context("missing access_token")?)
+        cred.access_token.clone().context("missing access_token")
     }
 
     fn drive_id(&self) -> Result<&str> {

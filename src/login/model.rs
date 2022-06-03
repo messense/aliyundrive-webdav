@@ -1,5 +1,4 @@
-use anyhow::anyhow;
-use std::fmt::Debug;
+use anyhow::{bail, Context};
 
 use crate::login::State;
 use serde::{Deserialize, Serialize};
@@ -150,7 +149,7 @@ impl Ok for QueryQrCodeResult {
 impl QueryQrCodeResult {
     pub fn is_new(&self) -> bool {
         if let Some(ref state) = self.get_status() {
-            if State::NEW.eq(state) {
+            if State::New.eq(state) {
                 return true;
             }
         }
@@ -159,7 +158,7 @@ impl QueryQrCodeResult {
 
     pub fn is_expired(&self) -> bool {
         if let Some(ref state) = self.get_status() {
-            if State::EXPIRED.eq(state) {
+            if State::Expired.eq(state) {
                 return true;
             }
         }
@@ -168,7 +167,7 @@ impl QueryQrCodeResult {
 
     pub fn is_confirmed(&self) -> bool {
         if let Some(ref state) = self.get_status() {
-            if State::CONFIRMED.eq(state) {
+            if State::Confirmed.eq(state) {
                 return true;
             }
         }
@@ -293,24 +292,20 @@ impl From<&String> for GotoResult {
 
 impl GotoResult {
     pub fn extract_authorization_code(&self) -> anyhow::Result<String> {
-        let goto = self.goto.as_ref().ok_or(anyhow!("goto value is None"))?;
+        let goto = self.goto.as_ref().context("goto value is None")?;
         let url = Url::parse(goto.as_str())?;
-        let query = url.query().ok_or(anyhow!("goto query is None"))?;
-        let param_array = query.split("&").collect::<Vec<&str>>();
+        let query = url.query().context("goto query is None")?;
+        let param_array = query.split('&').collect::<Vec<&str>>();
         for param in param_array {
             let param = param.to_string();
-            let k_v_array = param.split("=").collect::<Vec<&str>>();
-            let key = k_v_array
-                .get(0)
-                .ok_or(anyhow!("goto query param key is None"))?;
+            let k_v_array = param.split('=').collect::<Vec<&str>>();
+            let key = k_v_array.get(0).context("goto query param key is None")?;
             if *key == CODE_KEY {
-                let value = k_v_array
-                    .get(1)
-                    .ok_or(anyhow!("goto query param value is None"))?;
+                let value = k_v_array.get(1).context("goto query param value is None")?;
                 return Ok(String::from(*value));
             }
         }
-        Err(anyhow!("Failed to get authorization code"))
+        bail!("Failed to get authorization code")
     }
 }
 
