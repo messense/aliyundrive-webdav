@@ -127,7 +127,7 @@ async fn main() -> anyhow::Result<()> {
     let workdir = opt
         .workdir
         .or_else(|| dirs::cache_dir().map(|c| c.join("aliyundrive-webdav")));
-    let (drive_config, no_trash) = if let Some(domain_id) = opt.domain_id {
+    let (drive_config, no_trash) = if let Some(domain_id) = opt.domain_id.as_ref() {
         (
             DriveConfig {
                 api_base_url: format!("https://{}.api.aliyunpds.com", domain_id),
@@ -159,7 +159,10 @@ async fn main() -> anyhow::Result<()> {
     } else {
         None
     };
-    let refresh_token = if opt.refresh_token.is_none() && refresh_token_from_file.is_none() {
+    let refresh_token = if opt.domain_id.is_none()
+        && opt.refresh_token.is_none()
+        && refresh_token_from_file.is_none()
+    {
         login().await?
     } else {
         opt.refresh_token.unwrap_or_default()
