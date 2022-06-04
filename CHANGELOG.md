@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.0
+
+* 增加移动端 App refresh token 支持,扫码登录使用 App refresh token.
+
 ## 1.4.0
 
 * 命令行增加阿里云盘扫码登录功能

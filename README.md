@@ -39,12 +39,12 @@ sudo snap install aliyundrive-webdav
 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，以 nanopi r4s 为例：
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.4.0/aliyundrive-webdav_1.4.0-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.4.0/luci-app-aliyundrive-webdav_1.4.0_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.4.0/luci-i18n-aliyundrive-webdav-zh-cn_1.4.0-1_all.ipk
-opkg install aliyundrive-webdav_1.4.0-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_1.4.0_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.4.0-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.5.0/aliyundrive-webdav_1.5.0-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.5.0/luci-app-aliyundrive-webdav_1.5.0_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.5.0/luci-i18n-aliyundrive-webdav-zh-cn_1.5.0-1_all.ipk
+opkg install aliyundrive-webdav_1.5.0-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_1.5.0_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.5.0-1_all.ipk
 ```
 
 其它 CPU 架构的路由器可在 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面中查找对应的架构的主程序 ipk 文件下载安装， 常见
@@ -120,7 +120,7 @@ services:
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 1.4.0
+aliyundrive-webdav 1.5.0
 
 USAGE:
     aliyundrive-webdav [OPTIONS]
@@ -151,6 +151,7 @@ OPTIONS:
 > 注意：TLS/HTTPS 暂不支持 MIPS 架构。
 
 ### 获取 refresh_token
+
 * 自动获取: 登录[阿里云盘](https://www.aliyundrive.com/drive/)后，控制台粘贴 `JSON.parse(localStorage.token).refresh_token`
 ![](https://user-images.githubusercontent.com/12248888/150632769-ea6b7a0f-4170-44d6-bafb-92b2a7c1726b.png)
 
@@ -158,6 +159,8 @@ OPTIONS:
 Application -> Local Storage 中的 `token` 字段中找到。  
 注意：不是复制整段 JSON 值，而是 JSON 里 `refresh_token` 字段的值，如下图所示红色部分：
 ![refresh token](./doc/refresh_token.png)
+
+* 使用移动端 App refresh token: 需要在其前增加 `app:` 前缀,如 refresh token 为 `abcd` 则填入 `app:abcd`
 
 ## License
 
