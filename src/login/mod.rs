@@ -1,9 +1,6 @@
 pub mod model;
 
-use crate::login::model::{
-    AuthorizationCode, CkForm, GeneratorQrCodeResult, GotoResult, QueryQrCodeResult, Token,
-    WebLoginResult,
-};
+use crate::login::model::{CkForm, GeneratorQrCodeResult, QueryQrCodeResult};
 use anyhow::anyhow;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
@@ -14,15 +11,6 @@ use std::str::FromStr;
 const GENERATOR_QRCODE_API: &str = "https://passport.aliyundrive.com/newlogin/qrcode/generate.do?appName=aliyun_drive&fromSite=52&appEntrance=web";
 // query scanner result (include mobile token)
 const QUERY_API: &str = "https://passport.aliyundrive.com/newlogin/qrcode/query.do?appName=aliyun_drive&fromSite=52&_bx-v=2.0.31";
-// get session id
-const SESSION_ID_API: &str = "https://auth.aliyundrive.com/v2/oauth/authorize?client_id=25dzX3vbYqktVxyX&redirect_uri=https%3A%2F%2Fwww.aliyundrive.com%2Fsign%2Fcallback&response_type=code&login_type=custom&state=%7B%22origin%22%3A%22https%3A%2F%2Fwww.aliyundrive.com%22%7D#/nestedlogin?keepLogin=false&hidePhoneCode=true&ad__pass__q__rememberLogin=true&ad__pass__q__rememberLoginDefaultValue=true&ad__pass__q__forgotPassword=true&ad__pass__q__licenseMargin=true&ad__pass__q__loginType=normal";
-// scan scan result（include authorization code）
-const TOKEN_LOGIN_API: &str = "https://auth.aliyundrive.com/v2/oauth/token_login";
-// get web side token
-const GET_WEB_TOKEN_API: &str = "https://api.aliyundrive.com/token/get";
-
-const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36";
-const SESSION_ID_KEY: &str = "SESSIONID";
 
 #[derive(Eq, PartialEq, Clone)]
 pub enum State {
@@ -57,7 +45,6 @@ impl<'de> Deserialize<'de> for State {
 }
 
 pub struct QrCodeScanner {
-    session_id: String,
     client: reqwest::Client,
 }
 
@@ -68,22 +55,7 @@ impl QrCodeScanner {
             .connect_timeout(std::time::Duration::from_secs(10))
             .timeout(std::time::Duration::from_secs(30))
             .build()?;
-        let resp = client
-            .get(SESSION_ID_API)
-            .header(reqwest::header::USER_AGENT, UA)
-            .send()
-            .await?;
-        if resp.status().is_success() {
-            for cookie in resp.cookies() {
-                if cookie.name() == SESSION_ID_KEY {
-                    return Ok(Self {
-                        session_id: String::from(cookie.value()),
-                        client,
-                    });
-                }
-            }
-        }
-        return Err(anyhow!("Failed to get session id."));
+        Ok(Self { client })
     }
 }
 
@@ -101,34 +73,6 @@ impl QrCodeScanner {
             .send()
             .await?;
         ResponseHandler::response_handler::<QueryQrCodeResult>(resp).await
-    }
-
-    pub async fn token_login(&self, token: Token) -> anyhow::Result<GotoResult> {
-        let resp = self
-            .client
-            .post(TOKEN_LOGIN_API)
-            .header(
-                reqwest::header::COOKIE,
-                format!("SESSIONID={}", &self.session_id),
-            )
-            .json(&token)
-            .send()
-            .await?;
-        ResponseHandler::response_handler::<GotoResult>(resp).await
-    }
-
-    pub async fn get_token(&self, auth: AuthorizationCode) -> anyhow::Result<WebLoginResult> {
-        let resp = self
-            .client
-            .post(GET_WEB_TOKEN_API)
-            .header(
-                reqwest::header::COOKIE,
-                format!("SESSIONID={}", &self.session_id),
-            )
-            .json(&auth)
-            .send()
-            .await?;
-        ResponseHandler::response_handler::<WebLoginResult>(resp).await
     }
 }
 

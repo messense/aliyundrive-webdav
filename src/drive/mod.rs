@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::fmt;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
@@ -34,6 +36,43 @@ pub struct DriveConfig {
     pub refresh_token_url: String,
     pub workdir: Option<PathBuf>,
     pub app_id: Option<String>,
+    pub client_type: ClientType,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ClientType {
+    Web,
+    App,
+}
+
+impl ClientType {
+    fn refresh_token_url(&self) -> &'static str {
+        match self {
+            ClientType::Web => "https://websv.aliyundrive.com/token/refresh",
+            ClientType::App => "https://auth.aliyundrive.com/v2/account/token",
+        }
+    }
+}
+
+impl FromStr for ClientType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "web" | "" => Ok(ClientType::Web),
+            "app" => Ok(ClientType::App),
+            _ => bail!("invalid client type '{}'", s),
+        }
+    }
+}
+
+impl fmt::Display for ClientType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ClientType::Web => write!(f, "web"),
+            ClientType::App => write!(f, "app"),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -60,10 +99,12 @@ impl AliyunDrive {
         let mut headers = HeaderMap::new();
         headers.insert("Origin", HeaderValue::from_static(ORIGIN));
         headers.insert("Referer", HeaderValue::from_static(REFERER));
-        headers.insert(
-            "x-canary",
-            HeaderValue::from_static("client=web,app=adrive,version=v3.0.0"),
-        );
+        if config.refresh_token_url.starts_with("websv") {
+            headers.insert(
+                "x-canary",
+                HeaderValue::from_static("client=web,app=adrive,version=v3.0.0"),
+            );
+        }
         let client = reqwest::Client::builder()
             .user_agent(UA)
             .default_headers(headers)
@@ -83,11 +124,8 @@ impl AliyunDrive {
 
         let (tx, rx) = oneshot::channel();
         // schedule update token task
-        let client = drive.clone();
         let refresh_token_from_file = if let Some(dir) = drive.config.workdir.as_ref() {
-            tokio::fs::read_to_string(dir.join("refresh_token"))
-                .await
-                .ok()
+            read_refresh_token(dir).await.ok()
         } else {
             None
         };
@@ -95,6 +133,7 @@ impl AliyunDrive {
             bail!("No refresh token provided! \n📝 Please specify refresh token from `--refresh-token` CLI option.");
         }
 
+        let client = drive.clone();
         tokio::spawn(async move {
             let mut delay_seconds = 7000;
             match client
@@ -140,16 +179,25 @@ impl AliyunDrive {
         Ok(())
     }
 
-    async fn do_refresh_token(&self, refresh_token: &str) -> Result<RefreshTokenResponse> {
+    async fn do_refresh_token(
+        &self,
+        refresh_token: &str,
+        client_type: ClientType,
+    ) -> Result<RefreshTokenResponse> {
         let mut data = HashMap::new();
         data.insert("refresh_token", refresh_token);
         data.insert("grant_type", "refresh_token");
         if let Some(app_id) = self.config.app_id.as_ref() {
             data.insert("app_id", app_id);
         }
+        let refresh_token_url = if self.config.app_id.is_none() {
+            client_type.refresh_token_url()
+        } else {
+            &self.config.refresh_token_url
+        };
         let res = self
             .client
-            .post(&self.config.refresh_token_url)
+            .post(refresh_token_url)
             .json(&data)
             .send()
             .await?;
@@ -177,13 +225,15 @@ impl AliyunDrive {
     ) -> Result<RefreshTokenResponse> {
         let mut last_err = None;
         let mut refresh_token = self.refresh_token().await;
+        let mut client_type = self.config.client_type;
         for _ in 0..10 {
-            match self.do_refresh_token(&refresh_token).await {
+            match self.do_refresh_token(&refresh_token, client_type).await {
                 Ok(res) => {
                     let mut cred = self.credentials.write().await;
                     cred.refresh_token = res.refresh_token.clone();
                     cred.access_token = Some(res.access_token.clone());
-                    if let Err(err) = self.save_refresh_token(&res.refresh_token).await {
+                    let save_content = format!("{}:{}", client_type, res.refresh_token);
+                    if let Err(err) = self.save_refresh_token(&save_content).await {
                         error!(error = %err, "save refresh token failed");
                     }
                     return Ok(res);
@@ -202,7 +252,8 @@ impl AliyunDrive {
                     // refresh_token from file
                     if let Some(refresh_token_from_file) = refresh_token_from_file.as_ref() {
                         if !should_retry && &refresh_token != refresh_token_from_file {
-                            refresh_token = refresh_token_from_file.trim().to_string();
+                            (refresh_token, client_type) =
+                                parse_refresh_token(refresh_token_from_file.trim())?;
                             should_retry = true;
                             // don't warn if we are gonna try refresh_token from file
                             should_warn = false;
@@ -676,4 +727,16 @@ impl DavDirEntry for AliyunFile {
     fn metadata(&self) -> FsFuture<Box<dyn DavMetaData>> {
         async move { Ok(Box::new(self.clone()) as Box<dyn DavMetaData>) }.boxed()
     }
+}
+
+pub async fn read_refresh_token(workdir: &Path) -> Result<String> {
+    Ok(tokio::fs::read_to_string(workdir.join("refresh_token")).await?)
+}
+
+pub fn parse_refresh_token(content: &str) -> Result<(String, ClientType)> {
+    let (client, token) = content
+        .trim()
+        .split_once(':')
+        .unwrap_or_else(|| ("web", content.trim()));
+    Ok((token.to_string(), client.parse()?))
 }
