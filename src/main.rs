@@ -70,7 +70,7 @@ struct Opt {
     #[clap(short = 'w', long)]
     workdir: Option<PathBuf>,
     /// Delete file permanently instead of trashing it
-    #[clap(long, conflicts_with = "domain-id")]
+    #[clap(long, conflicts_with = "domain_id")]
     no_trash: bool,
     /// Aliyun PDS domain id
     #[clap(long)]
