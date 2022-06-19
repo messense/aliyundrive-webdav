@@ -6,7 +6,8 @@ body:
     attributes:
       value: |
         感谢反馈，请填写以下表单。
-        注意请先搜索历史 issue，避免重复反馈相同的问题。
+
+        **注意请先搜索历史 issue，避免重复反馈相同的问题。**
   - type: textarea
     id: description
     attributes:
@@ -37,6 +38,13 @@ body:
     attributes:
       label: 运行平台
       placeholder: 什么路由器/盒子？Docker？Windows/Linux/macOS？
+    validations:
+      required: true
+  - type: input
+    id: refresh-token
+    attributes:
+      label: refresh token 获取方式
+      placeholder: 网页版/App
     validations:
       required: true
   - type: textarea
