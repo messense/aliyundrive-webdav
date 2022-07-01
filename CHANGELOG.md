@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.5.1
+
+* 修复 Web 版 refresh token 刷新失败问题
+
 ## 1.5.0
 
 * 增加移动端 App refresh token 支持,扫码登录使用 App refresh token.
