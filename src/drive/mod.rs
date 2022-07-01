@@ -48,7 +48,7 @@ pub enum ClientType {
 impl ClientType {
     fn refresh_token_url(&self) -> &'static str {
         match self {
-            ClientType::Web => "https://websv.aliyundrive.com/token/refresh",
+            ClientType::Web => "https://api.aliyundrive.com/token/refresh",
             ClientType::App => "https://auth.aliyundrive.com/v2/account/token",
         }
     }
