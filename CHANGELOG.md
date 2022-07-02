@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.6.0
+* 增加自动更新功能
+
 ## 1.5.1
 
 * 修复 Web 版 refresh token 刷新失败问题
