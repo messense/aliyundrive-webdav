@@ -116,7 +116,7 @@ async fn main() -> anyhow::Result<()> {
     if env::var("NO_SELF_UPGRADE").is_err() && !opt.no_self_upgrade {
         tokio::task::spawn_blocking(move || {
             if let Err(e) = check_for_update(opt.debug) {
-                error!("failed to check for update: {}", e);
+                warn!("failed to check for update: {}", e);
             }
         })
         .await?;
