@@ -9,7 +9,8 @@ use clap::Parser;
 use dav_server::{body::Body, memls::MemLs, DavConfig, DavHandler};
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
 use hyper::{service::Service, Request, Response};
-use tracing::{debug, error, info};
+use self_update::cargo_crate_version;
+use tracing::{debug, error, info, warn};
 
 #[cfg(feature = "rustls-tls")]
 use {
@@ -92,6 +93,9 @@ struct Opt {
     /// Enable debug log
     #[clap(long)]
     debug: bool,
+    /// Disable self auto upgrade
+    #[clap(long)]
+    no_self_upgrade: bool,
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -108,6 +112,15 @@ async fn main() -> anyhow::Result<()> {
         }
     }
     tracing_subscriber::fmt::init();
+
+    if env::var("NO_SELF_UPGRADE").is_err() && !opt.no_self_upgrade {
+        tokio::task::spawn_blocking(move || {
+            if let Err(e) = check_for_update(opt.debug) {
+                error!("failed to check for update: {}", e);
+            }
+        })
+        .await?;
+    }
 
     let auth_user = opt.auth_user;
     let auth_password = opt.auth_password;
@@ -399,4 +412,61 @@ async fn login() -> anyhow::Result<String> {
         }
     }
     anyhow::bail!("Login failed")
+}
+
+fn check_for_update(show_output: bool) -> anyhow::Result<()> {
+    use self_update::update::UpdateStatus;
+    #[cfg(unix)]
+    use std::os::unix::process::CommandExt;
+    use std::process::Command;
+
+    let auth_token = env::var("GITHUB_API_TOKEN")
+        .unwrap_or_else(|_| env::var("HOMEBREW_GITHUB_API_TOKEN").unwrap_or_default());
+    let status = self_update::backends::github::Update::configure()
+        .repo_owner("messense")
+        .repo_name("aliyundrive-webdav")
+        .bin_name("aliyundrive-webdav")
+        .target(if cfg!(target_os = "macos") {
+            "apple-darwin"
+        } else {
+            self_update::get_target()
+        })
+        .auth_token(&auth_token)
+        .show_output(show_output)
+        .show_download_progress(true)
+        .no_confirm(true)
+        .current_version(cargo_crate_version!())
+        .build()?
+        .update_extended()?;
+    if let UpdateStatus::Updated(ref release) = status {
+        if let Some(body) = &release.body {
+            if !body.trim().is_empty() {
+                info!("aliyundrive-webdav upgraded to {}:\n", release.version);
+                info!("{}", body);
+            } else {
+                info!("aliyundrive-webdav upgraded to {}", release.version);
+            }
+        }
+    } else {
+        info!("aliyundrive-webdav is up-to-date");
+    }
+
+    if status.updated() {
+        warn!("Respawning...");
+        let current_exe = env::current_exe();
+        let mut command = Command::new(current_exe?);
+        command.args(env::args().skip(1)).env("NO_SELF_UPGRADE", "");
+        #[cfg(unix)]
+        {
+            let err = command.exec();
+            anyhow::bail!(err);
+        }
+
+        #[cfg(windows)]
+        {
+            let status = command.spawn().and_then(|mut c| c.wait())?;
+            anyhow::bail!("aliyundrive-webdav upgraded");
+        }
+    }
+    Ok(())
 }
