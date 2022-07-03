@@ -125,6 +125,7 @@ WebDAV server for AliyunDrive
 
 USAGE:
     aliyundrive-webdav [OPTIONS]
+    aliyundrive-webdav <SUBCOMMAND>
 
 OPTIONS:
         --cache-size <CACHE_SIZE>                Directory entries cache size [default: 1000]
@@ -148,6 +149,10 @@ OPTIONS:
     -V, --version                                Print version information
     -w, --workdir <WORKDIR>                      Working directory, refresh_token will be stored in there if specified
     -W, --auth-password <AUTH_PASSWORD>          WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
+
+SUBCOMMANDS:
+    help    Print this message or the help of the given subcommand(s)
+    qr      Scan QRCode
 ```
 
 > 注意：TLS/HTTPS 暂不支持 MIPS 架构。
@@ -161,6 +166,8 @@ OPTIONS:
 Application -> Local Storage 中的 `token` 字段中找到。  
 注意：不是复制整段 JSON 值，而是 JSON 里 `refresh_token` 字段的值，如下图所示红色部分：
 ![refresh token](./doc/refresh_token.png)
+
+* 命令行获取: `aliyundrive-webdav qr login`
 
 * 使用移动端 App refresh token: 需要在其前增加 `app:` 前缀,如 refresh token 为 `abcd` 则填入 `app:abcd`
 
