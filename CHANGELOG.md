@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.7.0
+
+* 梅林 384/386 固件禁用程序自动更新
+* 默认使用 App refresh token 刷新接口
+* 增加 `aliyundrive-webdav qr` 子命令
+
 ## 1.6.2
 
 * 非 tty 终端模式下不尝试扫码登录
