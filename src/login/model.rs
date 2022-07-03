@@ -47,6 +47,10 @@ impl GeneratorQrCodeResult {
         }
         String::new()
     }
+
+    pub fn get_content_data(self) -> Option<GeneratorQrCodeContentData> {
+        self.content?.data
+    }
 }
 
 impl Ok for GeneratorQrCodeResult {
@@ -79,7 +83,7 @@ impl GeneratorQrCodeContent {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct GeneratorQrCodeContentData {
     #[serde(rename = "t")]
     #[serde(default)]
@@ -200,6 +204,12 @@ pub struct QueryQrCodeContentData {
 pub struct QueryQrCodeCkForm {
     t: i64,
     ck: String,
+}
+
+impl QueryQrCodeCkForm {
+    pub fn new(t: i64, ck: String) -> Self {
+        Self { t, ck }
+    }
 }
 
 impl From<GeneratorQrCodeResult> for QueryQrCodeCkForm {
