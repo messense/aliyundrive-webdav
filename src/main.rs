@@ -5,7 +5,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{env, io};
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use dav_server::{body::Body, memls::MemLs, DavConfig, DavHandler};
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
 use hyper::{service::Service, Request, Response};
@@ -96,6 +96,33 @@ struct Opt {
     /// Disable self auto upgrade
     #[clap(long)]
     no_self_upgrade: bool,
+
+    #[clap(subcommand)]
+    subcommands: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Scan QRCode login to get a token or generate a QRCode
+    #[clap(arg_required_else_help = true)]
+    QR {
+        /// Mobile App QRCode scan code login
+        #[clap(long, group = "scan")]
+        qr_login: bool,
+        /// Return the content of the QRCode that needs to be generated and the query result parameters t, ck
+        #[clap(long, group = "scan")]
+        qr_generate: bool,
+    },
+    /// Query the QRCode login result
+    #[clap(arg_required_else_help = true)]
+    QRQuery {
+        /// Query parameter t
+        #[clap(long)]
+        t: i64,
+        /// Query parameter ck
+        #[clap(long)]
+        ck: String,
+    },
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -112,6 +139,45 @@ async fn main() -> anyhow::Result<()> {
         }
     }
     tracing_subscriber::fmt::init();
+
+    // subcommands
+    match &opt.subcommands {
+        Some(Commands::QR {
+            qr_login,
+            qr_generate,
+        }) => {
+            if *qr_login {
+                let refresh_token = login().await?;
+                println!("refresh_token: {}", refresh_token)
+            }
+            if *qr_generate {
+                let scan = login::QrCodeScanner::new().await?;
+                let result = scan.generator().await?;
+                let data = result
+                    .get_content_data()
+                    .ok_or(anyhow::anyhow!("Failed to get QRCode"))?;
+                println!("{}", serde_json::to_string_pretty(&data)?);
+            }
+            return Ok(());
+        }
+        Some(Commands::QRQuery { t, ck }) => {
+            use crate::login::model::{AuthorizationToken, QueryQrCodeCkForm};
+            use anyhow::Context;
+            let scan = login::QrCodeScanner::new().await?;
+            let form = QueryQrCodeCkForm::new(*t, ck.to_string());
+            let query_result = scan.query(&form).await?;
+            if query_result.is_confirmed() {
+                let refresh_token = query_result
+                    .get_mobile_login_result()
+                    .context("failed to get mobile login result")?
+                    .refresh_token()
+                    .context("failed to get refresh token")?;
+                println!("{}", refresh_token)
+            }
+            return Ok(());
+        }
+        None => {}
+    }
 
     if env::var("NO_SELF_UPGRADE").is_err() && !opt.no_self_upgrade {
         tokio::task::spawn_blocking(move || {
