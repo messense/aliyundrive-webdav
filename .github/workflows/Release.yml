@@ -172,6 +172,10 @@ jobs:
         uses: Swatinem/rust-cache@v1
         with:
           key: ${{ matrix.platform.target }}
+      # Workaround upx bug for x86_64
+      - name: Set env for x86_64
+        if: matrix.platform.target == 'x86_64-unknown-linux-musl'
+        run: echo 'CARGO_PROFILE_RELEASE_OPT_LEVEL=z' >> $GITHUB_ENV
       - name: Build wheels - manylinux
         uses: messense/maturin-action@main
         with:
