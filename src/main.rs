@@ -420,7 +420,7 @@ fn check_for_update(show_output: bool) -> anyhow::Result<()> {
     use std::os::unix::process::CommandExt;
     use std::process::Command;
 
-    let auth_token = env::var("GITHUB_API_TOKEN")
+    let auth_token = env::var("GITHUB_TOKEN")
         .unwrap_or_else(|_| env::var("HOMEBREW_GITHUB_API_TOKEN").unwrap_or_default());
     let status = self_update::backends::github::Update::configure()
         .repo_owner("messense")
