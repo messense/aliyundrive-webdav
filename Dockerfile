@@ -11,5 +11,7 @@ RUN mkdir -p /etc/aliyundrive-webdav
 WORKDIR /root/
 ADD aliyundrive-webdav-$TARGETARCH$TARGETVARIANT /usr/bin/aliyundrive-webdav
 
+ENV NO_SELF_UPGRADE 1
+
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/usr/bin/aliyundrive-webdav", "--auto-index", "--workdir", "/etc/aliyundrive-webdav"]
