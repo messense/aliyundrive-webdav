@@ -5,6 +5,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{env, io};
 
+use anyhow::Context as _;
 use clap::{Parser, Subcommand};
 use dav_server::{body::Body, memls::MemLs, DavConfig, DavHandler};
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
@@ -36,6 +37,7 @@ mod vfs;
 
 #[derive(Parser, Debug)]
 #[clap(name = "aliyundrive-webdav", about, version, author)]
+#[clap(args_conflicts_with_subcommands = true)]
 struct Opt {
     /// Listen host
     #[clap(long, env = "HOST", default_value = "0.0.0.0")]
@@ -103,19 +105,20 @@ struct Opt {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Scan QRCode login to get a token or generate a QRCode
-    #[clap(arg_required_else_help = true)]
-    QR {
-        /// Mobile App QRCode scan code login
-        #[clap(long, group = "scan")]
-        qr_login: bool,
-        /// Return the content of the QRCode that needs to be generated and the query result parameters t, ck
-        #[clap(long, group = "scan")]
-        qr_generate: bool,
-    },
+    /// Scan QRCode
+    #[clap(subcommand)]
+    Qr(QrCommand),
+}
+
+#[derive(Subcommand, Debug)]
+enum QrCommand {
+    /// Scan QRCode login to get a token
+    Login,
+    /// Generate a QRCode
+    Generate,
     /// Query the QRCode login result
     #[clap(arg_required_else_help = true)]
-    QRQuery {
+    Query {
         /// Query parameter t
         #[clap(long)]
         t: i64,
@@ -141,38 +144,34 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     // subcommands
-    match &opt.subcommands {
-        Some(Commands::QR {
-            qr_login,
-            qr_generate,
-        }) => {
-            if *qr_login {
-                let refresh_token = login().await?;
-                println!("refresh_token: {}", refresh_token)
-            }
-            if *qr_generate {
-                let scan = login::QrCodeScanner::new().await?;
-                let result = scan.generator().await?;
-                let data = result
-                    .get_content_data()
-                    .ok_or(anyhow::anyhow!("Failed to get QRCode"))?;
-                println!("{}", serde_json::to_string_pretty(&data)?);
-            }
-            return Ok(());
-        }
-        Some(Commands::QRQuery { t, ck }) => {
-            use crate::login::model::{AuthorizationToken, QueryQrCodeCkForm};
-            use anyhow::Context;
-            let scan = login::QrCodeScanner::new().await?;
-            let form = QueryQrCodeCkForm::new(*t, ck.to_string());
-            let query_result = scan.query(&form).await?;
-            if query_result.is_confirmed() {
-                let refresh_token = query_result
-                    .get_mobile_login_result()
-                    .context("failed to get mobile login result")?
-                    .refresh_token()
-                    .context("failed to get refresh token")?;
-                println!("{}", refresh_token)
+    match opt.subcommands.as_ref() {
+        Some(Commands::Qr(qr)) => {
+            match qr {
+                QrCommand::Login => {
+                    let refresh_token = login(120).await?;
+                    println!("refresh_token: {}", refresh_token)
+                }
+                QrCommand::Generate => {
+                    let scan = login::QrCodeScanner::new().await?;
+                    let result = scan.generator().await?;
+                    let data = result.get_content_data().context("Failed to get QRCode")?;
+                    println!("{}", serde_json::to_string_pretty(&data)?);
+                }
+                QrCommand::Query { t, ck } => {
+                    use crate::login::model::{AuthorizationToken, QueryQrCodeCkForm};
+
+                    let scan = login::QrCodeScanner::new().await?;
+                    let form = QueryQrCodeCkForm::new(*t, ck.to_string());
+                    let query_result = scan.query(&form).await?;
+                    if query_result.is_confirmed() {
+                        let refresh_token = query_result
+                            .get_mobile_login_result()
+                            .context("failed to get mobile login result")?
+                            .refresh_token()
+                            .context("failed to get refresh token")?;
+                        println!("{}", refresh_token)
+                    }
+                }
             }
             return Ok(());
         }
@@ -216,7 +215,7 @@ async fn main() -> anyhow::Result<()> {
         && refresh_token_from_file.is_none()
         && atty::is(atty::Stream::Stdout)
     {
-        (login().await?, ClientType::App)
+        (login(30).await?, ClientType::App)
     } else {
         parse_refresh_token(&opt.refresh_token.unwrap_or_default())?
     };
@@ -435,9 +434,10 @@ fn private_keys(rd: &mut dyn io::BufRead) -> Result<Vec<Vec<u8>>, io::Error> {
     }
 }
 
-async fn login() -> anyhow::Result<String> {
+async fn login(timeout: u64) -> anyhow::Result<String> {
     use crate::login::model::{AuthorizationToken, Ok, QueryQrCodeCkForm};
-    use anyhow::Context;
+
+    const SLEEP: u64 = 3;
 
     let scan = login::QrCodeScanner::new().await?;
     // 返回二维码内容结果集
@@ -447,9 +447,10 @@ async fn login() -> anyhow::Result<String> {
     let ck_form = QueryQrCodeCkForm::from(generator_qr_code_result);
     // 打印二维码
     qr2term::print_qr(&qrcode_content)?;
-    info!("Please scan the qrcode to login in 30 seconds");
-    for _i in 0..10 {
-        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+    info!("Please scan the qrcode to login in {} seconds", timeout);
+    let loop_count = timeout / SLEEP;
+    for _i in 0..loop_count {
+        tokio::time::sleep(tokio::time::Duration::from_secs(SLEEP)).await;
         // 模拟轮训查询二维码状态
         let query_result = scan.query(&ck_form).await?;
         if query_result.ok() {
