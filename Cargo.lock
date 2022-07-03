@@ -22,6 +22,7 @@ name = "aliyundrive-webdav"
 version = "1.6.1"
 dependencies = [
  "anyhow",
+ "atty",
  "base64",
  "bytes",
  "clap",

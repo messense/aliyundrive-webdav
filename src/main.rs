@@ -148,6 +148,7 @@ async fn main() -> anyhow::Result<()> {
     let (refresh_token, client_type) = if opt.domain_id.is_none()
         && opt.refresh_token.is_none()
         && refresh_token_from_file.is_none()
+        && atty::is(atty::Stream::Stdout)
     {
         (login().await?, ClientType::App)
     } else {
