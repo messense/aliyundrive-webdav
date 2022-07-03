@@ -7,6 +7,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   macos:
     runs-on: macos-latest
@@ -172,10 +176,6 @@ jobs:
         uses: Swatinem/rust-cache@v1
         with:
           key: ${{ matrix.platform.target }}
-      # Workaround upx bug for x86_64
-      - name: Set env for x86_64
-        if: matrix.platform.target == 'x86_64-unknown-linux-musl'
-        run: echo 'CARGO_PROFILE_RELEASE_OPT_LEVEL=z' >> $GITHUB_ENV
       - name: Build wheels - manylinux
         uses: messense/maturin-action@main
         with:
@@ -209,11 +209,26 @@ jobs:
           name: wheels
           path: dist
           if-no-files-found: error
+      - name: Install upx
+        working-directory: /tmp
+        env:
+          CC: clang
+          CXX: clang++
+        run: |
+          set -ex
+          curl -sqLO https://www.oberhumer.com/opensource/ucl/download/ucl-1.03.tar.gz
+          tar zxf ucl-1.03.tar.gz
+          cd ucl-1.03
+          ./configure --with-pic --disable-debug --disable-dependency-tracking --prefix=/usr/local
+          sudo make install
+          cd ..
+          git clone --recursive https://github.com/upx/upx.git
+          cd upx
+          make all
+          cp src/upx.out /usr/local/bin/upx
+          chmod +x /usr/local/bin/upx
       - name: Upx compress binary
-        uses: crazy-max/ghaction-upx@v1
-        with:
-          version: latest
-          files: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
+        run: upx target/${{ matrix.platform.target }}/release/aliyundrive-webdav
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v2
         with:
