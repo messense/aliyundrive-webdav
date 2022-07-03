@@ -7,6 +7,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   macos:
     runs-on: macos-latest
@@ -207,12 +211,15 @@ jobs:
           if-no-files-found: error
       - name: Install upx
         working-directory: /tmp
+        env:
+          CC: clang
+          CXX: clang++
         run: |
           set -ex
           curl -sqLO https://www.oberhumer.com/opensource/ucl/download/ucl-1.03.tar.gz
           tar zxf ucl-1.03.tar.gz
           cd ucl-1.03
-          CC=clang ./configure --disable-debug --disable-dependency-tracking --prefix=/usr/local
+          ./configure --with-pic --disable-debug --disable-dependency-tracking --prefix=/usr/local
           sudo make install
           cd ..
           git clone --recursive https://github.com/upx/upx.git
