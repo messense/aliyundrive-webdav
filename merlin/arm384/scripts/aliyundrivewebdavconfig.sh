@@ -33,7 +33,7 @@ aliyundrivewebdav_start_stop(){
         echo_date "参数为：${aliyundrivewebdav_port} -r ${aliyundrivewebdav_refresh_token} --root ${aliyundrivewebdav_root} -S ${aliyundrivewebdav_read_buffer_size} --cache-size ${aliyundrivewebdav_cache_size} $AUTH_ARGS" >> $LOG_FILE
         #start-stop-daemon -S -q -b -m -p ${PID_FILE} \
         #  -x /bin/sh -- -c "${BIN} -I --workdir /var/run/aliyundrivewebdav --host 0.0.0.0 -p ${aliyundrivewebdav_port} -r ${aliyundrivewebdav_refresh_token} --root ${aliyundrivewebdav_root} -S ${aliyundrivewebdav_read_bufffer_size} $AUTH_ARGS >/tmp/aliyundrivewebdav.log 2>&1"
-        ${BIN} -I --workdir /var/run/aliyundrivewebdav --host 0.0.0.0 -p ${aliyundrivewebdav_port} -r ${aliyundrivewebdav_refresh_token} --root ${aliyundrivewebdav_root} -S ${aliyundrivewebdav_read_buffer_size} --cache-size ${aliyundrivewebdav_cache_size} $AUTH_ARGS >/tmp/upload/aliyundrivewebdav.log 2>&1 &
+        ${BIN} -I --no-self-upgrade --workdir /var/run/aliyundrivewebdav --host 0.0.0.0 -p ${aliyundrivewebdav_port} -r ${aliyundrivewebdav_refresh_token} --root ${aliyundrivewebdav_root} -S ${aliyundrivewebdav_read_buffer_size} --cache-size ${aliyundrivewebdav_cache_size} $AUTH_ARGS >/tmp/upload/aliyundrivewebdav.log 2>&1 &
         sleep 5s
         if [ ! -z "$(pidof aliyundrive-webdav)" -a ! -n "$(grep "Error" /tmp/upload/aliyundrivewebdav.log)" ] ; then
           echo_date "aliyundrive 进程启动成功！(PID: $(pidof aliyundrive-webdav))" >> $LOG_FILE
