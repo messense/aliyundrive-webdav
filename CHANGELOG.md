@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.6.1
+
+* 降低自动更新失败日志级别为警告
+
 ## 1.6.0
+
 * 增加自动更新功能
 
 ## 1.5.1
