@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.6.2
+
+* 非 tty 终端模式下不尝试扫码登录
+
 ## 1.6.1
 
 * 降低自动更新失败日志级别为警告
