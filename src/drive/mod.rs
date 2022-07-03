@@ -737,6 +737,6 @@ pub fn parse_refresh_token(content: &str) -> Result<(String, ClientType)> {
     let (client, token) = content
         .trim()
         .split_once(':')
-        .unwrap_or_else(|| ("web", content.trim()));
+        .unwrap_or_else(|| ("app", content.trim()));
     Ok((token.to_string(), client.parse()?))
 }
