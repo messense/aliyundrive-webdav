@@ -51,6 +51,7 @@ atomic64 = ["moka/atomic64"]
 
 [profile.release]
 lto = true
+opt-level = "z"  # Optimize for size
 
 [package.metadata.deb]
 maintainer = "messense <messense@icloud.com>"
