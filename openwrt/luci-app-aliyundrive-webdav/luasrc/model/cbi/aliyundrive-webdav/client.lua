@@ -11,7 +11,11 @@ enable = e:option(Flag, "enable", translate("Enable"))
 enable.rmempty = false
 
 refresh_token = e:option(Value, "refresh_token", translate("Refresh Token"))
-refresh_token.description = translate("<a href=\"https://github.com/messense/aliyundrive-webdav#%E8%8E%B7%E5%8F%96-refresh_token\" target=\"_blank\">How to get refresh token</a>")
+refresh_token.description = translate("Double click the input box above to get refresh token by scanning qrcode")
+
+qrcode = e:option(DummyValue, '', '')
+qrcode.rawhtml = true
+qrcode.template = 'aliyundrive-webdav/aliyundrive-webdav_qrcode'
 
 root = e:option(Value, "root", translate("Root Directory"))
 root.description = translate("Restrict access to a folder of aliyundrive, defaults to / which means no restrictions")
