@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "aliyundrive-webdav"
-version = "1.7.0"
+version = "1.7.1"
 dependencies = [
  "anyhow",
  "atty",
@@ -448,9 +448,9 @@ dependencies = [
 
 [[package]]
 name = "dav-server"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b13dcbc90dc34a6654d89a8160e9dfc8a8b40ac6755bf8feeec4594f6911575"
+checksum = "00ade8f731e04d714b5c7724a3ee7f66583d5fda379e79d4eff55857fe111e62"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -1102,9 +1102,9 @@ checksum = "830b246a0e5f20af87141b25c173cd1b609bd7779a4617d6ec582abaf90870f3"
 
 [[package]]
 name = "once_cell"
-version = "1.12.0"
+version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7709cef83f0c1f58f666e746a08b21e0085f7440fa6a29cc194d68aac97a4225"
+checksum = "ac8b1a9b2518dc799a2271eff1688707eb315f0d4697aa6b0871369ca4c4da55"
 
 [[package]]
 name = "openssl"

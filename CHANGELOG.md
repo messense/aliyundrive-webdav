@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.7.1
+
+* OpenWrt Luci 配置界面增加扫码登录获取 refresh token 功能
+
 ## 1.7.0
 
 * 梅林 384/386 固件禁用程序自动更新
