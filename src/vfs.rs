@@ -118,7 +118,7 @@ impl AliyunDriveFileSystem {
     }
 
     async fn read_dir_and_cache(&self, path: PathBuf) -> Result<Vec<AliyunFile>, FsError> {
-        let path_str = path.to_slash_lossy();
+        let path_str = path.to_slash_lossy().into_owned();
         debug!(path = %path_str, "read_dir and cache");
         let parent_file_id = if path_str == "/" {
             "root".to_string()
