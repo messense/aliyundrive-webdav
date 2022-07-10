@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.7.2
+
+* 增加 socks5 代理支持
+
 ## 1.7.1
 
 * OpenWrt Luci 配置界面增加扫码登录获取 refresh token 功能
