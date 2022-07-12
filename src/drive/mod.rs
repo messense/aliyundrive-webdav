@@ -13,6 +13,8 @@ use reqwest::{
     header::{HeaderMap, HeaderValue},
     StatusCode,
 };
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tokio::{
@@ -84,7 +86,7 @@ struct Credentials {
 #[derive(Debug, Clone)]
 pub struct AliyunDrive {
     config: DriveConfig,
-    client: reqwest::Client,
+    client: ClientWithMiddleware,
     credentials: Arc<RwLock<Credentials>>,
     drive_id: Option<String>,
 }
@@ -105,6 +107,10 @@ impl AliyunDrive {
                 HeaderValue::from_static("client=web,app=adrive,version=v3.0.0"),
             );
         }
+        let retry_policy = ExponentialBackoff::builder()
+            .backoff_exponent(2)
+            .retry_bounds(Duration::from_millis(100), Duration::from_secs(5))
+            .build_with_max_retries(3);
         let client = reqwest::Client::builder()
             .user_agent(UA)
             .default_headers(headers)
@@ -115,6 +121,9 @@ impl AliyunDrive {
             .connect_timeout(Duration::from_secs(10))
             .timeout(Duration::from_secs(30))
             .build()?;
+        let client = ClientBuilder::new(client)
+            .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+            .build();
         let mut drive = Self {
             config,
             client,
