@@ -74,6 +74,8 @@ jobs:
         with:
           files: |
             target/release/aliyundrive-webdav*.tar.gz
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
 
   windows:
     runs-on: windows-latest
@@ -146,6 +148,8 @@ jobs:
         with:
           files: |
             target/${{ matrix.platform.target }}/release/*.zip
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
 
   linux:
     runs-on: ubuntu-latest
@@ -260,18 +264,24 @@ jobs:
         with:
           files: |
             target/${{ matrix.platform.target }}/release/aliyundrive-webdav*.tar.gz*
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
       - name: Upload deb to GitHub Release
         uses: softprops/action-gh-release@v1
         if: "startsWith(github.ref, 'refs/tags/') && matrix.platform.deb"
         with:
           files: |
             target/${{ matrix.platform.target }}/debian/aliyundrive-webdav_*.deb
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
       - name: Upload RPM to GitHub Release
         uses: softprops/action-gh-release@v1
         if: "startsWith(github.ref, 'refs/tags/') && matrix.platform.deb"
         with:
           files: |
             target/${{ matrix.platform.target }}/generate-rpm/aliyundrive-webdav*.rpm
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
       - name: Remove cached deb and RPM packages
         if: matrix.platform.deb
         run: |
@@ -333,6 +343,8 @@ jobs:
         with:
           files: |
             target/${{ matrix.platform.target }}/release/aliyundrive-webdav*.tar.gz*
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
 
   openwrt:
     name: OpenWrt Package - ${{ matrix.target.arch }}
@@ -415,12 +427,16 @@ jobs:
         with:
           files: |
             openwrt-sdk/bin/packages/*/aliyundrive/aliyundrive-webdav*.ipk
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
       - name: Upload luci packages to GitHub Release
         uses: softprops/action-gh-release@v1
         if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.target.arch == 'aarch64_generic' }}
         with:
           files: |
             openwrt-sdk/bin/packages/*/aliyundrive/luci-*.ipk
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
 
   merlin:
     name: Merlin Package
@@ -469,6 +485,8 @@ jobs:
         with:
           files: |
             merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
 
   docker:
     name: Build Docker Image

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.7.3
+
+* 调用云盘接口增加自动重试机制
+
 ## 1.7.2
 
 * 增加 socks5 代理支持
