@@ -511,7 +511,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: messense/aliyundrive-webdav
+          images: |
+            messense/aliyundrive-webdav
+            ghcr.io/messense/aliyundrive-webdav
           tags: |
             type=schedule
             type=ref,event=branch
@@ -530,6 +532,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: docker build
         uses: docker/build-push-action@v2
         with:
