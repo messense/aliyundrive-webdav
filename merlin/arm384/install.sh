@@ -38,7 +38,7 @@ if [ "$aliyundrivewebdav_enable" == "1" ];then
 fi
 # 检测储存空间是否足够
 echo_date 检测jffs分区剩余空间...
-SPACE_AVAL=$(df|grep jffs | awk '{print $4}')
+SPACE_AVAL=$(df|grep jffs|head -n 1  | awk '{print $4}')
 SPACE_NEED=$(du -s /tmp/aliyundrivewebdav | awk '{print $1}')
 if [ "$SPACE_AVAL" -gt "$SPACE_NEED" ];then
 	echo_date 当前jffs分区剩余"$SPACE_AVAL" KB, 插件安装需要"$SPACE_NEED" KB，空间满足，继续安装！
