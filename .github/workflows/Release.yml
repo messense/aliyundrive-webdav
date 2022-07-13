@@ -258,27 +258,13 @@ jobs:
           tar czvf aliyundrive-webdav-${{ steps.tag.outputs.tag }}.${{ matrix.platform.target }}.tar.gz aliyundrive-webdav
           shasum -a 256 aliyundrive-webdav-${{ steps.tag.outputs.tag }}.${{ matrix.platform.target }}.tar.gz > aliyundrive-webdav-${{ steps.tag.outputs.tag }}.${{ matrix.platform.target }}.tar.gz.sha256
           cd -
-      - name: Upload binary to GitHub Release
+      - name: Upload binaries to GitHub Release
         uses: softprops/action-gh-release@v1
         if: "startsWith(github.ref, 'refs/tags/')"
         with:
           files: |
             target/${{ matrix.platform.target }}/release/aliyundrive-webdav*.tar.gz*
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
-          generate_release_notes: true
-      - name: Upload deb to GitHub Release
-        uses: softprops/action-gh-release@v1
-        if: "startsWith(github.ref, 'refs/tags/') && matrix.platform.deb"
-        with:
-          files: |
             target/${{ matrix.platform.target }}/debian/aliyundrive-webdav_*.deb
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
-          generate_release_notes: true
-      - name: Upload RPM to GitHub Release
-        uses: softprops/action-gh-release@v1
-        if: "startsWith(github.ref, 'refs/tags/') && matrix.platform.deb"
-        with:
-          files: |
             target/${{ matrix.platform.target }}/generate-rpm/aliyundrive-webdav*.rpm
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
           generate_release_notes: true
