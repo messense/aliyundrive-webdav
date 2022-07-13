@@ -7,7 +7,10 @@ body:
       value: |
         感谢反馈，请填写以下表单。
 
-        **注意请先搜索历史 issue，避免重复反馈相同的问题。**
+        **注意事项**
+
+        1. **请先搜索历史 issue，避免重复反馈相同的问题, 否则直接关闭 issue**
+        2. **请勿反馈类似 `operation timed out`/`dns error`/`connection reset` 等网络问题, 请自行排查运行环境网络状况**
   - type: textarea
     id: description
     attributes:
@@ -31,6 +34,7 @@ body:
     id: version
     attributes:
       label: 版本
+      placeholder: 请提供具体版本号如 1.7.4 而不是"最新版"
     validations:
       required: true
   - type: input
