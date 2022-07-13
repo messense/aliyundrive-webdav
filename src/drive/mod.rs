@@ -681,12 +681,14 @@ impl AliyunDrive {
     }
 
     pub async fn upload(&self, url: &str, body: Bytes) -> Result<()> {
-        self.client
-            .put(url)
-            .body(body)
-            .send()
-            .await?
-            .error_for_status()?;
+        let res = self.client.put(url).body(body).send().await?;
+        if let Err(err) = res.error_for_status_ref() {
+            let detail = res
+                .text()
+                .await
+                .unwrap_or_else(|_| "unknown error".to_string());
+            bail!("{}: {}", err, detail);
+        }
         Ok(())
     }
 
