@@ -503,12 +503,23 @@ impl AliyunDrive {
             drive_id: self.drive_id()?,
             file_id,
         };
-        let _res: Option<serde::de::IgnoredAny> = self
+        let res: Result<Option<serde::de::IgnoredAny>> = self
             .request(
                 format!("{}/v2/recyclebin/trash", self.config.api_base_url),
                 &req,
             )
-            .await?;
+            .await;
+        if let Err(err) = res {
+            if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
+                // Ignore 404 and 400 status codes
+                if !matches!(
+                    req_err.status(),
+                    Some(StatusCode::NOT_FOUND | StatusCode::BAD_REQUEST)
+                ) {
+                    return Err(err);
+                }
+            }
+        }
         Ok(())
     }
 
@@ -518,9 +529,20 @@ impl AliyunDrive {
             drive_id: self.drive_id()?,
             file_id,
         };
-        let _res: Option<serde::de::IgnoredAny> = self
+        let res: Result<Option<serde::de::IgnoredAny>> = self
             .request(format!("{}/v2/file/delete", self.config.api_base_url), &req)
-            .await?;
+            .await;
+        if let Err(err) = res {
+            if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
+                // Ignore 404 and 400 status codes
+                if !matches!(
+                    req_err.status(),
+                    Some(StatusCode::NOT_FOUND | StatusCode::BAD_REQUEST)
+                ) {
+                    return Err(err);
+                }
+            }
+        }
         Ok(())
     }
 
