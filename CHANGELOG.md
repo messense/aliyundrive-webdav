@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.7.4
+
+* 删除文件时忽略 404 和 400 状态码
+* 修复梅林 arm384/arm386 使用 usb2jffs 插件后安装报错 `bad number` 问题
+* 上传文件出错时日志中增加更详细的错误信息
+
 ## 1.7.3
 
 * 调用云盘接口增加自动重试机制
