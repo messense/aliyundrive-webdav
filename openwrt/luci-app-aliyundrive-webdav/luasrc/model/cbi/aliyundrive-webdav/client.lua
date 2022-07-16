@@ -40,6 +40,10 @@ read_buffer_size = e:option(Value, "read_buffer_size", translate("Read Buffer Si
 read_buffer_size.default = "10485760"
 read_buffer_size.datatype = "uinteger"
 
+upload_buffer_size = e:option(Value, "upload_buffer_size", translate("Upload Buffer Size"))
+upload_buffer_size.default = "16777216"
+upload_buffer_size.datatype = "uinteger"
+
 cache_size = e:option(Value, "cache_size", translate("Cache Size"))
 cache_size.default = "1000"
 cache_size.datatype = "uinteger"

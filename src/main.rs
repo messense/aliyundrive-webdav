@@ -60,6 +60,9 @@ struct Opt {
     /// Read/download buffer size in bytes, defaults to 10MB
     #[clap(short = 'S', long, default_value = "10485760")]
     read_buffer_size: usize,
+    /// Upload buffer size in bytes, defaults to 16MB
+    #[clap(long, default_value = "16777216")]
+    upload_buffer_size: usize,
     /// Directory entries cache size
     #[clap(long, default_value = "1000")]
     cache_size: u64,
@@ -254,6 +257,7 @@ async fn main() -> anyhow::Result<()> {
         opt.cache_ttl,
         no_trash,
         opt.read_only,
+        opt.upload_buffer_size,
     )
     .await?;
     debug!("aliyundrive file system initialized");

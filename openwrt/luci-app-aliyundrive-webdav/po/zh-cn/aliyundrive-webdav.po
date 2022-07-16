@@ -37,6 +37,9 @@ msgstr "密码"
 msgid "Read Buffer Size"
 msgstr "下载缓冲大小(bytes)"
 
+msgid "Upload Buffer Size"
+msgstr "上传缓冲大小(bytes)"
+
 msgid "Cache Size"
 msgstr "目录缓存大小"
 

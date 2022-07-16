@@ -25,8 +25,6 @@ use crate::{
     drive::{model::GetFileDownloadUrlResponse, AliyunDrive, AliyunFile, DateTime, FileType},
 };
 
-const UPLOAD_CHUNK_SIZE: u64 = 16 * 1024 * 1024; // 16MB
-
 #[derive(Clone)]
 pub struct AliyunDriveFileSystem {
     drive: AliyunDrive,
@@ -35,6 +33,7 @@ pub struct AliyunDriveFileSystem {
     root: PathBuf,
     no_trash: bool,
     read_only: bool,
+    upload_buffer_size: usize,
 }
 
 impl AliyunDriveFileSystem {
@@ -45,6 +44,7 @@ impl AliyunDriveFileSystem {
         cache_ttl: u64,
         no_trash: bool,
         read_only: bool,
+        upload_buffer_size: usize,
     ) -> Result<Self> {
         let dir_cache = Cache::new(cache_size, cache_ttl);
         debug!("dir cache initialized");
@@ -60,6 +60,7 @@ impl AliyunDriveFileSystem {
             root,
             no_trash,
             read_only,
+            upload_buffer_size,
         })
     }
 
@@ -558,8 +559,9 @@ impl AliyunDavFile {
                 }
             }
             // TODO: create parent folders?
+            let upload_buffer_size = self.fs.upload_buffer_size as u64;
             let chunk_count =
-                size / UPLOAD_CHUNK_SIZE + if size % UPLOAD_CHUNK_SIZE != 0 { 1 } else { 0 };
+                size / upload_buffer_size + if size % upload_buffer_size != 0 { 1 } else { 0 };
             self.upload_state.chunk_count = chunk_count;
             let res = self
                 .fs
@@ -588,10 +590,10 @@ impl AliyunDavFile {
 
     async fn maybe_upload_chunk(&mut self, remaining: bool) -> Result<(), FsError> {
         let chunk_size = if remaining {
-            // last chunk size maybe less than UPLOAD_CHUNK_SIZE
+            // last chunk size maybe less than upload_buffer_size
             self.upload_state.buffer.remaining()
         } else {
-            UPLOAD_CHUNK_SIZE as usize
+            self.fs.upload_buffer_size
         };
         let current_chunk = self.upload_state.chunk;
         if chunk_size > 0
