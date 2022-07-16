@@ -34,10 +34,12 @@ pub struct AliyunDriveFileSystem {
     no_trash: bool,
     read_only: bool,
     upload_buffer_size: usize,
+    skip_upload_same_size: bool,
 }
 
 impl AliyunDriveFileSystem {
-    pub async fn new(
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
         drive: AliyunDrive,
         root: String,
         cache_size: u64,
@@ -45,6 +47,7 @@ impl AliyunDriveFileSystem {
         no_trash: bool,
         read_only: bool,
         upload_buffer_size: usize,
+        skip_upload_same_size: bool,
     ) -> Result<Self> {
         let dir_cache = Cache::new(cache_size, cache_ttl);
         debug!("dir cache initialized");
@@ -61,6 +64,7 @@ impl AliyunDriveFileSystem {
             no_trash,
             read_only,
             upload_buffer_size,
+            skip_upload_same_size,
         })
     }
 
@@ -213,21 +217,19 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .get_file(parent_path.to_path_buf())
                 .await?
                 .ok_or(FsError::NotFound)?;
-            let dav_file = if let Some(mut file) = self.get_file(path.clone()).await? {
+            let dav_file = if let Some(file) = self.get_file(path.clone()).await? {
                 if options.write && options.create_new {
                     return Err(FsError::Exists);
                 }
                 if options.write && self.read_only {
                     return Err(FsError::Forbidden);
                 }
-
-                if let Some(size) = options.size {
-                    // 上传中的文件刚开始 size 可能为 0，更新为正确的 size
-                    if file.size == 0 {
-                        file.size = size;
-                    }
-                }
-                AliyunDavFile::new(self.clone(), file, parent_file.id)
+                AliyunDavFile::new(
+                    self.clone(),
+                    file,
+                    parent_file.id,
+                    options.size.unwrap_or_default(),
+                )
             } else if options.write && (options.create || options.create_new) {
                 if self.read_only {
                     return Err(FsError::Forbidden);
@@ -256,7 +258,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 };
                 let mut uploading = self.uploading.entry(parent_file.id.clone()).or_default();
                 uploading.push(file.clone());
-                AliyunDavFile::new(self.clone(), file, parent_file.id)
+                AliyunDavFile::new(self.clone(), file, parent_file.id, size.unwrap_or(0))
             } else {
                 return Err(FsError::NotFound);
             };
@@ -486,6 +488,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
 
 #[derive(Debug, Clone)]
 struct UploadState {
+    size: u64,
     buffer: BytesMut,
     chunk_count: u64,
     chunk: u64,
@@ -496,6 +499,7 @@ struct UploadState {
 impl Default for UploadState {
     fn default() -> Self {
         Self {
+            size: 0,
             buffer: BytesMut::new(),
             chunk_count: 0,
             chunk: 1,
@@ -526,13 +530,16 @@ impl Debug for AliyunDavFile {
 }
 
 impl AliyunDavFile {
-    fn new(fs: AliyunDriveFileSystem, file: AliyunFile, parent_file_id: String) -> Self {
+    fn new(fs: AliyunDriveFileSystem, file: AliyunFile, parent_file_id: String, size: u64) -> Self {
         Self {
             fs,
             file,
             parent_file_id,
             current_pos: 0,
-            upload_state: UploadState::default(),
+            upload_state: UploadState {
+                size,
+                ..Default::default()
+            },
         }
     }
 
@@ -543,11 +550,15 @@ impl AliyunDavFile {
         })
     }
 
-    async fn prepare_for_upload(&mut self) -> Result<(), FsError> {
+    async fn prepare_for_upload(&mut self) -> Result<bool, FsError> {
         if self.upload_state.chunk_count == 0 {
-            let size = self.file.size;
+            let size = self.upload_state.size;
             debug!(file_name = %self.file.name, size = size, "prepare for upload");
             if !self.file.id.is_empty() {
+                if self.fs.skip_upload_same_size && self.file.size == size {
+                    debug!(file_name = %self.file.name, size = size, "skip uploading same size file");
+                    return Ok(false);
+                }
                 // existing file, delete before upload
                 if let Err(err) = self
                     .fs
@@ -585,7 +596,7 @@ impl AliyunDavFile {
             }
             self.upload_state.upload_urls = upload_urls;
         }
-        Ok(())
+        Ok(true)
     }
 
     async fn maybe_upload_chunk(&mut self, remaining: bool) -> Result<(), FsError> {
@@ -604,7 +615,7 @@ impl AliyunDavFile {
             debug!(
                 file_id = %self.file.id,
                 file_name = %self.file.name,
-                size = self.file.size,
+                size = self.upload_state.size,
                 "upload part {}/{}",
                 current_chunk,
                 self.upload_state.chunk_count
@@ -635,7 +646,7 @@ impl AliyunDavFile {
                     error!(
                         file_id = %self.file.id,
                         file_name = %self.file.name,
-                        size = self.file.size,
+                        size = self.upload_state.size,
                         error = %err,
                         "upload file chunk {} failed",
                         current_chunk
@@ -678,9 +689,10 @@ impl DavFile for AliyunDavFile {
     fn write_buf(&'_ mut self, buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: write_buf");
         async move {
-            self.prepare_for_upload().await?;
-            self.upload_state.buffer.put(buf);
-            self.maybe_upload_chunk(false).await?;
+            if self.prepare_for_upload().await? {
+                self.upload_state.buffer.put(buf);
+                self.maybe_upload_chunk(false).await?;
+            }
             Ok(())
         }
         .boxed()
@@ -689,9 +701,10 @@ impl DavFile for AliyunDavFile {
     fn write_bytes(&mut self, buf: Bytes) -> FsFuture<()> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: write_bytes");
         async move {
-            self.prepare_for_upload().await?;
-            self.upload_state.buffer.extend_from_slice(&buf);
-            self.maybe_upload_chunk(false).await?;
+            if self.prepare_for_upload().await? {
+                self.upload_state.buffer.extend_from_slice(&buf);
+                self.maybe_upload_chunk(false).await?;
+            }
             Ok(())
         }
         .boxed()
@@ -788,26 +801,27 @@ impl DavFile for AliyunDavFile {
     fn flush(&mut self) -> FsFuture<()> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: flush");
         async move {
-            self.prepare_for_upload().await?;
-            self.maybe_upload_chunk(true).await?;
-            if !self.upload_state.upload_id.is_empty() {
+            if self.prepare_for_upload().await? {
+                self.maybe_upload_chunk(true).await?;
+                if !self.upload_state.upload_id.is_empty() {
+                    self.fs
+                        .drive
+                        .complete_file_upload(&self.file.id, &self.upload_state.upload_id)
+                        .await
+                        .map_err(|err| {
+                            error!(
+                                file_id = %self.file.id,
+                                file_name = %self.file.name,
+                                error = %err,
+                                "complete file upload failed"
+                            );
+                            FsError::GeneralFailure
+                        })?;
+                }
                 self.fs
-                    .drive
-                    .complete_file_upload(&self.file.id, &self.upload_state.upload_id)
-                    .await
-                    .map_err(|err| {
-                        error!(
-                            file_id = %self.file.id,
-                            file_name = %self.file.name,
-                            error = %err,
-                            "complete file upload failed"
-                        );
-                        FsError::GeneralFailure
-                    })?;
+                    .remove_uploading_file(&self.parent_file_id, &self.file.name);
+                self.fs.dir_cache.invalidate_all();
             }
-            self.fs
-                .remove_uploading_file(&self.parent_file_id, &self.file.name);
-            self.fs.dir_cache.invalidate_all();
             Ok(())
         }
         .boxed()

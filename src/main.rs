@@ -101,6 +101,9 @@ struct Opt {
     /// Disable self auto upgrade
     #[clap(long)]
     no_self_upgrade: bool,
+    /// Skip uploading same size file
+    #[clap(long)]
+    skip_upload_same_size: bool,
 
     #[clap(subcommand)]
     subcommands: Option<Commands>,
@@ -258,8 +261,8 @@ async fn main() -> anyhow::Result<()> {
         no_trash,
         opt.read_only,
         opt.upload_buffer_size,
-    )
-    .await?;
+        opt.skip_upload_same_size,
+    )?;
     debug!("aliyundrive file system initialized");
 
     let mut dav_server_builder = DavHandler::builder()

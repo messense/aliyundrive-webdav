@@ -48,6 +48,13 @@ start_service() {
             ;;
           *) ;;
         esac
+
+        case "$(uci_get_by_type server skip_upload_same_size 0)" in
+          1|on|true|yes|enabled)
+            extra_options="$extra_options --skip-upload-same-size"
+            ;;
+          *) ;;
+        esac
       fi
 
       if [[ ! -z "$tls_cert" && ! -z "$tls_key" ]]; then

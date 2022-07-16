@@ -87,3 +87,9 @@ msgstr "阿里云相册与云盘服务 domainId"
 
 msgid "Input domain_id option will use <a href=\"https://www.aliyun.com/product/storage/pds\" target=\"_blank\">Aliyun PDS</a> instead of <a href=\"https://www.aliyundrive.com\" target=\"_blank\">AliyunDrive</a>"
 msgstr "填写此选项将使用<a href=\"https://www.aliyun.com/product/storage/pds\" target=\"_blank\">阿里云相册与网盘服务</a>而不是<a href=\"https://www.aliyundrive.com\" target=\"_blank\">阿里云盘</a>"
+
+msgid "Skip uploading same size files"
+msgstr "跳过上传相同大小的文件"
+
+msgid "Reduce the upload traffic by skipping uploading files with the same size"
+msgstr "跳过上传相同大小的文件减少上传流量消耗，但可能会导致修改过的同样大小的文件不会被上传"

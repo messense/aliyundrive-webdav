@@ -44,6 +44,10 @@ upload_buffer_size = e:option(Value, "upload_buffer_size", translate("Upload Buf
 upload_buffer_size.default = "16777216"
 upload_buffer_size.datatype = "uinteger"
 
+skip_upload_same_size = e:option(Flag, "skip_upload_same_size", translate("Skip uploading same size files"))
+skip_upload_same_size.description = translate("Reduce the upload traffic by skipping uploading files with the same size")
+skip_upload_same_size.rmempty = false
+
 cache_size = e:option(Value, "cache_size", translate("Cache Size"))
 cache_size.default = "1000"
 cache_size.datatype = "uinteger"
