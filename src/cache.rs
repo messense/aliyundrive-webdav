@@ -20,8 +20,7 @@ impl Cache {
         Self { inner }
     }
 
-    #[allow(clippy::ptr_arg)]
-    pub fn get(&self, key: &String) -> Option<Vec<AliyunFile>> {
+    pub fn get(&self, key: &str) -> Option<Vec<AliyunFile>> {
         trace!(key = %key, "cache: get");
         self.inner.get(key)
     }

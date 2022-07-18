@@ -70,7 +70,7 @@ impl AliyunDriveFileSystem {
 
     fn find_in_cache(&self, path: &Path) -> Result<Option<AliyunFile>, FsError> {
         if let Some(parent) = path.parent() {
-            let parent_str = parent.to_string_lossy().into_owned();
+            let parent_str = parent.to_string_lossy();
             let file_name = path
                 .file_name()
                 .ok_or(FsError::NotFound)?
@@ -123,7 +123,7 @@ impl AliyunDriveFileSystem {
     }
 
     async fn read_dir_and_cache(&self, path: PathBuf) -> Result<Vec<AliyunFile>, FsError> {
-        let path_str = path.to_slash_lossy().into_owned();
+        let path_str = path.to_slash_lossy();
         debug!(path = %path_str, "read_dir and cache");
         let parent_file_id = if path_str == "/" {
             "root".to_string()
@@ -142,7 +142,7 @@ impl AliyunDriveFileSystem {
         let mut files = if let Some(files) = self.dir_cache.get(&path_str) {
             files
         } else {
-            self.list_files_and_cache(path_str, parent_file_id.clone())
+            self.list_files_and_cache(path_str.to_string(), parent_file_id.clone())
                 .await
                 .map_err(|_| FsError::NotFound)?
         };
