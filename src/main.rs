@@ -142,9 +142,9 @@ async fn main() -> anyhow::Result<()> {
     let opt = Opt::parse();
     if env::var("RUST_LOG").is_err() {
         if opt.debug {
-            env::set_var("RUST_LOG", "aliyundrive_webdav=debug");
+            env::set_var("RUST_LOG", "aliyundrive_webdav=debug,reqwest=debug");
         } else {
-            env::set_var("RUST_LOG", "aliyundrive_webdav=info");
+            env::set_var("RUST_LOG", "aliyundrive_webdav=info,reqwest=warn");
         }
     }
     tracing_subscriber::fmt::init();
