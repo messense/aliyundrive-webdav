@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.8.1
+
+* 增加调试模式 HTTP 请求日志输出
+
 ## 1.8.0
 
 * 增加配置上传文件缓冲区大小参数 `--upload-buffer-size`
