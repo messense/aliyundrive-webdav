@@ -130,21 +130,38 @@ impl AliyunDriveFileSystem {
         } else {
             match self.find_in_cache(&path) {
                 Ok(Some(file)) => file.id,
-                _ => {
-                    if let Ok(Some(file)) = self.drive.get_by_path(&path_str).await {
-                        file.id
-                    } else {
-                        return Err(FsError::NotFound);
+                _ => match self.drive.get_by_path(&path_str).await {
+                    Ok(Some(file)) => file.id,
+                    Ok(None) => return Err(FsError::NotFound),
+                    Err(err) => {
+                        error!(path = %path_str, error = %err, "get_by_path failed");
+                        return Err(FsError::GeneralFailure);
                     }
-                }
+                },
             }
         };
         let mut files = if let Some(files) = self.dir_cache.get(&path_str) {
             files
         } else {
-            self.list_files_and_cache(path_str.to_string(), parent_file_id.clone())
-                .await
-                .map_err(|_| FsError::NotFound)?
+            let res = self
+                .list_files_and_cache(path_str.to_string(), parent_file_id.clone())
+                .await;
+            match res {
+                Ok(files) => files,
+                Err(err) => {
+                    if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
+                        if matches!(req_err.status(), Some(reqwest::StatusCode::NOT_FOUND)) {
+                            return Err(FsError::NotFound);
+                        } else {
+                            error!(path = %path_str, error = %err, "list_files_and_cache failed");
+                            return Err(FsError::GeneralFailure);
+                        }
+                    } else {
+                        error!(path = %path_str, error = %err, "list_files_and_cache failed");
+                        return Err(FsError::GeneralFailure);
+                    }
+                }
+            }
         };
         let uploading_files = self.list_uploading_files(&parent_file_id);
         if !uploading_files.is_empty() {
