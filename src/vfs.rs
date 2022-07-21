@@ -28,7 +28,7 @@ use crate::{
 #[derive(Clone)]
 pub struct AliyunDriveFileSystem {
     drive: AliyunDrive,
-    dir_cache: Cache,
+    pub(crate) dir_cache: Cache,
     uploading: Arc<DashMap<String, Vec<AliyunFile>>>,
     root: PathBuf,
     no_trash: bool,
@@ -124,7 +124,6 @@ impl AliyunDriveFileSystem {
 
     async fn read_dir_and_cache(&self, path: PathBuf) -> Result<Vec<AliyunFile>, FsError> {
         let path_str = path.to_slash_lossy();
-        debug!(path = %path_str, "read_dir and cache");
         let parent_file_id = if path_str == "/" {
             "root".to_string()
         } else {
@@ -141,16 +140,21 @@ impl AliyunDriveFileSystem {
             }
         };
         let mut files = if let Some(files) = self.dir_cache.get(&path_str) {
+            debug!(path = %path_str, "read_dir cache hit");
             files
         } else {
             let res = self
                 .list_files_and_cache(path_str.to_string(), parent_file_id.clone())
                 .await;
             match res {
-                Ok(files) => files,
+                Ok(files) => {
+                    debug!(path = %path_str, "read_dir cache miss");
+                    files
+                }
                 Err(err) => {
                     if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
                         if matches!(req_err.status(), Some(reqwest::StatusCode::NOT_FOUND)) {
+                            debug!(path = %path_str, "read_dir not found");
                             return Err(FsError::NotFound);
                         } else {
                             error!(path = %path_str, error = %err, "list_files_and_cache failed");
@@ -166,8 +170,8 @@ impl AliyunDriveFileSystem {
         let uploading_files = self.list_uploading_files(&parent_file_id);
         if !uploading_files.is_empty() {
             debug!("added {} uploading files", uploading_files.len());
+            files.extend(uploading_files);
         }
-        files.extend(uploading_files);
         Ok(files)
     }
 

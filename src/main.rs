@@ -8,14 +8,17 @@ use std::{env, io};
 use anyhow::Context as _;
 use clap::{Parser, Subcommand};
 use dav_server::{body::Body, memls::MemLs, DavConfig, DavHandler};
+#[cfg(any(unix, feature = "rustls-tls"))]
+use futures_util::stream::StreamExt;
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
 use hyper::{service::Service, Request, Response};
 use self_update::cargo_crate_version;
 use tracing::{debug, error, info, warn};
+#[cfg(unix)]
+use {signal_hook::consts::signal::*, signal_hook_tokio::Signals};
 
 #[cfg(feature = "rustls-tls")]
 use {
-    futures_util::stream::StreamExt,
     hyper::server::accept,
     hyper::server::conn::AddrIncoming,
     std::fs::File,
@@ -27,6 +30,7 @@ use {
     tokio_rustls::TlsAcceptor,
 };
 
+use cache::Cache;
 use drive::{parse_refresh_token, read_refresh_token, AliyunDrive, ClientType, DriveConfig};
 use vfs::AliyunDriveFileSystem;
 
@@ -265,6 +269,9 @@ async fn main() -> anyhow::Result<()> {
     )?;
     debug!("aliyundrive file system initialized");
 
+    #[cfg(unix)]
+    let dir_cache = fs.dir_cache.clone();
+
     let mut dav_server_builder = DavHandler::builder()
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
@@ -318,8 +325,36 @@ async fn main() -> anyhow::Result<()> {
         handler: dav_server,
     });
     info!("listening on http://{}", server.local_addr());
+
+    #[cfg(not(unix))]
     let _ = server.await.map_err(|e| error!("server error: {}", e));
+
+    #[cfg(unix)]
+    {
+        let signals = Signals::new(&[SIGHUP])?;
+        let handle = signals.handle();
+        let signals_task = tokio::spawn(handle_signals(signals, dir_cache));
+
+        let _ = server.await.map_err(|e| error!("server error: {}", e));
+
+        // Terminate the signal stream.
+        handle.close();
+        signals_task.await?;
+    }
     Ok(())
+}
+
+#[cfg(unix)]
+async fn handle_signals(mut signals: Signals, dir_cache: Cache) {
+    while let Some(signal) = signals.next().await {
+        match signal {
+            SIGHUP => {
+                dir_cache.invalidate_all();
+                info!("directory cache invalidated by SIGHUP");
+            }
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[derive(Clone)]
