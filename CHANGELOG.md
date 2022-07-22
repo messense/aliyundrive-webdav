@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.8.3
+
+* 优化上传文件完成目录缓存失效策略
+
 ## 1.8.2
 
 * 修复读取目录在阿里云盘接口请求错误时返回 404 的问题
