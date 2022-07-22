@@ -49,6 +49,7 @@ pub struct ListFileItem {
     #[serde(default)]
     pub size: u64,
     pub url: Option<String>,
+    pub content_hash: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -112,6 +113,7 @@ impl From<GetFileResponse> for AliyunFile {
             updated_at: res.updated_at,
             size,
             url: None,
+            content_hash: None,
         }
     }
 }
@@ -272,6 +274,7 @@ pub struct AliyunFile {
     #[serde(default)]
     pub size: u64,
     pub url: Option<String>,
+    pub content_hash: Option<String>,
 }
 
 impl AliyunFile {
@@ -285,6 +288,7 @@ impl AliyunFile {
             updated_at: DateTime(now),
             size: 0,
             url: None,
+            content_hash: None,
         }
     }
 }
@@ -304,6 +308,7 @@ impl From<ListFileItem> for AliyunFile {
             } else {
                 f.url
             },
+            content_hash: f.content_hash,
         }
     }
 }

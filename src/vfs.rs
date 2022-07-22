@@ -15,7 +15,7 @@ use dav_server::{
         ReadDirMeta,
     },
 };
-use futures_util::future::FutureExt;
+use futures_util::future::{ready, FutureExt};
 use path_slash::PathBufExt;
 use tracing::{debug, error, trace};
 use zip::write::{FileOptions, ZipWriter};
@@ -277,6 +277,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     updated_at: DateTime::new(now),
                     size: size.unwrap_or(0),
                     url: None,
+                    content_hash: None,
                 };
                 let mut uploading = self.uploading.entry(parent_file.id.clone()).or_default();
                 uploading.push(file.clone());
@@ -509,6 +510,40 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 FsError::GeneralFailure
             })?;
             Ok((used, Some(total)))
+        }
+        .boxed()
+    }
+
+    fn have_props<'a>(
+        &'a self,
+        _path: &'a DavPath,
+    ) -> std::pin::Pin<Box<dyn futures_util::Future<Output = bool> + Send + 'a>> {
+        Box::pin(ready(true))
+    }
+
+    fn get_prop(&self, dav_path: &DavPath, prop: dav_server::fs::DavProp) -> FsFuture<Vec<u8>> {
+        let path = self.normalize_dav_path(dav_path);
+        debug!(path = %path.display(), "fs: get_prop");
+        async move {
+            if prop.namespace.as_deref() == Some("http://owncloud.org/ns")
+                && prop.prefix.as_deref() == Some("oc")
+                && prop.name == "checksums"
+            {
+                let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
+                if let Some(sha1) = file.content_hash {
+                    let checksums = format!("sha1:{}", sha1.to_ascii_lowercase());
+                    let xml = format!(
+                        r#"<?xml version="1.0"?>
+                        <oc:checksums xmlns:d="DAV:" xmlns:nc="http://nextcloud.org/ns" xmlns:oc="http://owncloud.org/ns">
+                            <oc:checksum>{}</oc:checksum>
+                        </oc:checksums>
+                    "#,
+                        checksums
+                    );
+                    return Ok(xml.into_bytes());
+                }
+            }
+            Err(FsError::NotImplemented)
         }
         .boxed()
     }
