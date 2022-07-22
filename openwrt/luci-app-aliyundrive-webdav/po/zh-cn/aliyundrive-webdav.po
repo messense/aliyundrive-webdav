@@ -49,6 +49,9 @@ msgstr "目录缓存过期时间（单位为秒）"
 msgid "Collecting data..."
 msgstr "获取数据中..."
 
+msgid "Invalidate cache"
+msgstr "清除缓存"
+
 msgid "RUNNING"
 msgstr "运行中"
 
