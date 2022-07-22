@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.8.4
+
+* 支持 rclone 以 OwnCloud/Nextcloud WebDAV 模式挂载时返回 sha1 checksum
+
 ## 1.8.3
 
 * 优化上传文件完成目录缓存失效策略
