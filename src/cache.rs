@@ -2,7 +2,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use moka::future::Cache as MokaCache;
-use tracing::trace;
+use tracing::debug;
 
 use crate::drive::AliyunFile;
 
@@ -21,18 +21,18 @@ impl Cache {
     }
 
     pub fn get(&self, key: &str) -> Option<Vec<AliyunFile>> {
-        trace!(key = %key, "cache: get");
+        debug!(key = %key, "cache: get");
         self.inner.get(key)
     }
 
     pub async fn insert(&self, key: String, value: Vec<AliyunFile>) {
-        trace!(key = %key, "cache: insert");
+        debug!(key = %key, "cache: insert");
         self.inner.insert(key, value).await;
     }
 
     pub async fn invalidate(&self, path: &Path) {
         let key = path.to_string_lossy().into_owned();
-        trace!(path = %path.display(), key = %key, "cache: invalidate");
+        debug!(path = %path.display(), key = %key, "cache: invalidate");
         self.inner.invalidate(&key).await;
     }
 
@@ -43,7 +43,7 @@ impl Cache {
     }
 
     pub fn invalidate_all(&self) {
-        trace!("cache: invalidate all");
+        debug!("cache: invalidate all");
         self.inner.invalidate_all();
     }
 }
