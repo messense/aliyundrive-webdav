@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.8.2
+
+* 修复读取目录在阿里云盘接口请求错误时返回 404 的问题
+* OpenWrt 界面增加清除缓存功能
+
 ## 1.8.1
 
 * 增加调试模式 HTTP 请求日志输出
