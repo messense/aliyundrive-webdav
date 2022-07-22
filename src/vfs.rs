@@ -249,6 +249,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     self.clone(),
                     file,
                     parent_file.id,
+                    parent_path.to_path_buf(),
                     options.size.unwrap_or_default(),
                 )
             } else if options.write && (options.create || options.create_new) {
@@ -279,7 +280,13 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 };
                 let mut uploading = self.uploading.entry(parent_file.id.clone()).or_default();
                 uploading.push(file.clone());
-                AliyunDavFile::new(self.clone(), file, parent_file.id, size.unwrap_or(0))
+                AliyunDavFile::new(
+                    self.clone(),
+                    file,
+                    parent_file.id,
+                    parent_path.to_path_buf(),
+                    size.unwrap_or(0),
+                )
             } else {
                 return Err(FsError::NotFound);
             };
@@ -530,11 +537,11 @@ impl Default for UploadState {
     }
 }
 
-#[derive(Clone)]
 struct AliyunDavFile {
     fs: AliyunDriveFileSystem,
     file: AliyunFile,
     parent_file_id: String,
+    parent_dir: PathBuf,
     current_pos: u64,
     upload_state: UploadState,
 }
@@ -551,11 +558,18 @@ impl Debug for AliyunDavFile {
 }
 
 impl AliyunDavFile {
-    fn new(fs: AliyunDriveFileSystem, file: AliyunFile, parent_file_id: String, size: u64) -> Self {
+    fn new(
+        fs: AliyunDriveFileSystem,
+        file: AliyunFile,
+        parent_file_id: String,
+        parent_dir: PathBuf,
+        size: u64,
+    ) -> Self {
         Self {
             fs,
             file,
             parent_file_id,
+            parent_dir,
             current_pos: 0,
             upload_state: UploadState {
                 size,
@@ -841,7 +855,7 @@ impl DavFile for AliyunDavFile {
                 }
                 self.fs
                     .remove_uploading_file(&self.parent_file_id, &self.file.name);
-                self.fs.dir_cache.invalidate_all();
+                self.fs.dir_cache.invalidate(&self.parent_dir).await;
             }
             Ok(())
         }
