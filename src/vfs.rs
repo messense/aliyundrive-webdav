@@ -534,14 +534,13 @@ impl DavFileSystem for AliyunDriveFileSystem {
             {
                 let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
                 if let Some(sha1) = file.content_hash {
-                    let checksums = format!("sha1:{}", sha1.to_ascii_lowercase());
                     let xml = format!(
                         r#"<?xml version="1.0"?>
                         <oc:checksums xmlns:d="DAV:" xmlns:nc="http://nextcloud.org/ns" xmlns:oc="http://owncloud.org/ns">
-                            <oc:checksum>{}</oc:checksum>
+                            <oc:checksum>sha1:{}</oc:checksum>
                         </oc:checksums>
                     "#,
-                        checksums
+                        sha1
                     );
                     return Ok(xml.into_bytes());
                 }
