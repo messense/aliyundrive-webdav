@@ -366,6 +366,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install build requirements
         run: |
+          set -e
           sudo apt-get update
           sudo apt-get install -y build-essential ccache ecj fastjar file g++ gawk \
           gettext git java-propose-classpath libelf-dev libncurses5-dev \
@@ -374,11 +375,13 @@ jobs:
           swig time xsltproc zlib1g-dev
       - name: Install OpenWrt SDK
         run: |
+          set -e
           wget -O openwrt-sdk.tar.xz ${{ matrix.target.sdk }}
           xz -q -d openwrt-sdk.tar.xz && tar -xvf openwrt-sdk.tar
           mv -f openwrt-sdk-* openwrt-sdk
       - name: Build Package
         run: |
+          set -e
           echo "src-link aliyundrive $GITHUB_WORKSPACE/openwrt" > openwrt-sdk/feeds.conf
           echo 'CONFIG_PACKAGE_aliyundrive-webdav=y
           CONFIG_PACKAGE_luci-app-aliyundrive-webdav=y
@@ -421,6 +424,66 @@ jobs:
         with:
           files: |
             openwrt-sdk/bin/packages/*/aliyundrive/luci-*.ipk
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          generate_release_notes: true
+
+  openwrt-gl-inet:
+    name: OpenWrt Package - ${{ matrix.target.arch }}
+    runs-on: ubuntu-latest
+    needs: [ linux, linux-others ]
+    environment: OpenWrt
+    strategy:
+      matrix:
+        target:
+          - arch: siflower-1806
+            path: sdk/1806/siflower
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install build requirements
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y build-essential ccache ecj fastjar file g++ gawk \
+          gettext git java-propose-classpath libelf-dev libncurses5-dev \
+          libncursesw5-dev libssl-dev python python2.7-dev python3 unzip wget \
+          python3-distutils python3-setuptools python3-dev rsync subversion \
+          swig time xsltproc zlib1g-dev
+      - name: Install OpenWrt SDK
+        run: |
+          set -e
+          git clone https://github.com/gl-inet/sdk.git openwrt-sdk
+          cd openwrt-sdk
+          ./download.sh ${{ matrix.target.arch }}
+      - name: Build Package
+        run: |
+          set -e
+          cd openwrt-sdk/${{ matrix.target.path }}
+          ln -s $GITHUB_WORKSPACE/openwrt/aliyundrive-webdav package/aliyundrive-webdav
+
+          echo 'CONFIG_PACKAGE_aliyundrive-webdav=y
+          CONFIG_PACKAGE_luci-app-aliyundrive-webdav=y
+          ' >> .config
+          cp feeds.conf.default feeds.conf
+          cat feeds.conf
+
+          ./scripts/feeds update -a > /dev/null
+          make defconfig
+
+          ./scripts/feeds install -d y -f -a
+          make package/aliyundrive-webdav/compile V=s
+          tree bin/packages/
+      - name: Archive package
+        uses: actions/upload-artifact@v2
+        with:
+          name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}
+          path: openwrt-sdk/${{ matrix.target.path }}/bin/packages/*/base/aliyundrive-webdav*.ipk
+          if-no-files-found: error
+      - name: Upload package to GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: "startsWith(github.ref, 'refs/tags/')"
+        with:
+          files: |
+            openwrt-sdk/${{ matrix.target.path }}/bin/packages/*/base/aliyundrive-webdav*.ipk
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
           generate_release_notes: true
 
