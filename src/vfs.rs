@@ -523,10 +523,13 @@ impl DavFileSystem for AliyunDriveFileSystem {
 
     fn get_prop(&self, dav_path: &DavPath, prop: dav_server::fs::DavProp) -> FsFuture<Vec<u8>> {
         let path = self.normalize_dav_path(dav_path);
-        debug!(path = %path.display(), "fs: get_prop");
+        let prop_name = match prop.prefix.as_ref() {
+            Some(prefix) => format!("{}:{}", prefix, prop.name),
+            None => prop.name.to_string(),
+        };
+        debug!(path = %path.display(), prop = %prop_name, "fs: get_prop");
         async move {
             if prop.namespace.as_deref() == Some("http://owncloud.org/ns")
-                && prop.prefix.as_deref() == Some("oc")
                 && prop.name == "checksums"
             {
                 let file = self.get_file(path).await?.ok_or(FsError::NotFound)?;
