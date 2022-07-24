@@ -394,6 +394,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     error!(path = %path.display(), error = %err, "remove directory failed");
                     FsError::GeneralFailure
                 })?;
+            self.dir_cache.invalidate(&path).await;
             self.dir_cache.invalidate_parent(&path).await;
             Ok(())
         }
