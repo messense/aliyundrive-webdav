@@ -470,6 +470,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 return Err(FsError::Forbidden);
             }
 
+            let is_dir;
             if from.parent() == to.parent() {
                 // rename
                 if let Some(name) = to.file_name() {
@@ -477,6 +478,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                         .get_file(from.clone())
                         .await?
                         .ok_or(FsError::NotFound)?;
+                    is_dir = matches!(file.r#type, FileType::Folder);
                     let name = name.to_string_lossy().into_owned();
                     self.drive
                         .rename_file(&file.id, &name)
@@ -494,6 +496,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     .get_file(from.clone())
                     .await?
                     .ok_or(FsError::NotFound)?;
+                is_dir = matches!(file.r#type, FileType::Folder);
                 let to_parent_file = self
                     .get_file(to.parent().unwrap().to_path_buf())
                     .await?
@@ -508,6 +511,9 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     })?;
             }
 
+            if is_dir {
+                self.dir_cache.invalidate(&from).await;
+            }
             self.dir_cache.invalidate_parent(&from).await;
             self.dir_cache.invalidate_parent(&to).await;
             Ok(())
