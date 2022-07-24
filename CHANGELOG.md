@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.8.7
+
+* 复制/删除文件夹时清除原文件夹缓存内容
+
 ## 1.8.6
 
 * 修复重命名文件夹时原文件夹缓存内容未清除的问题
