@@ -455,10 +455,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     FsError::GeneralFailure
                 })?;
 
-            if matches!(file.r#type, FileType::Folder) {
-                self.dir_cache.invalidate(&from).await;
-            }
-            self.dir_cache.invalidate_parent(&from).await;
+            self.dir_cache.invalidate(&to).await;
             self.dir_cache.invalidate_parent(&to).await;
             Ok(())
         }
