@@ -457,9 +457,9 @@ dependencies = [
 
 [[package]]
 name = "dav-server"
-version = "0.3.4"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00ade8f731e04d714b5c7724a3ee7f66583d5fda379e79d4eff55857fe111e62"
+checksum = "b8cd54eb9b5800e91cca178eda3f11e4cf544206b8153f490f60065ee5714708"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -479,7 +479,7 @@ dependencies = [
  "time",
  "tokio",
  "url",
- "uuid 0.8.2",
+ "uuid",
  "xml-rs",
  "xmltree",
 ]
@@ -1086,7 +1086,7 @@ dependencies = [
  "tagptr",
  "thiserror",
  "triomphe",
- "uuid 1.1.2",
+ "uuid",
 ]
 
 [[package]]
@@ -2264,15 +2264,6 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
-]
-
-[[package]]
-name = "uuid"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
-dependencies = [
- "getrandom",
 ]
 
 [[package]]

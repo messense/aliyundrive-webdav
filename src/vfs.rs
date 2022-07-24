@@ -238,6 +238,17 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .get_file(parent_path.to_path_buf())
                 .await?
                 .ok_or(FsError::NotFound)?;
+            let sha1 = options.checksum.and_then(|c| {
+                if let Some((algo, hash)) = c.split_once(':') {
+                    if algo.eq_ignore_ascii_case("sha1") {
+                        Some(hash.to_string())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            });
             let dav_file = if let Some(file) = self.get_file(path.clone()).await? {
                 if options.write && options.create_new {
                     return Err(FsError::Exists);
@@ -251,6 +262,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     parent_file.id,
                     parent_path.to_path_buf(),
                     options.size.unwrap_or_default(),
+                    sha1,
                 )
             } else if options.write && (options.create || options.create_new) {
                 if self.read_only {
@@ -287,6 +299,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     parent_file.id,
                     parent_path.to_path_buf(),
                     size.unwrap_or(0),
+                    sha1,
                 )
             } else {
                 return Err(FsError::NotFound);
@@ -559,6 +572,7 @@ struct UploadState {
     chunk: u64,
     upload_id: String,
     upload_urls: Vec<String>,
+    sha1: Option<String>,
 }
 
 impl Default for UploadState {
@@ -570,6 +584,7 @@ impl Default for UploadState {
             chunk: 1,
             upload_id: String::new(),
             upload_urls: Vec::new(),
+            sha1: None,
         }
     }
 }
@@ -601,6 +616,7 @@ impl AliyunDavFile {
         parent_file_id: String,
         parent_dir: PathBuf,
         size: u64,
+        sha1: Option<String>,
     ) -> Self {
         Self {
             fs,
@@ -610,6 +626,7 @@ impl AliyunDavFile {
             current_pos: 0,
             upload_state: UploadState {
                 size,
+                sha1,
                 ..Default::default()
             },
         }
@@ -627,6 +644,14 @@ impl AliyunDavFile {
             let size = self.upload_state.size;
             debug!(file_name = %self.file.name, size = size, "prepare for upload");
             if !self.file.id.is_empty() {
+                if let Some(content_hash) = self.file.content_hash.as_ref() {
+                    if let Some(sha1) = self.upload_state.sha1.as_ref() {
+                        if content_hash.eq_ignore_ascii_case(sha1) {
+                            debug!(file_name = %self.file.name, sha1 = %sha1, "skip uploading same content hash file");
+                            return Ok(false);
+                        }
+                    }
+                }
                 if self.fs.skip_upload_same_size && self.file.size == size {
                     debug!(file_name = %self.file.name, size = size, "skip uploading same size file");
                     return Ok(false);
