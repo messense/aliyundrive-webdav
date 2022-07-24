@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## 1.8.4
+## 1.8.6
+
+* 修复重命名文件夹时原文件夹缓存内容未清除的问题
+
+## 1.8.5
 
 * 支持 rclone 以 Nextcloud WebDAV 模式上传时跳过上传相同 sha1 哈希值文件
 
