@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## 1.8.4
 
+* 支持 rclone 以 Nextcloud WebDAV 模式上传时跳过上传相同 sha1 哈希值文件
+
+## 1.8.4
+
 * 支持 rclone 以 OwnCloud/Nextcloud WebDAV 模式挂载时返回 sha1 checksum
 
 ## 1.8.3
