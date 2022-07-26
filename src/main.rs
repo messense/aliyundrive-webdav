@@ -316,7 +316,22 @@ async fn main() -> anyhow::Result<()> {
             handler: dav_server.clone(),
         });
         info!("listening on https://{}", addr);
+
+        #[cfg(not(unix))]
         let _ = server.await.map_err(|e| error!("server error: {}", e));
+
+        #[cfg(unix)]
+        {
+            let signals = Signals::new(&[SIGHUP])?;
+            let handle = signals.handle();
+            let signals_task = tokio::spawn(handle_signals(signals, dir_cache));
+
+            let _ = server.await.map_err(|e| error!("server error: {}", e));
+
+            // Terminate the signal stream.
+            handle.close();
+            signals_task.await?;
+        }
         return Ok(());
     }
     let server = hyper::Server::bind(&addr).serve(MakeSvc {
