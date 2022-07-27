@@ -222,6 +222,7 @@ jobs:
           cd ..
           git clone --recursive https://github.com/upx/upx.git
           cd upx
+          sed -i 's/[ \t]*$//' src/pefile.cpp
           make all
           cp src/upx.out /usr/local/bin/upx
           chmod +x /usr/local/bin/upx
