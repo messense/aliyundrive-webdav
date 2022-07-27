@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.8.8
+
+* 修复开启 TLS 后清除缓存导致进程 crash 的问题
+
 ## 1.8.7
 
 * 复制/删除文件夹时清除原文件夹缓存内容
