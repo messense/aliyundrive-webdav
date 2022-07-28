@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.8.9
+
+* 修复上传大文件时上传地址过期的问题
+
 ## 1.8.8
 
 * 修复开启 TLS 后清除缓存导致进程 crash 的问题
