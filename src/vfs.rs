@@ -757,6 +757,7 @@ impl AliyunDavFile {
                     error!(
                         file_id = %self.file.id,
                         file_name = %self.file.name,
+                        upload_url = %upload_url,
                         size = self.upload_state.size,
                         error = %err,
                         "upload file chunk {} failed",
@@ -811,7 +812,7 @@ impl DavFile for AliyunDavFile {
     }
 
     fn write_bytes(&mut self, buf: Bytes) -> FsFuture<()> {
-        debug!(file_id = %self.file.id, file_name = %self.file.name, "file: write_bytes");
+        debug!(file_id = %self.file.id, file_name = %self.file.name, size = buf.len(), "file: write_bytes");
         async move {
             if self.prepare_for_upload().await? {
                 self.upload_state.buffer.extend_from_slice(&buf);
