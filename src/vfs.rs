@@ -947,8 +947,8 @@ fn is_url_expired(url: &str) -> bool {
                 .duration_since(UNIX_EPOCH)
                 .expect("Time went backwards")
                 .as_secs();
-            // 预留 1s
-            return current_ts >= expires - 1;
+            // 预留 1 分钟
+            return current_ts >= expires - 60;
         }
     }
     false
