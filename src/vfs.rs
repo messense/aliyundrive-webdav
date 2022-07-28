@@ -17,7 +17,7 @@ use dav_server::{
 };
 use futures_util::future::{ready, FutureExt};
 use path_slash::PathBufExt;
-use tracing::{debug, error, trace};
+use tracing::{debug, error, trace, warn};
 use zip::write::{FileOptions, ZipWriter};
 
 use crate::{
@@ -725,28 +725,35 @@ impl AliyunDavFile {
                 self.upload_state.chunk_count
             );
             let mut upload_url = &self.upload_state.upload_urls[current_chunk as usize - 1];
-            if is_url_expired(upload_url) {
-                if let Ok(part_info_list) = self
-                    .fs
-                    .drive
-                    .get_upload_url(
-                        &self.file.id,
-                        &self.upload_state.upload_id,
-                        self.upload_state.chunk_count,
-                    )
-                    .await
-                {
-                    let upload_urls: Vec<_> =
-                        part_info_list.into_iter().map(|x| x.upload_url).collect();
-                    self.upload_state.upload_urls = upload_urls;
-                    upload_url = &self.upload_state.upload_urls[current_chunk as usize - 1];
+            let upload_data = chunk_data.freeze();
+            let mut res = self.fs.drive.upload(upload_url, upload_data.clone()).await;
+            if let Err(ref err) = res {
+                if err.to_string().contains("expired") {
+                    warn!(
+                        file_id = %self.file.id,
+                        file_name = %self.file.name,
+                        upload_url = %upload_url,
+                        "upload url expired"
+                    );
+                    if let Ok(part_info_list) = self
+                        .fs
+                        .drive
+                        .get_upload_url(
+                            &self.file.id,
+                            &self.upload_state.upload_id,
+                            self.upload_state.chunk_count,
+                        )
+                        .await
+                    {
+                        let upload_urls: Vec<_> =
+                            part_info_list.into_iter().map(|x| x.upload_url).collect();
+                        self.upload_state.upload_urls = upload_urls;
+                        upload_url = &self.upload_state.upload_urls[current_chunk as usize - 1];
+                        // retry upload
+                        res = self.fs.drive.upload(upload_url, upload_data).await;
+                    }
                 }
-            }
-            self.fs
-                .drive
-                .upload(upload_url, chunk_data.freeze())
-                .await
-                .map_err(|err| {
+                res.map_err(|err| {
                     error!(
                         file_id = %self.file.id,
                         file_name = %self.file.name,
@@ -757,6 +764,7 @@ impl AliyunDavFile {
                     );
                     FsError::GeneralFailure
                 })?;
+            }
             self.upload_state.chunk += 1;
         }
         Ok(())
