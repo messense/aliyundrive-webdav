@@ -2008,11 +2008,12 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.11"
+version = "0.3.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72c91f41dcb2f096c05f0873d667dceec1087ce5bcf984ec8ffb19acddbb3217"
+checksum = "74b7cc93fc23ba97fde84f7eea56c55d1ba183f495c6715defdfc7b9cb8c870f"
 dependencies = [
  "itoa",
+ "js-sys",
  "libc",
  "num_threads",
  "time-macros",
