@@ -55,6 +55,13 @@ start_service() {
             ;;
           *) ;;
         esac
+
+        case "$(uci_get_by_type server prefer_http_download 0)" in
+          1|on|true|yes|enabled)
+            extra_options="$extra_options --prefer-http-download"
+            ;;
+          *) ;;
+        esac
       fi
 
       if [[ ! -z "$tls_cert" && ! -z "$tls_key" ]]; then

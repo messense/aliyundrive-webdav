@@ -108,6 +108,9 @@ struct Opt {
     /// Skip uploading same size file
     #[clap(long)]
     skip_upload_same_size: bool,
+    /// Prefer downloading using HTTP protocol
+    #[clap(long)]
+    prefer_http_download: bool,
 
     #[clap(subcommand)]
     subcommands: Option<Commands>,
@@ -257,16 +260,12 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let drive = AliyunDrive::new(drive_config, refresh_token).await?;
-    let fs = AliyunDriveFileSystem::new(
-        drive,
-        opt.root,
-        opt.cache_size,
-        opt.cache_ttl,
-        no_trash,
-        opt.read_only,
-        opt.upload_buffer_size,
-        opt.skip_upload_same_size,
-    )?;
+    let mut fs = AliyunDriveFileSystem::new(drive, opt.root, opt.cache_size, opt.cache_ttl)?;
+    fs.set_no_trash(no_trash)
+        .set_read_only(opt.read_only)
+        .set_upload_buffer_size(opt.upload_buffer_size)
+        .set_skip_upload_same_size(opt.skip_upload_same_size)
+        .set_prefer_http_download(opt.prefer_http_download);
     debug!("aliyundrive file system initialized");
 
     #[cfg(unix)]

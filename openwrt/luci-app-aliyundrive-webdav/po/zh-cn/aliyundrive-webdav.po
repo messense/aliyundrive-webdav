@@ -96,3 +96,9 @@ msgstr "跳过上传相同大小的文件"
 
 msgid "Reduce the upload traffic by skipping uploading files with the same size"
 msgstr "跳过上传相同大小的文件减少上传流量消耗，但可能会导致修改过的同样大小的文件不会被上传"
+
+msgid "Prefer HTTP Download"
+msgstr "使用 HTTP 下载"
+
+msgid "Prefer downloading files using HTTP instead of HTTPS protocol"
+msgstr "优先使用 HTTP 而不是 HTTPS 协议下载，低端设备上降低 CPU 占用"
