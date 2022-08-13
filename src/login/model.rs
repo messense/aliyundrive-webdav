@@ -188,7 +188,7 @@ pub struct QueryQrCodeContent {
     success: bool,
 }
 
-#[derive(Deserialize, PartialEq)]
+#[derive(Deserialize, PartialEq, Eq)]
 pub struct QueryQrCodeContentData {
     #[serde(default)]
     #[serde(rename = "qrCodeStatus")]
@@ -309,7 +309,7 @@ impl GotoResult {
         for param in param_array {
             let param = param.to_string();
             let k_v_array = param.split('=').collect::<Vec<&str>>();
-            let key = k_v_array.get(0).context("goto query param key is None")?;
+            let key = k_v_array.first().context("goto query param key is None")?;
             if *key == CODE_KEY {
                 let value = k_v_array.get(1).context("goto query param value is None")?;
                 return Ok(String::from(*value));
