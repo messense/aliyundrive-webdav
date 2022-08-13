@@ -35,20 +35,12 @@ pub struct AliyunDriveFileSystem {
     read_only: bool,
     upload_buffer_size: usize,
     skip_upload_same_size: bool,
+    prefer_http_download: bool,
 }
 
 impl AliyunDriveFileSystem {
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        drive: AliyunDrive,
-        root: String,
-        cache_size: u64,
-        cache_ttl: u64,
-        no_trash: bool,
-        read_only: bool,
-        upload_buffer_size: usize,
-        skip_upload_same_size: bool,
-    ) -> Result<Self> {
+    pub fn new(drive: AliyunDrive, root: String, cache_size: u64, cache_ttl: u64) -> Result<Self> {
         let dir_cache = Cache::new(cache_size, cache_ttl);
         debug!("dir cache initialized");
         let root = if root.starts_with('/') {
@@ -61,11 +53,37 @@ impl AliyunDriveFileSystem {
             dir_cache,
             uploading: Arc::new(DashMap::new()),
             root,
-            no_trash,
-            read_only,
-            upload_buffer_size,
-            skip_upload_same_size,
+            no_trash: false,
+            read_only: false,
+            upload_buffer_size: 16 * 1024 * 1024,
+            skip_upload_same_size: false,
+            prefer_http_download: false,
         })
+    }
+
+    pub fn set_read_only(&mut self, read_only: bool) -> &mut Self {
+        self.read_only = read_only;
+        self
+    }
+
+    pub fn set_no_trash(&mut self, no_trash: bool) -> &mut Self {
+        self.no_trash = no_trash;
+        self
+    }
+
+    pub fn set_upload_buffer_size(&mut self, upload_buffer_size: usize) -> &mut Self {
+        self.upload_buffer_size = upload_buffer_size;
+        self
+    }
+
+    pub fn set_skip_upload_same_size(&mut self, skip_upload_same_size: bool) -> &mut Self {
+        self.skip_upload_same_size = skip_upload_same_size;
+        self
+    }
+
+    pub fn set_prefer_http_download(&mut self, prefer_http_download: bool) -> &mut Self {
+        self.prefer_http_download = prefer_http_download;
+        self
     }
 
     fn find_in_cache(&self, path: &Path) -> Result<Option<AliyunFile>, FsError> {
@@ -249,7 +267,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
                     None
                 }
             });
-            let dav_file = if let Some(file) = self.get_file(path.clone()).await? {
+            let mut dav_file = if let Some(file) = self.get_file(path.clone()).await? {
                 if options.write && options.create_new {
                     return Err(FsError::Exists);
                 }
@@ -304,6 +322,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
             } else {
                 return Err(FsError::NotFound);
             };
+            dav_file.http_download = self.prefer_http_download;
             Ok(Box::new(dav_file) as Box<dyn DavFile>)
         }
         .boxed()
@@ -603,6 +622,7 @@ struct AliyunDavFile {
     parent_dir: PathBuf,
     current_pos: u64,
     upload_state: UploadState,
+    http_download: bool,
 }
 
 impl Debug for AliyunDavFile {
@@ -636,6 +656,7 @@ impl AliyunDavFile {
                 sha1,
                 ..Default::default()
             },
+            http_download: false,
         }
     }
 
@@ -850,10 +871,16 @@ impl DavFile for AliyunDavFile {
             };
 
             if !download_url.is_empty() {
+                let mut url =
+                    reqwest::Url::parse(&download_url).map_err(|_| FsError::GeneralFailure)?;
+                if self.http_download {
+                    url.set_scheme("http")
+                        .map_err(|_| FsError::GeneralFailure)?;
+                }
                 let content = self
                     .fs
                     .drive
-                    .download(&download_url, Some((self.current_pos, count)))
+                    .download(url, Some((self.current_pos, count)))
                     .await
                     .map_err(|err| {
                         error!(url = %download_url, error = %err, "download file failed");

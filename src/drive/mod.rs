@@ -11,7 +11,7 @@ use dav_server::fs::{DavDirEntry, DavMetaData, FsFuture, FsResult};
 use futures_util::future::FutureExt;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
-    StatusCode,
+    IntoUrl, StatusCode,
 };
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
@@ -455,9 +455,10 @@ impl AliyunDrive {
             .and_then(|res| res.context("expect response"))
     }
 
-    pub async fn download(&self, url: &str, range: Option<(u64, usize)>) -> Result<Bytes> {
+    pub async fn download<U: IntoUrl>(&self, url: U, range: Option<(u64, usize)>) -> Result<Bytes> {
         use reqwest::header::RANGE;
 
+        let url = url.into_url()?;
         let res = if let Some((start_pos, size)) = range {
             let end_pos = start_pos + size as u64 - 1;
             debug!(url = %url, start = start_pos, end = end_pos, "download file");
