@@ -101,12 +101,6 @@ impl AliyunDrive {
         let mut headers = HeaderMap::new();
         headers.insert("Origin", HeaderValue::from_static(ORIGIN));
         headers.insert("Referer", HeaderValue::from_static(REFERER));
-        if config.refresh_token_url.starts_with("websv") {
-            headers.insert(
-                "x-canary",
-                HeaderValue::from_static("client=web,app=adrive,version=v3.0.0"),
-            );
-        }
         let retry_policy = ExponentialBackoff::builder()
             .backoff_exponent(2)
             .retry_bounds(Duration::from_millis(100), Duration::from_secs(5))
