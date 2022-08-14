@@ -838,11 +838,10 @@ impl DavFile for AliyunDavFile {
                 res.url
             };
             Ok(download_url)
-
         }
         .boxed()
     }
-        
+
     fn write_buf(&'_ mut self, buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: write_buf");
         async move {

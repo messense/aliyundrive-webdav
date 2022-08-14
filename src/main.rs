@@ -61,7 +61,7 @@ struct Opt {
     /// Automatically generate index.html
     #[clap(short = 'I', long)]
     auto_index: bool,
-    /// Dose GET on a file return 302 redirect.
+    /// Does GET on a file return 302 redirect.
     #[clap(short = 'R', long)]
     redirect: bool,
     /// Read/download buffer size in bytes, defaults to 10MB

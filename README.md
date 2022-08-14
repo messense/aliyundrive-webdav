@@ -157,7 +157,7 @@ OPTIONS:
     -p, --port <PORT>                                Listen port [env: PORT=] [default: 8080]
         --prefer-http-download                       Prefer downloading using HTTP protocol
     -r, --refresh-token <REFRESH_TOKEN>              Aliyun drive refresh token [env: REFRESH_TOKEN=]
-    -R, --redirect                                   Dose GET on a file return 302 redirect
+    -R, --redirect                                   Does GET on a file return 302 redirect
         --read-only                                  Enable read only mode
         --root <ROOT>                                Root directory path [default: /]
     -S, --read-buffer-size <READ_BUFFER_SIZE>        Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
