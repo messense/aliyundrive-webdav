@@ -2,8 +2,10 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::io::{Cursor, SeekFrom, Write};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
+use url::Url;
 
 use anyhow::Result;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
@@ -820,7 +822,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn redirect_url(&mut self) -> FsFuture<String> {
+    fn redirect_url(&mut self) -> FsFuture<Url> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: redirect_url");
         async move {
             if self.file.id.is_empty() {
@@ -837,6 +839,7 @@ impl DavFile for AliyunDavFile {
                 let res = self.get_download_url().await?;
                 res.url
             };
+            let download_url = Url::from_str(&download_url).map_err(|_| FsError::GeneralFailure)?;
             Ok(download_url)
         }
         .boxed()
