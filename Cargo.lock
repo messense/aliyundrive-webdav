@@ -467,8 +467,6 @@ dependencies = [
 [[package]]
 name = "dav-server"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8cd54eb9b5800e91cca178eda3f11e4cf544206b8153f490f60065ee5714708"
 dependencies = [
  "bytes",
  "futures-channel",

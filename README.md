@@ -9,7 +9,7 @@
 > 🚀 Help me to become a full-time open-source developer by [sponsoring me on GitHub](https://github.com/sponsors/messense)
 
 阿里云盘 WebDAV 服务，主要使用场景为配合支持 WebDAV 协议的客户端 App 如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com)
-等实现在电视上直接观看云盘视频内容， 支持上传文件，但受限于 WebDAV 协议不支持文件秒传。
+等实现在电视上直接观看云盘视频内容， 支持客户端 App 直接从阿里云盘获取文件播放而不经过运行本应用的服务器中转, 支持上传文件，但受限于 WebDAV 协议不支持文件秒传。
 
 如果你使用 Emby 或者 Jellyfin，也可以试试 [aliyundrive-fuse](https://github.com/messense/aliyundrive-fuse) 项目。
 
@@ -157,6 +157,7 @@ OPTIONS:
     -p, --port <PORT>                                Listen port [env: PORT=] [default: 8080]
         --prefer-http-download                       Prefer downloading using HTTP protocol
     -r, --refresh-token <REFRESH_TOKEN>              Aliyun drive refresh token [env: REFRESH_TOKEN=]
+    -R, --redirect                                   Dose GET on a file return 302 redirect
         --read-only                                  Enable read only mode
         --root <ROOT>                                Root directory path [default: /]
     -S, --read-buffer-size <READ_BUFFER_SIZE>        Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
@@ -182,6 +183,10 @@ SUBCOMMANDS:
 > **Note**
 > 
 > 注意：启用 `--skip-upload-same-size` 选项虽然能加速上传但可能会导致修改过的同样大小的文件不会被上传
+
+> **Note**
+>
+>注意：启用 `-R` 选项可以让 WebDAV 客户端直接从阿里云获取文件而不经过中转，但受限于阿里云盘的 Referer 限制，不能使用从网页获取的 refresh_token
 
 ### 获取 refresh_token
 

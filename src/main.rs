@@ -61,6 +61,9 @@ struct Opt {
     /// Automatically generate index.html
     #[clap(short = 'I', long)]
     auto_index: bool,
+    /// Dose GET on a file return 302 redirect.
+    #[clap(short = 'R', long)]
+    redirect: bool,
     /// Read/download buffer size in bytes, defaults to 10MB
     #[clap(short = 'S', long, default_value = "10485760")]
     read_buffer_size: usize,
@@ -275,7 +278,8 @@ async fn main() -> anyhow::Result<()> {
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
         .read_buf_size(opt.read_buffer_size)
-        .autoindex(opt.auto_index);
+        .autoindex(opt.auto_index)
+        .redirect(opt.redirect);
     if let Some(prefix) = opt.strip_prefix {
         dav_server_builder = dav_server_builder.strip_prefix(prefix);
     }
