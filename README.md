@@ -152,12 +152,12 @@ OPTIONS:
     -h, --help                                       Print help information
         --host <HOST>                                Listen host [env: HOST=] [default: 0.0.0.0]
     -I, --auto-index                                 Automatically generate index.html
+        --no-redirect                                Disable 302 redirect when using app refresh token
         --no-self-upgrade                            Disable self auto upgrade
         --no-trash                                   Delete file permanently instead of trashing it
     -p, --port <PORT>                                Listen port [env: PORT=] [default: 8080]
         --prefer-http-download                       Prefer downloading using HTTP protocol
     -r, --refresh-token <REFRESH_TOKEN>              Aliyun drive refresh token [env: REFRESH_TOKEN=]
-    -R, --redirect                                   Does GET on a file return 302 redirect
         --read-only                                  Enable read only mode
         --root <ROOT>                                Root directory path [default: /]
     -S, --read-buffer-size <READ_BUFFER_SIZE>        Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
@@ -186,7 +186,7 @@ SUBCOMMANDS:
 
 > **Note**
 >
->注意：启用 `-R` 选项可以让 WebDAV 客户端直接从阿里云获取文件而不经过中转，但受限于阿里云盘的 Referer 限制，不能使用从网页获取的 refresh_token
+>注意：使用 App refresh token 时，WebDAV 客户端请求文件会默认返回 302 重定向而不经过中转。如需中转请启用 `--no-redirect` 选项。
 
 ### 获取 refresh_token
 

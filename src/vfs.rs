@@ -837,7 +837,11 @@ impl DavFile for AliyunDavFile {
                 let res = self.get_download_url().await?;
                 res.url
             };
-            Ok(Some(download_url))
+            if !download_url.is_empty() {
+                Ok(Some(download_url))
+            } else {
+                Ok(None)
+            }
         }
         .boxed()
     }

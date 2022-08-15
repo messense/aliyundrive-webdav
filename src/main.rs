@@ -61,7 +61,7 @@ struct Opt {
     /// Automatically generate index.html
     #[clap(short = 'I', long)]
     auto_index: bool,
-    /// Does GET on a file return 302 redirect.
+    /// Disable 302 redirect when using app refresh token
     #[clap(long)]
     no_redirect: bool,
     /// Read/download buffer size in bytes, defaults to 10MB
