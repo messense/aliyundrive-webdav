@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.10.0
+
+* 使用 App refresh token 下载时默认 302 重定向而不需要中转
+
+## 1.9.0
+
+* 增加使用 HTTP 协议下载配置,低端设备中转时降低资源消耗
+
 ## 1.8.9
 
 * 修复上传大文件时上传地址过期的问题
