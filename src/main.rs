@@ -279,7 +279,7 @@ async fn main() -> anyhow::Result<()> {
         .locksystem(MemLs::new())
         .read_buf_size(opt.read_buffer_size)
         .autoindex(opt.auto_index)
-        .redirect(client_type == ClientType::App && !opt.no_redirect);
+        .redirect(!opt.no_redirect && matches!(client_type, ClientType::App));
     if let Some(prefix) = opt.strip_prefix {
         dav_server_builder = dav_server_builder.strip_prefix(prefix);
     }

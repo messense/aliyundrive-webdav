@@ -41,7 +41,7 @@ pub struct DriveConfig {
     pub client_type: ClientType,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy)]
 pub enum ClientType {
     Web,
     App,
