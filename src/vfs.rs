@@ -820,6 +820,32 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
+    fn redirect_url(&mut self) -> FsFuture<Option<String>> {
+        debug!(file_id = %self.file.id, file_name = %self.file.name, "file: redirect_url");
+        async move {
+            if self.file.id.is_empty() {
+                return Err(FsError::NotFound);
+            }
+            let download_url = self.file.url.take();
+            let download_url = if let Some(mut url) = download_url {
+                if is_url_expired(&url) {
+                    debug!(url = %url, "download url expired");
+                    url = self.get_download_url().await?.url;
+                }
+                url
+            } else {
+                let res = self.get_download_url().await?;
+                res.url
+            };
+            if !download_url.is_empty() {
+                Ok(Some(download_url))
+            } else {
+                Ok(None)
+            }
+        }
+        .boxed()
+    }
+
     fn write_buf(&'_ mut self, buf: Box<dyn Buf + Send>) -> FsFuture<'_, ()> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: write_buf");
         async move {
