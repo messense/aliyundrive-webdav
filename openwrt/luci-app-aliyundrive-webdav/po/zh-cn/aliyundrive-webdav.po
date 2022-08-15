@@ -102,3 +102,9 @@ msgstr "使用 HTTP 下载"
 
 msgid "Prefer downloading files using HTTP instead of HTTPS protocol"
 msgstr "优先使用 HTTP 而不是 HTTPS 协议下载，低端设备上降低 CPU 占用"
+
+msgid "Disable Redirect"
+msgstr "禁用重定向"
+
+msgid "Disable 302 redirect when using app refresh token"
+msgstr "使用 app refresh token 时禁用 302 重定向"
