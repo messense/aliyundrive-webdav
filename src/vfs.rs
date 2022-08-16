@@ -837,11 +837,14 @@ impl DavFile for AliyunDavFile {
                 let res = self.get_download_url().await?;
                 res.url
             };
+
             if !download_url.is_empty() {
-                Ok(Some(download_url))
-            } else {
-                Ok(None)
+                self.file.url = Some(download_url.clone());
+                if !download_url.contains("x-oss-additional-headers=referer") {
+                    return Ok(Some(download_url));
+                }
             }
+            Ok(None)
         }
         .boxed()
     }
