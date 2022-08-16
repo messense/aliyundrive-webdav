@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.10.1
+
+* 修复使用 Web 版 refresh token 时下载被错误 302 重定向的问题
+
 ## 1.10.0
 
 * 使用 App refresh token 下载时默认 302 重定向而不需要中转
