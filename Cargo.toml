@@ -13,7 +13,7 @@ readme = "README.md"
 [dependencies]
 anyhow = "1.0.59"
 bytes = "1.2.1"
-clap = { version = "3.2.2", features = ["derive", "env", "wrap_help", "unstable-v4"] }
+clap = { version = "3.2.19", features = ["derive", "env", "wrap_help", "unstable-v4"] }
 dashmap = "5.3.2"
 dav-server = { version = "0.5.0", default-features = false, features = ["hyper"] }
 dirs = "4.0.0"
