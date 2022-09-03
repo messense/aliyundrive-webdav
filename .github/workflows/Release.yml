@@ -216,17 +216,10 @@ jobs:
           CXX: clang++
         run: |
           set -ex
-          curl -sqLO https://www.oberhumer.com/opensource/ucl/download/ucl-1.03.tar.gz
-          tar zxf ucl-1.03.tar.gz
-          cd ucl-1.03
-          ./configure --with-pic --disable-debug --disable-dependency-tracking --prefix=/usr/local
-          sudo make install
-          cd ..
           git clone --recursive https://github.com/upx/upx.git
           cd upx
-          make all
-          cp src/upx.out /usr/local/bin/upx
-          chmod +x /usr/local/bin/upx
+          make
+          cp build/release/upx /usr/local/bin/upx
       - name: Upx compress binary
         run: upx target/${{ matrix.platform.target }}/release/aliyundrive-webdav
       - name: Upload binary artifacts
