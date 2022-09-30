@@ -40,89 +40,89 @@ mod login;
 mod vfs;
 
 #[derive(Parser, Debug)]
-#[clap(name = "aliyundrive-webdav", about, version, author)]
-#[clap(args_conflicts_with_subcommands = true)]
+#[command(name = "aliyundrive-webdav", about, version, author)]
+#[command(args_conflicts_with_subcommands = true)]
 struct Opt {
     /// Listen host
-    #[clap(long, env = "HOST", default_value = "0.0.0.0")]
+    #[arg(long, env = "HOST", default_value = "0.0.0.0")]
     host: String,
     /// Listen port
-    #[clap(short, env = "PORT", long, default_value = "8080")]
+    #[arg(short, env = "PORT", long, default_value = "8080")]
     port: u16,
     /// Aliyun drive refresh token
-    #[clap(short, long, env = "REFRESH_TOKEN")]
+    #[arg(short, long, env = "REFRESH_TOKEN")]
     refresh_token: Option<String>,
     /// WebDAV authentication username
-    #[clap(short = 'U', long, env = "WEBDAV_AUTH_USER")]
+    #[arg(short = 'U', long, env = "WEBDAV_AUTH_USER")]
     auth_user: Option<String>,
     /// WebDAV authentication password
-    #[clap(short = 'W', long, env = "WEBDAV_AUTH_PASSWORD")]
+    #[arg(short = 'W', long, env = "WEBDAV_AUTH_PASSWORD")]
     auth_password: Option<String>,
     /// Automatically generate index.html
-    #[clap(short = 'I', long)]
+    #[arg(short = 'I', long)]
     auto_index: bool,
     /// Disable 302 redirect when using app refresh token
-    #[clap(long)]
+    #[arg(long)]
     no_redirect: bool,
     /// Read/download buffer size in bytes, defaults to 10MB
-    #[clap(short = 'S', long, default_value = "10485760")]
+    #[arg(short = 'S', long, default_value = "10485760")]
     read_buffer_size: usize,
     /// Upload buffer size in bytes, defaults to 16MB
-    #[clap(long, default_value = "16777216")]
+    #[arg(long, default_value = "16777216")]
     upload_buffer_size: usize,
     /// Directory entries cache size
-    #[clap(long, default_value = "1000")]
+    #[arg(long, default_value = "1000")]
     cache_size: u64,
     /// Directory entries cache expiration time in seconds
-    #[clap(long, default_value = "600")]
+    #[arg(long, default_value = "600")]
     cache_ttl: u64,
     /// Root directory path
-    #[clap(long, default_value = "/")]
+    #[arg(long, default_value = "/")]
     root: String,
     /// Working directory, refresh_token will be stored in there if specified
-    #[clap(short = 'w', long)]
+    #[arg(short = 'w', long)]
     workdir: Option<PathBuf>,
     /// Delete file permanently instead of trashing it
-    #[clap(long, conflicts_with = "domain_id")]
+    #[arg(long, conflicts_with = "domain_id")]
     no_trash: bool,
     /// Aliyun PDS domain id
-    #[clap(long)]
+    #[arg(long)]
     domain_id: Option<String>,
     /// Enable read only mode
-    #[clap(long)]
+    #[arg(long)]
     read_only: bool,
     /// TLS certificate file path
     #[cfg(feature = "rustls-tls")]
-    #[clap(long, env = "TLS_CERT")]
+    #[arg(long, env = "TLS_CERT")]
     tls_cert: Option<PathBuf>,
     /// TLS private key file path
     #[cfg(feature = "rustls-tls")]
-    #[clap(long, env = "TLS_KEY")]
+    #[arg(long, env = "TLS_KEY")]
     tls_key: Option<PathBuf>,
     /// Prefix to be stripped off when handling request.
-    #[clap(long, env = "WEBDAV_STRIP_PREFIX")]
+    #[arg(long, env = "WEBDAV_STRIP_PREFIX")]
     strip_prefix: Option<String>,
     /// Enable debug log
-    #[clap(long)]
+    #[arg(long)]
     debug: bool,
     /// Disable self auto upgrade
-    #[clap(long)]
+    #[arg(long)]
     no_self_upgrade: bool,
     /// Skip uploading same size file
-    #[clap(long)]
+    #[arg(long)]
     skip_upload_same_size: bool,
     /// Prefer downloading using HTTP protocol
-    #[clap(long)]
+    #[arg(long)]
     prefer_http_download: bool,
 
-    #[clap(subcommand)]
+    #[command(subcommand)]
     subcommands: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Scan QRCode
-    #[clap(subcommand)]
+    #[command(subcommand)]
     Qr(QrCommand),
 }
 
@@ -133,13 +133,13 @@ enum QrCommand {
     /// Generate a QRCode
     Generate,
     /// Query the QRCode login result
-    #[clap(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true)]
     Query {
         /// Query parameter t
-        #[clap(long)]
+        #[arg(long)]
         t: i64,
         /// Query parameter ck
-        #[clap(long)]
+        #[arg(long)]
         ck: String,
     },
 }
