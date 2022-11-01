@@ -19,7 +19,7 @@ dav-server = { version = "0.5.1", default-features = false, features = ["hyper"]
 dirs = "4.0.0"
 futures-util = "0.3"
 headers = "0.3.6"
-hyper = { version = "0.14.18", features = ["server", "http2"] }
+hyper = { version = "0.14.22", features = ["server", "http2"] }
 moka = { version = "0.9.2", default-features = false, features = ["future"] }
 openssl-probe = { version = "0.1.4", optional = true }
 path-slash = "0.2.0"
