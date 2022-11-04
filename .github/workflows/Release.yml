@@ -15,21 +15,17 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.9
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          target: aarch64-apple-darwin
-          profile: minimal
-          default: true
+          targets: aarch64-apple-darwin
       - name: Cache cargo build
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
       - name: Build wheels - x86_64
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: x86_64-apple-darwin
           args: --release --out dist --strip
@@ -38,7 +34,7 @@ jobs:
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
           aliyundrive-webdav --help
       - name: Build wheels - universal2
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           args: --release --universal2 --out dist --strip
       - name: Install built wheel - universal2
@@ -46,13 +42,13 @@ jobs:
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
           aliyundrive-webdav --help
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
           if-no-files-found: error
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: apple-darwin-bin
           path: target/release/aliyundrive-webdav
@@ -90,29 +86,24 @@ jobs:
           - arch: arm64
             target: aarch64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         if: matrix.platform.arch != 'arm64'
         with:
           python-version: 3.9
           architecture: ${{ matrix.platform.arch }}
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          default: true
+      - uses: dtolnay/rust-toolchain@stable
       - name: Cache cargo build
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
       - name: Build wheels
         if: matrix.platform.arch != 'arm64'
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --strip
       - name: Build wheels
         if: matrix.platform.arch == 'arm64'
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --strip --no-default-features --features atomic64,native-tls
@@ -122,13 +113,13 @@ jobs:
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
           aliyundrive-webdav --help
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
           if-no-files-found: error
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: windows-${{ matrix.platform.arch }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.exe
@@ -171,13 +162,13 @@ jobs:
       env:
         CFLAGS_armv7_unknown_linux_musleabihf: '-mfpu=vfpv3-d16'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache cargo build
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.platform.target }}
       - name: Build wheels - manylinux
-        uses: messense/maturin-action@main
+        uses: PyO3/maturin-action@main
         with:
           target: ${{ matrix.platform.target }}
           manylinux: auto
@@ -185,7 +176,7 @@ jobs:
           args: --release -o dist --strip
       - name: Build wheels - musllinux
         if: matrix.platform.wheel
-        uses: messense/maturin-action@v1
+        uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
           manylinux: musllinux_1_1
@@ -204,7 +195,7 @@ jobs:
         run: cargo generate-rpm --target=${{ matrix.platform.target }} --payload-compress none
       - name: Upload wheels
         if: matrix.platform.wheel
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: dist
@@ -223,21 +214,21 @@ jobs:
       - name: Upx compress binary
         run: upx target/${{ matrix.platform.target }}/release/aliyundrive-webdav
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.platform.target }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
           if-no-files-found: error
       - name: Upload deb artifacts
         if: matrix.platform.deb
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.platform.target }}-deb
           path: target/${{ matrix.platform.target }}/debian/aliyundrive-webdav_*.deb
           if-no-files-found: error
       - name: Upload RPM artifacts
         if: matrix.platform.deb
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.platform.target }}-rpm
           path: target/${{ matrix.platform.target }}/generate-rpm/aliyundrive-webdav*.rpm
@@ -287,9 +278,9 @@ jobs:
     container:
       image: docker://messense/rust-musl-cross:${{ matrix.platform.image_tag }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache cargo build
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.platform.target }}
       - name: Build
@@ -303,7 +294,7 @@ jobs:
           version: v3.95  # v3.96 breaks mipsel, https://github.com/upx/upx/issues/504
           files: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.platform.target }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
@@ -360,7 +351,7 @@ jobs:
           - arch: "mips_24kc"
             sdk: "https://archive.openwrt.org/releases/19.07.7/targets/ar71xx/nand/openwrt-sdk-19.07.7-ar71xx-nand_gcc-7.5.0_musl.Linux-x86_64.tar.xz"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install build requirements
         run: |
           set -e
@@ -395,13 +386,13 @@ jobs:
           make package/luci-app-aliyundrive-webdav/compile V=s
           tree bin/packages/
       - name: Archive package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}
           path: openwrt-sdk/bin/packages/*/aliyundrive/aliyundrive-webdav*.ipk
           if-no-files-found: error
       - name: Archive luci packages
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: ${{ matrix.target.arch == 'aarch64_generic' }}
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}
@@ -436,7 +427,7 @@ jobs:
           - arch: siflower-1806
             path: sdk/1806/siflower
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install build requirements
         run: |
           set -e
@@ -471,7 +462,7 @@ jobs:
           make package/aliyundrive-webdav/compile V=s
           tree bin/packages/
       - name: Archive package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}
           path: openwrt-sdk/${{ matrix.target.path }}/bin/packages/*/base/aliyundrive-webdav*.ipk
@@ -513,8 +504,8 @@ jobs:
             name: arm384-aarch64
             target: aarch64-unknown-linux-musl
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.platform.target }}-bin
       - name: Build package
@@ -522,7 +513,7 @@ jobs:
           mv aliyundrive-webdav merlin/${{ matrix.platform.type }}/bin/
           cd merlin && python3 build.py ${{ matrix.platform.type }} && mv aliyundrivewebdav.tar.gz aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
       - name: Archive package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: aliyundrive-webdav-merlin-${{ matrix.platform.name }}
           path: merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
@@ -542,32 +533,32 @@ jobs:
     needs: [ linux ]
     environment: Docker Hub
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: x86_64-unknown-linux-musl-bin
       - run: |
           chmod a+x aliyundrive-webdav
           mv aliyundrive-webdav aliyundrive-webdav-amd64
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: i686-unknown-linux-musl-bin
       - run: |
           chmod a+x aliyundrive-webdav
           mv aliyundrive-webdav aliyundrive-webdav-386
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: aarch64-unknown-linux-musl-bin
       - run: |
           chmod a+x aliyundrive-webdav
           mv aliyundrive-webdav aliyundrive-webdav-arm64
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: armv7-unknown-linux-musleabihf-bin
       - run: |
           chmod a+x aliyundrive-webdav
           mv aliyundrive-webdav aliyundrive-webdav-armv7
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: arm-unknown-linux-musleabihf-bin
       - run: |
@@ -591,10 +582,10 @@ jobs:
       - name: Setup QEMU
         uses: dbhi/qus/action@main
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
@@ -606,7 +597,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: docker build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6
@@ -630,13 +621,13 @@ jobs:
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: [ linux, macos ]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: wheels
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.9
-      - name: Publish to PyPi
+      - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
