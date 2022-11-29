@@ -8,7 +8,7 @@ DIR=$(cd $(dirname $0); pwd)
 # 判断路由架构和平台
 case $(uname -m) in
 	aarch64)
-		if [ "$(uname -o|grep Merlin)" ] && [ -d "/koolshare" ];then
+		if [ -d "/koolshare" ];then
 			echo_date 固件平台【koolshare merlin aarch64 / merlin_hnd】符合安装要求，开始安装插件！
 		else
 			echo_date 本插件适用于【koolshare merlin aarch64 / merlin_hnd】固件平台，你的平台不能安装！！！
@@ -17,7 +17,7 @@ case $(uname -m) in
 		fi
 		;;
 	armv7l)
-		if [ "`uname -o|grep Merlin`" ] && [ -d "/koolshare" ] && ([ -n "`nvram get buildno|grep 384`" ] || [ -n "`nvram get buildno|grep 386`" ]);then
+		if [ -d "/koolshare" ] && ([ -n "`nvram get buildno|grep 384`" ] || [ -n "`nvram get buildno|grep 386`" ]);then
 			echo_date 固件平台【koolshare merlin armv7l 384】符合安装要求，开始安装插件！
 		else
 			echo_date 本插件适用于【koolshare merlin armv7l 384】固件平台，你的固件平台不能安装！！！
