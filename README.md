@@ -59,7 +59,6 @@ OpenWrt 路由器 CPU 架构如下表（欢迎补充）：
 |      路由器     |        CPU 架构       |
 |----------------|----------------------|
 | nanopi r4s     | aarch64_generic      |
-| 电犀牛r66s r68s | aarch64_generic      |
 | 小米 AX3600     | aarch64_cortex-a53  |
 | 斐讯 N1 盒子    | aarch64_cortex-a53   |
 | Newifi D2      | mipsel_24kc          |
