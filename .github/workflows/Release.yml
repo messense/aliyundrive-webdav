@@ -148,17 +148,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [
-          { target: "x86_64-unknown-linux-musl", image_tag: "x86_64-musl", wheel: true, deb: true },
-          { target: "i686-unknown-linux-musl", image_tag: "i686-musl", wheel: true, deb: true },
-          { target: "aarch64-unknown-linux-musl", image_tag: "aarch64-musl", wheel: true, deb: true },
-          { target: "armv7-unknown-linux-musleabihf", image_tag: "armv7-musleabihf", wheel: true, deb: true },
-          { target: "armv7-unknown-linux-musleabi", image_tag: "armv7-musleabi", wheel: false, deb: true },
-          { target: "arm-unknown-linux-musleabihf", image_tag: "arm-musleabihf", wheel: false, deb: false },
-          { target: "arm-unknown-linux-musleabi", image_tag: "arm-musleabi", wheel: false, deb: false },
-        ]
+        platform:
+          - target: "x86_64-unknown-linux-musl"
+            wheel: true
+            deb: true
+          - target: "i686-unknown-linux-musl"
+            wheel: true
+            deb: true
+          - target: "aarch64-unknown-linux-musl"
+            wheel: true
+            deb: true
+          - target: "armv7-unknown-linux-musleabihf"
+            wheel: true
+            deb: true
+          - target: "armv7-unknown-linux-musleabi"
+            wheel: false
+            deb: true
+          - target: "arm-unknown-linux-musleabihf"
+            wheel: false
+            deb: false
+          - target: "arm-unknown-linux-musleabi"
+            wheel: false
+            deb: false
     container:
-      image: docker://messense/rust-musl-cross:${{ matrix.platform.image_tag }}
+      image: docker://ghcr.io/rust-cross/rust-musl-cross:${{ matrix.platform.target }}
       env:
         CFLAGS_armv7_unknown_linux_musleabihf: '-mfpu=vfpv3-d16'
     steps:
@@ -267,16 +280,13 @@ jobs:
       matrix:
         platform:
           - target: "armv5te-unknown-linux-musleabi"
-            image_tag: "armv5te-musleabi"
             cargo_extra_args: --no-default-features --features rustls-tls
           - target: "mips-unknown-linux-musl"
-            image_tag: "mips-musl"
             cargo_extra_args: --no-default-features --features native-tls-vendored
           - target: "mipsel-unknown-linux-musl"
-            image_tag: "mipsel-musl"
             cargo_extra_args: --no-default-features --features native-tls-vendored
     container:
-      image: docker://messense/rust-musl-cross:${{ matrix.platform.image_tag }}
+      image: docker://ghcr.io/rust-cross/rust-musl-cross:${{ matrix.platform.target }}
     steps:
       - uses: actions/checkout@v3
       - name: Cache cargo build
