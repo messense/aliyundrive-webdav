@@ -28,7 +28,7 @@ reqwest-middleware = "0.2.0"
 reqwest-retry = "0.2.0"
 serde = { version = "1.0.141", features = ["derive"] }
 time = { version = "0.3", features = ["formatting", "parsing"] }
-tokio = { version = "1.17.0", features = ["rt-multi-thread", "io-util", "net", "time", "sync", "macros", "parking_lot", "fs"] }
+tokio = { version = "1.23.1", features = ["rt-multi-thread", "io-util", "net", "time", "sync", "macros", "parking_lot", "fs"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "local-time"] }
 url = "2.2.2"
