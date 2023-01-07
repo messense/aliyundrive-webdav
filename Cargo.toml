@@ -1,6 +1,6 @@
 [package]
 name = "aliyundrive-webdav"
-version = "1.10.4"
+version = "1.10.5"
 edition = "2021"
 description = "WebDAV server for AliyunDrive"
 license = "MIT"
