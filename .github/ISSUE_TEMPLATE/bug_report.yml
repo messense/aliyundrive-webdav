@@ -41,7 +41,7 @@ body:
     id: platform
     attributes:
       label: 运行平台
-      placeholder: 什么路由器/盒子？Docker？Windows/Linux/macOS？
+      placeholder: 什么路由器/盒子？Docker？(Docker 请先确认是从官方镜像源安装) Windows/Linux/macOS？
     validations:
       required: true
   - type: input
