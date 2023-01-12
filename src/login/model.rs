@@ -120,8 +120,10 @@ impl QueryQrCodeResult {
     }
 
     pub fn get_mobile_login_result(&self) -> Option<MobileLoginResult> {
+        use base64::{engine::general_purpose, Engine as _};
+
         let biz_ext = self.get_biz_ext()?;
-        let vec = base64::decode(biz_ext).unwrap();
+        let vec = general_purpose::STANDARD.decode(biz_ext).unwrap();
         let string = vec.iter().map(|&c| c as char).collect::<String>();
         serde_json::from_str::<MobileLoginResult>(string.as_str()).ok()
     }
