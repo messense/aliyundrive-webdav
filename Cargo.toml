@@ -32,7 +32,7 @@ tokio = { version = "1.23.1", features = ["rt-multi-thread", "io-util", "net", "
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "local-time"] }
 url = "2.2.2"
-zip = { version = "0.6.2", default-features = false }
+zip = { version = "0.6.4", default-features = false }
 base64 = "0.21.0"
 serde_json = "1.0.81"
 atty = "0.2.14"
