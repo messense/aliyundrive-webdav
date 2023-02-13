@@ -20,11 +20,6 @@
 > 本项目作者没有上传需求, 故上传文件功能测试不全面且没有持续迭代计划.
 > 如果你很需要上传功能, 可考虑[付费技术支持](https://github.com/messense/aliyundrive-webdav/discussions/442).
 
-
-## 特别赞助
-
-* [找资源 - 阿里云盘资源搜索引擎](https://zhaoziyuan.me)
-
 ## 安装
 
 可以从 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面下载预先构建的二进制包， 也可以使用 pip 从 PyPI 下载:
