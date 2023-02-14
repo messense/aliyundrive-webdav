@@ -11,14 +11,11 @@
 阿里云盘 WebDAV 服务，主要使用场景为配合支持 WebDAV 协议的客户端 App 如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com)
 等实现在电视上直接观看云盘视频内容， 支持客户端 App 直接从阿里云盘获取文件播放而不经过运行本应用的服务器中转, 支持上传文件，但受限于 WebDAV 协议不支持文件秒传。
 
-如果你使用 Emby 或者 Jellyfin，也可以试试 [aliyundrive-fuse](https://github.com/messense/aliyundrive-fuse) 项目。
-
 如果项目对你有帮助，请考虑[捐赠支持](https://github.com/messense/aliyundrive-webdav/discussions/126)项目持续维护。
 
 > **Note**
 >
 > 本项目作者没有上传需求, 故上传文件功能测试不全面且没有持续迭代计划.
-> 如果你很需要上传功能, 可考虑[付费技术支持](https://github.com/messense/aliyundrive-webdav/discussions/442).
 
 ## 安装
 
