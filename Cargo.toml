@@ -20,7 +20,7 @@ dirs = "4.0.0"
 futures-util = "0.3"
 headers = "0.3.6"
 hyper = { version = "0.14.18", features = ["server", "http2"] }
-moka = { version = "0.9.2", default-features = false, features = ["future"] }
+moka = { version = "0.10.0", default-features = false, features = ["future"] }
 openssl-probe = { version = "0.1.4", optional = true }
 path-slash = "0.2.0"
 reqwest = { version = "0.11.7", default-features = false, features = ["json", "gzip", "cookies", "socks"] }
@@ -37,7 +37,7 @@ base64 = "0.21.0"
 serde_json = "1.0.81"
 atty = "0.2.14"
 qr2term = "0.3.0"
-self_update = { version = "0.34.0", default-features = false, features = ["archive-zip", "archive-tar", "compression-flate2", "compression-zip-deflate"] }
+self_update = { version = "0.35.0", default-features = false, features = ["archive-zip", "archive-tar", "compression-flate2", "compression-zip-deflate"] }
 
 # TLS server support
 rustls-pemfile = { version = "1.0.0", optional = true }
