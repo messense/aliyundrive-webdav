@@ -274,12 +274,15 @@ async fn main() -> anyhow::Result<()> {
     #[cfg(unix)]
     let dir_cache = fs.dir_cache.clone();
 
+    if !opt.no_redirect && matches!(client_type, ClientType::App) {
+        warn!("Using --no-redirect implicitly to unblock file downloading");
+    }
     let mut dav_server_builder = DavHandler::builder()
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
         .read_buf_size(opt.read_buffer_size)
         .autoindex(opt.auto_index)
-        .redirect(!opt.no_redirect && matches!(client_type, ClientType::App));
+        .redirect(false);
     if let Some(prefix) = opt.strip_prefix {
         dav_server_builder = dav_server_builder.strip_prefix(prefix);
     }
