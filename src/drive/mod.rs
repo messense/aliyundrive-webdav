@@ -306,10 +306,9 @@ impl AliyunDrive {
             .bearer_auth(&access_token)
             .json(&req)
             .send()
-            .await?
-            .error_for_status();
-        match res {
-            Ok(res) => {
+            .await?;
+        match res.error_for_status_ref() {
+            Ok(_) => {
                 if res.status() == StatusCode::NO_CONTENT {
                     return Ok(None);
                 }
@@ -317,6 +316,8 @@ impl AliyunDrive {
                 Ok(Some(res))
             }
             Err(err) => {
+                let err_msg = res.text().await?;
+                debug!(error = %err_msg, url = %url, "request failed");
                 match err.status() {
                     Some(
                         status_code
