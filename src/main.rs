@@ -83,11 +83,8 @@ struct Opt {
     #[arg(short = 'w', long)]
     workdir: Option<PathBuf>,
     /// Delete file permanently instead of trashing it
-    #[arg(long, conflicts_with = "domain_id")]
-    no_trash: bool,
-    /// Aliyun PDS domain id
     #[arg(long)]
-    domain_id: Option<String>,
+    no_trash: bool,
     /// Enable read only mode
     #[arg(long)]
     read_only: bool,
@@ -226,8 +223,7 @@ async fn main() -> anyhow::Result<()> {
     } else {
         None
     };
-    let (refresh_token, client_type) = if opt.domain_id.is_none()
-        && opt.refresh_token.is_none()
+    let (refresh_token, client_type) = if opt.refresh_token.is_none()
         && refresh_token_from_file.is_none()
         && atty::is(atty::Stream::Stdout)
     {
@@ -235,32 +231,16 @@ async fn main() -> anyhow::Result<()> {
     } else {
         parse_refresh_token(&opt.refresh_token.unwrap_or_default())?
     };
-    let (drive_config, no_trash) = if let Some(domain_id) = opt.domain_id.as_ref() {
-        (
-            DriveConfig {
-                api_base_url: format!("https://{}.api.aliyunpds.com", domain_id),
-                refresh_token_url: format!(
-                    "https://{}.auth.aliyunpds.com/v2/account/token",
-                    domain_id
-                ),
-                workdir,
-                app_id: Some("BasicUI".to_string()),
-                client_type: ClientType::Web,
-            },
-            true, // PDS doesn't have trash support
-        )
-    } else {
-        (
-            DriveConfig {
-                api_base_url: "https://api.aliyundrive.com".to_string(),
-                refresh_token_url: String::new(),
-                workdir,
-                app_id: None,
-                client_type,
-            },
-            opt.no_trash,
-        )
-    };
+    let (drive_config, no_trash) = (
+        DriveConfig {
+            api_base_url: "https://api.aliyundrive.com".to_string(),
+            refresh_token_url: String::new(),
+            workdir,
+            app_id: None,
+            client_type,
+        },
+        opt.no_trash,
+    );
 
     let drive = AliyunDrive::new(drive_config, refresh_token).await?;
     let mut fs = AliyunDriveFileSystem::new(drive, opt.root, opt.cache_size, opt.cache_ttl)?;

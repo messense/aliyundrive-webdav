@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.11.0
+
+* 移除阿里云 PDS 服务支持
+
 ## 1.10.1
 
 * 修复使用 Web 版 refresh token 时下载被错误 302 重定向的问题

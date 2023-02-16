@@ -450,9 +450,12 @@ impl AliyunDrive {
             order_direction: "DESC",
             marker,
         };
-        self.request(format!("{}/v2/file/list", self.config.api_base_url), &req)
-            .await
-            .and_then(|res| res.context("expect response"))
+        self.request(
+            format!("{}/adrive/v3/file/list", self.config.api_base_url),
+            &req,
+        )
+        .await
+        .and_then(|res| res.context("expect response"))
     }
 
     pub async fn download<U: IntoUrl>(&self, url: U, range: Option<(u64, usize)>) -> Result<Bytes> {

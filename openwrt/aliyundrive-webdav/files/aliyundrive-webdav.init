@@ -26,50 +26,45 @@ start_service() {
       local host=$(uci_get_by_type server host 127.0.0.1)
       local port=$(uci_get_by_type server port 8080)
       local root=$(uci_get_by_type server root /)
-      local domain_id=$(uci_get_by_type server domain_id)
       local tls_cert=$(uci_get_by_type server tls_cert)
       local tls_key=$(uci_get_by_type server tls_key)
 
       local extra_options="--auto-index"
 
-      if [[ ! -z "$domain_id" ]]; then
-        extra_options="$extra_options --domain-id $domain_id"
-      else
-        case "$(uci_get_by_type server no_trash 0)" in
-          1|on|true|yes|enabled)
-            extra_options="$extra_options --no-trash"
-            ;;
-          *) ;;
-        esac
+      case "$(uci_get_by_type server no_trash 0)" in
+        1|on|true|yes|enabled)
+          extra_options="$extra_options --no-trash"
+          ;;
+        *) ;;
+      esac
 
-        case "$(uci_get_by_type server read_only 0)" in
-          1|on|true|yes|enabled)
-            extra_options="$extra_options --read-only"
-            ;;
-          *) ;;
-        esac
+      case "$(uci_get_by_type server read_only 0)" in
+        1|on|true|yes|enabled)
+          extra_options="$extra_options --read-only"
+          ;;
+        *) ;;
+      esac
 
-        case "$(uci_get_by_type server skip_upload_same_size 0)" in
-          1|on|true|yes|enabled)
-            extra_options="$extra_options --skip-upload-same-size"
-            ;;
-          *) ;;
-        esac
+      case "$(uci_get_by_type server skip_upload_same_size 0)" in
+        1|on|true|yes|enabled)
+          extra_options="$extra_options --skip-upload-same-size"
+          ;;
+        *) ;;
+      esac
 
-        case "$(uci_get_by_type server prefer_http_download 0)" in
-          1|on|true|yes|enabled)
-            extra_options="$extra_options --prefer-http-download"
-            ;;
-          *) ;;
-        esac
+      case "$(uci_get_by_type server prefer_http_download 0)" in
+        1|on|true|yes|enabled)
+          extra_options="$extra_options --prefer-http-download"
+          ;;
+        *) ;;
+      esac
 
-        case "$(uci_get_by_type server no_redirect 0)" in
-          1|on|true|yes|enabled)
-            extra_options="$extra_options --no-redirect"
-            ;;
-          *) ;;
-        esac
-      fi
+      case "$(uci_get_by_type server no_redirect 0)" in
+        1|on|true|yes|enabled)
+          extra_options="$extra_options --no-redirect"
+          ;;
+        *) ;;
+      esac
 
       if [[ ! -z "$tls_cert" && ! -z "$tls_key" ]]; then
         extra_options="$extra_options --tls-cert $tls_cert --tls-key $tls_key"

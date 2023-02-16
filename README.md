@@ -142,7 +142,6 @@ OPTIONS:
         --cache-size <CACHE_SIZE>                    Directory entries cache size [default: 1000]
         --cache-ttl <CACHE_TTL>                      Directory entries cache expiration time in seconds [default: 600]
         --debug                                      Enable debug log
-        --domain-id <DOMAIN_ID>                      Aliyun PDS domain id
     -h, --help                                       Print help information
         --host <HOST>                                Listen host [env: HOST=] [default: 0.0.0.0]
     -I, --auto-index                                 Automatically generate index.html
