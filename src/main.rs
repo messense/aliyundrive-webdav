@@ -62,7 +62,7 @@ struct Opt {
     #[arg(short = 'I', long)]
     auto_index: bool,
     /// Disable 302 redirect when using app refresh token
-    #[arg(long)]
+    #[arg(long, hide = true)]
     no_redirect: bool,
     /// Read/download buffer size in bytes, defaults to 10MB
     #[arg(short = 'S', long, default_value = "10485760")]

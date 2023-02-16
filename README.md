@@ -145,7 +145,6 @@ OPTIONS:
     -h, --help                                       Print help information
         --host <HOST>                                Listen host [env: HOST=] [default: 0.0.0.0]
     -I, --auto-index                                 Automatically generate index.html
-        --no-redirect                                Disable 302 redirect when using app refresh token
         --no-self-upgrade                            Disable self auto upgrade
         --no-trash                                   Delete file permanently instead of trashing it
     -p, --port <PORT>                                Listen port [env: PORT=] [default: 8080]
@@ -176,10 +175,6 @@ SUBCOMMANDS:
 > **Note**
 > 
 > 注意：启用 `--skip-upload-same-size` 选项虽然能加速上传但可能会导致修改过的同样大小的文件不会被上传
-
-> **Note**
->
->注意：使用 App refresh token 时，WebDAV 客户端请求文件会默认返回 302 重定向而不经过中转。如需中转请启用 `--no-redirect` 选项。
 
 ### 获取 refresh_token
 
