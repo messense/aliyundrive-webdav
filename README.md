@@ -37,12 +37,12 @@ sudo snap install aliyundrive-webdav
 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，以 nanopi r4s 为例：
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.10.7/aliyundrive-webdav_1.10.7-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.10.7/luci-app-aliyundrive-webdav_1.10.7_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.10.7/luci-i18n-aliyundrive-webdav-zh-cn_1.10.7-1_all.ipk
-opkg install aliyundrive-webdav_1.10.7-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_1.10.7_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.10.7-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.11.0/aliyundrive-webdav_1.11.0-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.11.0/luci-app-aliyundrive-webdav_1.11.0_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.11.0/luci-i18n-aliyundrive-webdav-zh-cn_1.11.0-1_all.ipk
+opkg install aliyundrive-webdav_1.11.0-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_1.11.0_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.11.0-1_all.ipk
 ```
 
 其它 CPU 架构的路由器可在 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面中查找对应的架构的主程序 ipk 文件下载安装， 常见
@@ -131,7 +131,7 @@ rclone --no-update-modtime copy abc.pdf aliyundrive-nc://docs/
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 1.10.7
+aliyundrive-webdav 1.11.0
 WebDAV server for AliyunDrive
 
 USAGE:
