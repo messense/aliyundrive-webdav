@@ -1908,9 +1908,9 @@ dependencies = [
 
 [[package]]
 name = "self_update"
-version = "0.35.0"
+version = "0.36.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e18819cd93c4799f93cd4cf0ac069ed0e615fea3af28ec78df71e0ea890628a"
+checksum = "ca4e4e6f29fddb78b3e7a6e5a395e8274d4aca2d36b2278a297fa49673a5b7c7"
 dependencies = [
  "either",
  "flate2",
@@ -1924,6 +1924,7 @@ dependencies = [
  "serde_json",
  "tar",
  "tempfile",
+ "urlencoding",
  "zip",
 ]
 
@@ -2467,6 +2468,12 @@ dependencies = [
  "idna 0.3.0",
  "percent-encoding",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "2.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8db7427f936968176eaa7cdf81b7f98b980b18495ec28f1b5791ac3bfe3eea9"
 
 [[package]]
 name = "uuid"
