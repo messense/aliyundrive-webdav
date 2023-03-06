@@ -22,13 +22,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
-      - name: Cache cargo build
-        uses: Swatinem/rust-cache@v2
       - name: Build wheels - x86_64
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64-apple-darwin
           args: --release --out dist --strip
+          sccache: 'true'
       - name: Install built wheel - x86_64
         run: |
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
@@ -37,6 +36,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           args: --release --universal2 --out dist --strip
+          sccache: 'true'
       - name: Install built wheel - universal2
         run: |
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
@@ -93,8 +93,6 @@ jobs:
           python-version: 3.9
           architecture: ${{ matrix.platform.arch }}
       - uses: dtolnay/rust-toolchain@stable
-      - name: Cache cargo build
-        uses: Swatinem/rust-cache@v2
       - name: Build wheels
         if: matrix.platform.arch != 'arm64'
         uses: PyO3/maturin-action@v1
@@ -107,6 +105,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --strip --no-default-features --features atomic64,native-tls
+          sccache: 'true'
       - name: Install built wheel
         if: matrix.platform.arch != 'arm64'
         run: |
@@ -176,10 +175,6 @@ jobs:
         CFLAGS_armv7_unknown_linux_musleabihf: '-mfpu=vfpv3-d16'
     steps:
       - uses: actions/checkout@v3
-      - name: Cache cargo build
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.platform.target }}
       - name: Build wheels - manylinux
         uses: PyO3/maturin-action@main
         with:
@@ -187,6 +182,7 @@ jobs:
           manylinux: auto
           container: off
           args: --release -o dist --strip
+          sccache: 'true'
       - name: Build wheels - musllinux
         if: matrix.platform.wheel
         uses: PyO3/maturin-action@v1
@@ -195,6 +191,7 @@ jobs:
           manylinux: musllinux_1_1
           container: off
           args: --release --out dist --strip
+          sccache: 'true'
       - name: Install cargo packages
         if: matrix.platform.deb
         run: |
