@@ -5,6 +5,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{env, io};
 
+use anyhow::bail;
 use clap::{Parser, Subcommand};
 use dav_server::{body::Body, memls::MemLs, DavConfig, DavHandler};
 #[cfg(any(unix, feature = "rustls-tls"))]
@@ -199,14 +200,14 @@ async fn main() -> anyhow::Result<()> {
     if (auth_user.is_some() && auth_password.is_none())
         || (auth_user.is_none() && auth_password.is_some())
     {
-        anyhow::bail!("auth-user and auth-password must be specified together.");
+        bail!("auth-user and auth-password must be specified together.");
     }
 
     #[cfg(feature = "rustls-tls")]
     let use_tls = match (opt.tls_cert.as_ref(), opt.tls_key.as_ref()) {
         (Some(_), Some(_)) => true,
         (None, None) => false,
-        _ => anyhow::bail!("tls-cert and tls-key must be specified together."),
+        _ => bail!("tls-cert and tls-key must be specified together."),
     };
 
     let workdir = opt
@@ -223,7 +224,11 @@ async fn main() -> anyhow::Result<()> {
     {
         login(client_id, client_secret, 30).await?
     } else {
-        opt.refresh_token.unwrap_or_default()
+        let token = opt.refresh_token.unwrap_or_default();
+        if !token.is_empty() && token.split('.').count() < 3 {
+            bail!("Invalid refresh token value found in `--refresh-token` argument");
+        }
+        token
     };
     let refresh_token_url = if opt.client_id.is_none() || opt.client_secret.is_none() {
         "https://aliyundrive-oauth.messense.me/oauth/access_token".to_string()
@@ -500,7 +505,7 @@ async fn login(
         let refresh_token = scanner.fetch_refresh_token(&code).await?;
         return Ok(refresh_token);
     }
-    anyhow::bail!("Login failed")
+    bail!("Login failed")
 }
 
 fn check_for_update(show_output: bool) -> anyhow::Result<()> {
@@ -548,13 +553,13 @@ fn check_for_update(show_output: bool) -> anyhow::Result<()> {
         #[cfg(unix)]
         {
             let err = command.exec();
-            anyhow::bail!(err);
+            bail!(err);
         }
 
         #[cfg(windows)]
         {
             let status = command.spawn().and_then(|mut c| c.wait())?;
-            anyhow::bail!("aliyundrive-webdav upgraded");
+            bail!("aliyundrive-webdav upgraded");
         }
     }
     Ok(())
