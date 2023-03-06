@@ -1,96 +1,75 @@
 pub mod model;
 
-use crate::login::model::{CkForm, GeneratorQrCodeResult, QueryQrCodeResult};
-use anyhow::anyhow;
-use reqwest::Response;
-use serde::de::DeserializeOwned;
-use serde::{de, Deserialize, Deserializer};
-use std::str::FromStr;
-
-// generator qrcode
-const GENERATOR_QRCODE_API: &str = "https://passport.aliyundrive.com/newlogin/qrcode/generate.do?appName=aliyun_drive&fromSite=52&appEntrance=web";
-// query scanner result (include mobile token)
-const QUERY_API: &str = "https://passport.aliyundrive.com/newlogin/qrcode/query.do?appName=aliyun_drive&fromSite=52&_bx-v=2.0.31";
-
-#[derive(Eq, PartialEq, Clone)]
-pub enum State {
-    Confirmed,
-    Expired,
-    New,
-}
-
-impl FromStr for State {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use State::*;
-
-        match s {
-            "NEW" => Ok(New),
-            "EXPIRED" => Ok(Expired),
-            "CONFIRMED" => Ok(Confirmed),
-            _ => Ok(Expired),
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for State {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s = String::deserialize(deserializer)?;
-        FromStr::from_str(&s).map_err(de::Error::custom)
-    }
-}
+use crate::login::model::*;
 
 pub struct QrCodeScanner {
     client: reqwest::Client,
+    client_id: Option<String>,
+    client_secret: Option<String>,
 }
 
 impl QrCodeScanner {
-    pub async fn new() -> anyhow::Result<Self> {
+    pub async fn new(
+        client_id: Option<String>,
+        client_secret: Option<String>,
+    ) -> anyhow::Result<Self> {
         let client = reqwest::Client::builder()
             .pool_idle_timeout(std::time::Duration::from_secs(50))
             .connect_timeout(std::time::Duration::from_secs(10))
             .timeout(std::time::Duration::from_secs(30))
             .build()?;
-        Ok(Self { client })
+        Ok(Self {
+            client,
+            client_id,
+            client_secret,
+        })
     }
 }
 
 impl QrCodeScanner {
-    pub async fn generator(&self) -> anyhow::Result<GeneratorQrCodeResult> {
-        let resp = self.client.get(GENERATOR_QRCODE_API).send().await?;
-        ResponseHandler::response_handler::<GeneratorQrCodeResult>(resp).await
+    pub async fn scan(&self) -> anyhow::Result<QrCodeResponse> {
+        let req = QrCodeRequest {
+            client_id: self.client_id.clone(),
+            client_secret: self.client_secret.clone(),
+            scopes: vec![
+                "user:base".to_string(),
+                "file:all:read".to_string(),
+                "file:all:write".to_string(),
+            ],
+            width: None,
+            height: None,
+        };
+        let url = if self.client_id.is_none() || self.client_secret.is_none() {
+            "https://aliyundrive-oauth.messense.me/oauth/authorize/qrcode"
+        } else {
+            "https://openapi.aliyundrive.com/oauth/authorize/qrcode"
+        };
+        let resp = self.client.post(url).json(&req).send().await?;
+        let resp = resp.json::<QrCodeResponse>().await?;
+        Ok(resp)
     }
 
-    pub async fn query(&self, from: &impl CkForm) -> anyhow::Result<QueryQrCodeResult> {
-        let resp = self
-            .client
-            .post(QUERY_API)
-            .form(&from.map_form())
-            .send()
-            .await?;
-        ResponseHandler::response_handler::<QueryQrCodeResult>(resp).await
-    }
-}
-
-struct ResponseHandler;
-
-impl ResponseHandler {
-    async fn response_handler<T: DeserializeOwned>(resp: Response) -> anyhow::Result<T> {
-        if resp.status().is_success() {
-            let result = resp.json::<T>().await?;
-            return Ok(result);
-        }
-        let msg = ResponseHandler::response_error_msg_handler(resp).await;
-        Err(anyhow!(msg))
+    pub async fn query(&self, sid: &str) -> anyhow::Result<QrCodeStatusResponse> {
+        let url = format!("https://openapi.aliyundrive.com/oauth/qrcode/{sid}/status");
+        let resp = self.client.get(url).send().await?;
+        let resp = resp.json::<QrCodeStatusResponse>().await?;
+        Ok(resp)
     }
 
-    async fn response_error_msg_handler(resp: Response) -> String {
-        resp.text()
-            .await
-            .unwrap_or_else(|e| format!("An error occurred while extracting the body: {:?}", e))
+    pub async fn fetch_refresh_token(&self, code: &str) -> anyhow::Result<String> {
+        let req = AuthorizationCodeRequest {
+            client_id: self.client_id.clone(),
+            client_secret: self.client_secret.clone(),
+            grant_type: "authorization_code".to_string(),
+            code: code.to_string(),
+        };
+        let url = if self.client_id.is_none() || self.client_secret.is_none() {
+            "https://aliyundrive-oauth.messense.me/oauth/access_token"
+        } else {
+            "https://openapi.aliyundrive.com/oauth/access_token"
+        };
+        let resp = self.client.post(url).json(&req).send().await?;
+        let resp = resp.json::<AuthorizationCodeResponse>().await?;
+        Ok(resp.refresh_token)
     }
 }

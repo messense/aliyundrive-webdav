@@ -5,7 +5,6 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{env, io};
 
-use anyhow::Context as _;
 use clap::{Parser, Subcommand};
 use dav_server::{body::Body, memls::MemLs, DavConfig, DavHandler};
 #[cfg(any(unix, feature = "rustls-tls"))]
@@ -31,7 +30,7 @@ use {
 };
 
 use cache::Cache;
-use drive::{parse_refresh_token, read_refresh_token, AliyunDrive, ClientType, DriveConfig};
+use drive::{parse_refresh_token, read_refresh_token, AliyunDrive, DriveConfig};
 use vfs::AliyunDriveFileSystem;
 
 mod cache;
@@ -49,6 +48,12 @@ struct Opt {
     /// Listen port
     #[arg(short, env = "PORT", long, default_value = "8080")]
     port: u16,
+    /// Aliyun drive client_id
+    #[arg(long, env = "CLIENT_ID")]
+    client_id: Option<String>,
+    /// Aliyun drive client_secret
+    #[arg(long, env = "CLIENT_SECRET")]
+    client_secret: Option<String>,
     /// Aliyun drive refresh token
     #[arg(short, long, env = "REFRESH_TOKEN")]
     refresh_token: Option<String>,
@@ -61,9 +66,6 @@ struct Opt {
     /// Automatically generate index.html
     #[arg(short = 'I', long)]
     auto_index: bool,
-    /// Disable 302 redirect when using app refresh token
-    #[arg(long, hide = true)]
-    no_redirect: bool,
     /// Read/download buffer size in bytes, defaults to 10MB
     #[arg(short = 'S', long, default_value = "10485760")]
     read_buffer_size: usize,
@@ -132,12 +134,9 @@ enum QrCommand {
     /// Query the QRCode login result
     #[command(arg_required_else_help = true)]
     Query {
-        /// Query parameter t
+        /// Query parameter sid
         #[arg(long)]
-        t: i64,
-        /// Query parameter ck
-        #[arg(long)]
-        ck: String,
+        sid: String,
     },
 }
 
@@ -156,32 +155,27 @@ async fn main() -> anyhow::Result<()> {
     }
     tracing_subscriber::fmt::init();
 
+    let client_id = opt.client_id.clone();
+    let client_secret = opt.client_secret.clone();
     // subcommands
     match opt.subcommands.as_ref() {
         Some(Commands::Qr(qr)) => {
             match qr {
                 QrCommand::Login => {
-                    let refresh_token = login(120).await?;
+                    let refresh_token = login(client_id, client_secret, 120).await?;
                     println!("refresh_token: {}", refresh_token)
                 }
                 QrCommand::Generate => {
-                    let scan = login::QrCodeScanner::new().await?;
-                    let result = scan.generator().await?;
-                    let data = result.get_content_data().context("Failed to get QRCode")?;
+                    let scanner = login::QrCodeScanner::new(client_id, client_secret).await?;
+                    let data = scanner.scan().await?;
                     println!("{}", serde_json::to_string_pretty(&data)?);
                 }
-                QrCommand::Query { t, ck } => {
-                    use crate::login::model::{AuthorizationToken, QueryQrCodeCkForm};
-
-                    let scan = login::QrCodeScanner::new().await?;
-                    let form = QueryQrCodeCkForm::new(*t, ck.to_string());
-                    let query_result = scan.query(&form).await?;
-                    if query_result.is_confirmed() {
-                        let refresh_token = query_result
-                            .get_mobile_login_result()
-                            .context("failed to get mobile login result")?
-                            .refresh_token()
-                            .context("failed to get refresh token")?;
+                QrCommand::Query { sid } => {
+                    let scanner = login::QrCodeScanner::new(client_id, client_secret).await?;
+                    let query_result = scanner.query(&sid).await?;
+                    if query_result.is_success() {
+                        let code = query_result.auth_code.unwrap();
+                        let refresh_token = scanner.fetch_refresh_token(&code).await?;
                         println!("{}", refresh_token)
                     }
                 }
@@ -223,21 +217,26 @@ async fn main() -> anyhow::Result<()> {
     } else {
         None
     };
-    let (refresh_token, client_type) = if opt.refresh_token.is_none()
+    let refresh_token = if opt.refresh_token.is_none()
         && refresh_token_from_file.is_none()
         && atty::is(atty::Stream::Stdout)
     {
-        (login(30).await?, ClientType::App)
+        login(client_id, client_secret, 30).await?
     } else {
         parse_refresh_token(&opt.refresh_token.unwrap_or_default())?
     };
+    let refresh_token_url = if opt.client_id.is_none() || opt.client_secret.is_none() {
+        "https://aliyundrive-oauth.messense.me/oauth/access_token".to_string()
+    } else {
+        "https://openapi.aliyundrive.com/oauth/access_token".to_string()
+    };
     let (drive_config, no_trash) = (
         DriveConfig {
-            api_base_url: "https://api.aliyundrive.com".to_string(),
-            refresh_token_url: String::new(),
+            api_base_url: "https://openapi.aliyundrive.com".to_string(),
+            refresh_token_url,
             workdir,
-            app_id: None,
-            client_type,
+            client_id: opt.client_id.clone(),
+            client_secret: opt.client_secret.clone(),
         },
         opt.no_trash,
     );
@@ -254,9 +253,6 @@ async fn main() -> anyhow::Result<()> {
     #[cfg(unix)]
     let dir_cache = fs.dir_cache.clone();
 
-    if !opt.no_redirect && matches!(client_type, ClientType::App) {
-        warn!("Using --no-redirect implicitly to unblock file downloading");
-    }
     let mut dav_server_builder = DavHandler::builder()
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
@@ -477,17 +473,18 @@ fn private_keys(rd: &mut dyn io::BufRead) -> Result<Vec<Vec<u8>>, io::Error> {
     }
 }
 
-async fn login(timeout: u64) -> anyhow::Result<String> {
-    use crate::login::model::{AuthorizationToken, Ok, QueryQrCodeCkForm};
-
+async fn login(
+    client_id: Option<String>,
+    client_secret: Option<String>,
+    timeout: u64,
+) -> anyhow::Result<String> {
     const SLEEP: u64 = 3;
 
-    let scan = login::QrCodeScanner::new().await?;
+    let scanner = login::QrCodeScanner::new(client_id, client_secret).await?;
     // 返回二维码内容结果集
-    let generator_qr_code_result = scan.generator().await?;
+    let sid = scanner.scan().await?.sid;
     // 需要生成二维码的内容
-    let qrcode_content = generator_qr_code_result.get_content();
-    let ck_form = QueryQrCodeCkForm::from(generator_qr_code_result);
+    let qrcode_content = format!("https://www.aliyundrive.com/o/oauth/authorize?sid={sid}");
     // 打印二维码
     qr2term::print_qr(&qrcode_content)?;
     info!("Please scan the qrcode to login in {} seconds", timeout);
@@ -495,32 +492,13 @@ async fn login(timeout: u64) -> anyhow::Result<String> {
     for _i in 0..loop_count {
         tokio::time::sleep(tokio::time::Duration::from_secs(SLEEP)).await;
         // 模拟轮训查询二维码状态
-        let query_result = scan.query(&ck_form).await?;
-        if query_result.ok() {
-            // query_result.is_new() 表示未扫码状态
-            if query_result.is_new() {
-                // 做点什么..
-                continue;
-            }
-            // query_result.is_expired() 表示扫码成功，但未点击确认登陆
-            if query_result.is_expired() {
-                // 做点什么..
-                debug!("login expired");
-                continue;
-            }
-            // 移动端APP扫码成功并确认登陆
-            if query_result.is_confirmed() {
-                // 获取移动端登陆Result
-                let mobile_login_result = query_result
-                    .get_mobile_login_result()
-                    .context("failed to get mobile login result")?;
-                // 移动端 refresh token
-                let refresh_token = mobile_login_result
-                    .refresh_token()
-                    .context("failed to get refresh token")?;
-                return Ok(refresh_token);
-            }
+        let query_result = scanner.query(&sid).await?;
+        if !query_result.is_success() {
+            continue;
         }
+        let code = query_result.auth_code.unwrap();
+        let refresh_token = scanner.fetch_refresh_token(&code).await?;
+        return Ok(refresh_token);
     }
     anyhow::bail!("Login failed")
 }

@@ -117,10 +117,6 @@ impl AliyunDriveFileSystem {
             Ok(Some(file))
         } else {
             trace!(path = %path.display(), "file not found in cache");
-            if let Ok(Some(file)) = self.drive.get_by_path(&path_str).await {
-                return Ok(Some(file));
-            }
-
             // path may contain whitespaces which get_by_path can't handle
             // so we try to find it in directory
             let parts: Vec<&str> = path_str.split('/').collect();
@@ -145,17 +141,7 @@ impl AliyunDriveFileSystem {
         let parent_file_id = if path_str == "/" {
             "root".to_string()
         } else {
-            match self.find_in_cache(&path) {
-                Ok(Some(file)) => file.id,
-                _ => match self.drive.get_by_path(&path_str).await {
-                    Ok(Some(file)) => file.id,
-                    Ok(None) => return Err(FsError::NotFound),
-                    Err(err) => {
-                        error!(path = %path_str, error = %err, "get_by_path failed");
-                        return Err(FsError::GeneralFailure);
-                    }
-                },
-            }
+            self.find_in_cache(&path)?.ok_or(FsError::NotFound)?.id
         };
         let mut files = if let Some(files) = self.dir_cache.get(&path_str) {
             debug!(path = %path_str, "read_dir cache hit");
@@ -465,9 +451,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .get_file(to.parent().unwrap().to_path_buf())
                 .await?
                 .ok_or(FsError::NotFound)?;
-            let new_name = to_dav.file_name();
             self.drive
-                .copy_file(&file.id, &to_parent_file.id, new_name)
+                .copy_file(&file.id, &to_parent_file.id)
                 .await
                 .map_err(|err| {
                     error!(from = %from.display(), to = %to.display(), error = %err, "copy file failed");
