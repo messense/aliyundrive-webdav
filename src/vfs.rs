@@ -465,9 +465,8 @@ impl DavFileSystem for AliyunDriveFileSystem {
                 .get_file(to.parent().unwrap().to_path_buf())
                 .await?
                 .ok_or(FsError::NotFound)?;
-            let new_name = to_dav.file_name();
             self.drive
-                .copy_file(&file.id, &to_parent_file.id, new_name)
+                .copy_file(&file.id, &to_parent_file.id)
                 .await
                 .map_err(|err| {
                     error!(from = %from.display(), to = %to.display(), error = %err, "copy file failed");

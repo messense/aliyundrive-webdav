@@ -333,7 +333,10 @@ impl AliyunDrive {
         debug!(drive_id = %drive_id, file_id = %file_id, "get file");
         let req = GetFileRequest { drive_id, file_id };
         let res: Result<GetFileResponse> = self
-            .request(format!("{}/v2/file/get", self.config.api_base_url), &req)
+            .request(
+                format!("{}/adrive/v1.0/openFile/get", self.config.api_base_url),
+                &req,
+            )
             .await
             .and_then(|res| res.context("expect response"));
         match res {
@@ -410,17 +413,13 @@ impl AliyunDrive {
             drive_id,
             parent_file_id,
             limit: 200,
-            all: false,
-            image_thumbnail_process: "image/resize,w_400/format,jpeg",
-            image_url_process: "image/resize,w_1920/format,jpeg",
-            video_thumbnail_process: "video/snapshot,t_0,f_jpg,ar_auto,w_300",
             fields: "*",
             order_by: "updated_at",
             order_direction: "DESC",
             marker,
         };
         self.request(
-            format!("{}/adrive/v3/file/list", self.config.api_base_url),
+            format!("{}/adrive/v1.0/openFile/list", self.config.api_base_url),
             &req,
         )
         .await
@@ -453,10 +452,14 @@ impl AliyunDrive {
         let req = GetFileDownloadUrlRequest {
             drive_id: self.drive_id()?,
             file_id,
+            expire_sec: 14400, // 4 hours
         };
         let res: GetFileDownloadUrlResponse = self
             .request(
-                format!("{}/v2/file/get_download_url", self.config.api_base_url),
+                format!(
+                    "{}/adrive/v1.0/openFile/getDownloadUrl",
+                    self.config.api_base_url
+                ),
                 &req,
             )
             .await?
@@ -472,7 +475,10 @@ impl AliyunDrive {
         };
         let res: Result<Option<serde::de::IgnoredAny>> = self
             .request(
-                format!("{}/v2/recyclebin/trash", self.config.api_base_url),
+                format!(
+                    "{}/adrive/v1.0/openFile/recyclebin/trash",
+                    self.config.api_base_url
+                ),
                 &req,
             )
             .await;
@@ -497,7 +503,10 @@ impl AliyunDrive {
             file_id,
         };
         let res: Result<Option<serde::de::IgnoredAny>> = self
-            .request(format!("{}/v2/file/delete", self.config.api_base_url), &req)
+            .request(
+                format!("{}/adrive/v1.0/openFile/delete", self.config.api_base_url),
+                &req,
+            )
             .await;
         if let Err(err) = res {
             if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
@@ -532,7 +541,10 @@ impl AliyunDrive {
             r#type: "folder",
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v2/file/create", self.config.api_base_url), &req)
+            .request(
+                format!("{}/adrive/v1.0/openFile/create", self.config.api_base_url),
+                &req,
+            )
             .await?;
         Ok(())
     }
@@ -540,13 +552,15 @@ impl AliyunDrive {
     pub async fn rename_file(&self, file_id: &str, name: &str) -> Result<()> {
         debug!(file_id = %file_id, name = %name, "rename file");
         let req = RenameFileRequest {
-            check_name_mode: "refuse",
             drive_id: self.drive_id()?,
             file_id,
             name,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v2/file/update", self.config.api_base_url), &req)
+            .request(
+                format!("{}/adrive/v1.0/openFile/update ", self.config.api_base_url),
+                &req,
+            )
             .await?;
         Ok(())
     }
@@ -562,32 +576,32 @@ impl AliyunDrive {
         let req = MoveFileRequest {
             drive_id,
             file_id,
-            to_drive_id: drive_id,
             to_parent_file_id,
             new_name,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v2/file/move", self.config.api_base_url), &req)
+            .request(
+                format!("{}/adrive/v1.0/openFile/move ", self.config.api_base_url),
+                &req,
+            )
             .await?;
         Ok(())
     }
 
-    pub async fn copy_file(
-        &self,
-        file_id: &str,
-        to_parent_file_id: &str,
-        new_name: Option<&str>,
-    ) -> Result<()> {
+    pub async fn copy_file(&self, file_id: &str, to_parent_file_id: &str) -> Result<()> {
         debug!(file_id = %file_id, to_parent_file_id = %to_parent_file_id, "copy file");
         let drive_id = self.drive_id()?;
         let req = CopyFileRequest {
             drive_id,
             file_id,
             to_parent_file_id,
-            new_name,
+            auto_rename: false,
         };
         let _res: Option<serde::de::IgnoredAny> = self
-            .request(format!("{}/v2/file/copy", self.config.api_base_url), &req)
+            .request(
+                format!("{}/adrive/v1.0/openFile/copy ", self.config.api_base_url),
+                &req,
+            )
             .await?;
         Ok(())
     }
@@ -622,7 +636,7 @@ impl AliyunDrive {
         };
         let res: CreateFileWithProofResponse = self
             .request(
-                format!("{}/v2/file/create_with_proof", self.config.api_base_url),
+                format!("{}/adrive/v1.0/openFile/create", self.config.api_base_url),
                 &req,
             )
             .await?
@@ -640,7 +654,7 @@ impl AliyunDrive {
         };
         let _res: Option<serde::de::IgnoredAny> = self
             .request(
-                format!("{}/v2/file/complete", self.config.api_base_url),
+                format!("{}/adrive/v1.0/openFile/complete", self.config.api_base_url),
                 &req,
             )
             .await?;
@@ -681,7 +695,10 @@ impl AliyunDrive {
         };
         let res: CreateFileWithProofResponse = self
             .request(
-                format!("{}/v2/file/get_upload_url", self.config.api_base_url),
+                format!(
+                    "{}/adrive/v1.0/openFile/getUploadUrl",
+                    self.config.api_base_url
+                ),
                 &req,
             )
             .await?
@@ -693,11 +710,17 @@ impl AliyunDrive {
         let drive_id = self.drive_id()?;
         let mut data = HashMap::new();
         data.insert("drive_id", drive_id);
-        let res: GetDriveResponse = self
-            .request(format!("{}/v2/drive/get", self.config.api_base_url), &data)
+        let res: GetSpaceInfoResponse = self
+            .request(
+                format!("{}/adrive/v1.0/user/getSpaceInfo", self.config.api_base_url),
+                &data,
+            )
             .await?
             .context("expect response")?;
-        Ok((res.used_size, res.total_size))
+        Ok((
+            res.personal_space_info.used_size,
+            res.personal_space_info.total_size,
+        ))
     }
 }
 

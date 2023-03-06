@@ -23,10 +23,6 @@ pub struct ListFileRequest<'a> {
     pub drive_id: &'a str,
     pub parent_file_id: &'a str,
     pub limit: u64,
-    pub all: bool,
-    pub image_thumbnail_process: &'a str,
-    pub image_url_process: &'a str,
-    pub video_thumbnail_process: &'a str,
     pub fields: &'a str,
     pub order_by: &'a str,
     pub order_direction: &'a str,
@@ -124,6 +120,7 @@ impl From<GetFileResponse> for AliyunFile {
 pub struct GetFileDownloadUrlRequest<'a> {
     pub drive_id: &'a str,
     pub file_id: &'a str,
+    pub expire_sec: usize,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -131,8 +128,8 @@ pub struct GetFileDownloadUrlResponse {
     pub url: String,
     #[serde(default)]
     pub streams_url: HashMap<String, String>,
-    pub size: u64,
     pub expiration: String,
+    pub method: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -158,7 +155,6 @@ pub struct CreateFolderRequest<'a> {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct RenameFileRequest<'a> {
-    pub check_name_mode: &'a str,
     pub drive_id: &'a str,
     pub file_id: &'a str,
     pub name: &'a str,
@@ -168,7 +164,6 @@ pub struct RenameFileRequest<'a> {
 pub struct MoveFileRequest<'a> {
     pub drive_id: &'a str,
     pub file_id: &'a str,
-    pub to_drive_id: &'a str,
     pub to_parent_file_id: &'a str,
     pub new_name: Option<&'a str>,
 }
@@ -178,7 +173,7 @@ pub struct CopyFileRequest<'a> {
     pub drive_id: &'a str,
     pub file_id: &'a str,
     pub to_parent_file_id: &'a str,
-    pub new_name: Option<&'a str>,
+    pub auto_rename: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -228,9 +223,14 @@ pub struct GetUploadUrlRequest<'a> {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct GetDriveResponse {
+pub struct SpaceInfo {
     pub total_size: u64,
     pub used_size: u64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GetSpaceInfoResponse {
+    pub personal_space_info: SpaceInfo,
 }
 
 #[derive(Debug, Clone)]
