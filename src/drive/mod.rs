@@ -212,7 +212,7 @@ impl AliyunDrive {
                     // refresh_token from file
                     if let Some(refresh_token_from_file) = refresh_token_from_file.as_ref() {
                         if !should_retry && &refresh_token != refresh_token_from_file {
-                            refresh_token = parse_refresh_token(refresh_token_from_file.trim())?;
+                            refresh_token = refresh_token_from_file.trim().to_string();
                             should_retry = true;
                             // don't warn if we are gonna try refresh_token from file
                             should_warn = false;
@@ -723,13 +723,13 @@ impl DavDirEntry for AliyunFile {
 }
 
 pub async fn read_refresh_token(workdir: &Path) -> Result<String> {
-    Ok(tokio::fs::read_to_string(workdir.join("refresh_token")).await?)
-}
-
-pub fn parse_refresh_token(content: &str) -> Result<String> {
-    let (_client, token) = content
-        .trim()
-        .split_once(':')
-        .unwrap_or_else(|| ("app", content.trim()));
-    Ok(token.to_string())
+    let file = workdir.join("refresh_token");
+    let token = tokio::fs::read_to_string(&file).await?;
+    if token.starts_with("web:") || token.starts_with("app:") {
+        bail!(
+            "Please remove outdated refresh_token cache for v1.x at {}",
+            file.display(),
+        );
+    }
+    Ok(token)
 }

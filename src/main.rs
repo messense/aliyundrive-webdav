@@ -30,7 +30,7 @@ use {
 };
 
 use cache::Cache;
-use drive::{parse_refresh_token, read_refresh_token, AliyunDrive, DriveConfig};
+use drive::{read_refresh_token, AliyunDrive, DriveConfig};
 use vfs::AliyunDriveFileSystem;
 
 mod cache;
@@ -223,7 +223,7 @@ async fn main() -> anyhow::Result<()> {
     {
         login(client_id, client_secret, 30).await?
     } else {
-        parse_refresh_token(&opt.refresh_token.unwrap_or_default())?
+        opt.refresh_token.unwrap_or_default()
     };
     let refresh_token_url = if opt.client_id.is_none() || opt.client_secret.is_none() {
         "https://aliyundrive-oauth.messense.me/oauth/access_token".to_string()
