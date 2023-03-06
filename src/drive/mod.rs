@@ -268,6 +268,9 @@ impl AliyunDrive {
                 if res.status() == StatusCode::NO_CONTENT {
                     return Ok(None);
                 }
+                // let res = res.text().await?;
+                // println!("{}: {}", url, res);
+                // let res = serde_json::from_str(&res)?;
                 let res = res.json::<U>().await?;
                 Ok(Some(res))
             }
