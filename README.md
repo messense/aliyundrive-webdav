@@ -37,12 +37,12 @@ sudo snap install aliyundrive-webdav
 aarch64/arm/mipsel/x86_64/i686 等架构的版本，可以下载后使用 opkg 安装，以 nanopi r4s 为例：
 
 ```bash
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.11.0/aliyundrive-webdav_1.11.0-1_aarch64_generic.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.11.0/luci-app-aliyundrive-webdav_1.11.0_all.ipk
-wget https://github.com/messense/aliyundrive-webdav/releases/download/v1.11.0/luci-i18n-aliyundrive-webdav-zh-cn_1.11.0-1_all.ipk
-opkg install aliyundrive-webdav_1.11.0-1_aarch64_generic.ipk
-opkg install luci-app-aliyundrive-webdav_1.11.0_all.ipk
-opkg install luci-i18n-aliyundrive-webdav-zh-cn_1.11.0-1_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v2.0.0/aliyundrive-webdav_2.0.0-1_aarch64_generic.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v2.0.0/luci-app-aliyundrive-webdav_2.0.0_all.ipk
+wget https://github.com/messense/aliyundrive-webdav/releases/download/v2.0.0/luci-i18n-aliyundrive-webdav-zh-cn_2.0.0-1_all.ipk
+opkg install aliyundrive-webdav_2.0.0-1_aarch64_generic.ipk
+opkg install luci-app-aliyundrive-webdav_2.0.0_all.ipk
+opkg install luci-i18n-aliyundrive-webdav-zh-cn_2.0.0-1_all.ipk
 ```
 
 其它 CPU 架构的路由器可在 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面中查找对应的架构的主程序 ipk 文件下载安装， 常见
@@ -131,41 +131,41 @@ rclone --no-update-modtime copy abc.pdf aliyundrive-nc://docs/
 
 ```bash
 $ aliyundrive-webdav --help
-aliyundrive-webdav 1.11.0
 WebDAV server for AliyunDrive
 
-USAGE:
-    aliyundrive-webdav [OPTIONS]
-    aliyundrive-webdav <SUBCOMMAND>
+Usage: aliyundrive-webdav [OPTIONS]
+       aliyundrive-webdav <COMMAND>
 
-OPTIONS:
-        --cache-size <CACHE_SIZE>                    Directory entries cache size [default: 1000]
-        --cache-ttl <CACHE_TTL>                      Directory entries cache expiration time in seconds [default: 600]
-        --debug                                      Enable debug log
-    -h, --help                                       Print help information
-        --host <HOST>                                Listen host [env: HOST=] [default: 0.0.0.0]
-    -I, --auto-index                                 Automatically generate index.html
-        --no-self-upgrade                            Disable self auto upgrade
-        --no-trash                                   Delete file permanently instead of trashing it
-    -p, --port <PORT>                                Listen port [env: PORT=] [default: 8080]
-        --prefer-http-download                       Prefer downloading using HTTP protocol
-    -r, --refresh-token <REFRESH_TOKEN>              Aliyun drive refresh token [env: REFRESH_TOKEN=]
-        --read-only                                  Enable read only mode
-        --root <ROOT>                                Root directory path [default: /]
-    -S, --read-buffer-size <READ_BUFFER_SIZE>        Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
-        --skip-upload-same-size                      Skip uploading same size file
-        --strip-prefix <STRIP_PREFIX>                Prefix to be stripped off when handling request [env: WEBDAV_STRIP_PREFIX=]
-        --tls-cert <TLS_CERT>                        TLS certificate file path [env: TLS_CERT=]
-        --tls-key <TLS_KEY>                          TLS private key file path [env: TLS_KEY=]
-    -U, --auth-user <AUTH_USER>                      WebDAV authentication username [env: WEBDAV_AUTH_USER=]
-        --upload-buffer-size <UPLOAD_BUFFER_SIZE>    Upload buffer size in bytes, defaults to 16MB [default: 16777216]
-    -V, --version                                    Print version information
-    -w, --workdir <WORKDIR>                          Working directory, refresh_token will be stored in there if specified
-    -W, --auth-password <AUTH_PASSWORD>              WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
+Commands:
+  qr    Scan QRCode
+  help  Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    help    Print this message or the help of the given subcommand(s)
-    qr      Scan QRCode
+Options:
+      --host <HOST>                              Listen host [env: HOST=] [default: 0.0.0.0]
+  -p, --port <PORT>                              Listen port [env: PORT=] [default: 8080]
+      --client-id <CLIENT_ID>                    Aliyun drive client_id [env: CLIENT_ID=]
+      --client-secret <CLIENT_SECRET>            Aliyun drive client_secret [env: CLIENT_SECRET=]
+  -r, --refresh-token <REFRESH_TOKEN>            Aliyun drive refresh token [env: REFRESH_TOKEN=]
+  -U, --auth-user <AUTH_USER>                    WebDAV authentication username [env: WEBDAV_AUTH_USER=]
+  -W, --auth-password <AUTH_PASSWORD>            WebDAV authentication password [env: WEBDAV_AUTH_PASSWORD=]
+  -I, --auto-index                               Automatically generate index.html
+  -S, --read-buffer-size <READ_BUFFER_SIZE>      Read/download buffer size in bytes, defaults to 10MB [default: 10485760]
+      --upload-buffer-size <UPLOAD_BUFFER_SIZE>  Upload buffer size in bytes, defaults to 16MB [default: 16777216]
+      --cache-size <CACHE_SIZE>                  Directory entries cache size [default: 1000]
+      --cache-ttl <CACHE_TTL>                    Directory entries cache expiration time in seconds [default: 600]
+      --root <ROOT>                              Root directory path [default: /]
+  -w, --workdir <WORKDIR>                        Working directory, refresh_token will be stored in there if specified
+      --no-trash                                 Delete file permanently instead of trashing it
+      --read-only                                Enable read only mode
+      --tls-cert <TLS_CERT>                      TLS certificate file path [env: TLS_CERT=]
+      --tls-key <TLS_KEY>                        TLS private key file path [env: TLS_KEY=]
+      --strip-prefix <STRIP_PREFIX>              Prefix to be stripped off when handling request [env: WEBDAV_STRIP_PREFIX=]
+      --debug                                    Enable debug log
+      --no-self-upgrade                          Disable self auto upgrade
+      --skip-upload-same-size                    Skip uploading same size file
+      --prefer-http-download                     Prefer downloading using HTTP protocol
+  -h, --help                                     Print help
+  -V, --version                                  Print version
 ```
 
 > **Note**
