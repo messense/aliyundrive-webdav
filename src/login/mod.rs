@@ -2,16 +2,17 @@ pub mod model;
 
 use crate::login::model::*;
 
-const QRCODE_API: &str = "https://openapi.aliyundrive.com/oauth/authorize/qrcode";
-
 pub struct QrCodeScanner {
     client: reqwest::Client,
-    client_id: String,
-    client_secret: String,
+    client_id: Option<String>,
+    client_secret: Option<String>,
 }
 
 impl QrCodeScanner {
-    pub async fn new(client_id: String, client_secret: String) -> anyhow::Result<Self> {
+    pub async fn new(
+        client_id: Option<String>,
+        client_secret: Option<String>,
+    ) -> anyhow::Result<Self> {
         let client = reqwest::Client::builder()
             .pool_idle_timeout(std::time::Duration::from_secs(50))
             .connect_timeout(std::time::Duration::from_secs(10))
@@ -38,7 +39,12 @@ impl QrCodeScanner {
             width: None,
             height: None,
         };
-        let resp = self.client.post(QRCODE_API).json(&req).send().await?;
+        let url = if self.client_id.is_none() || self.client_secret.is_none() {
+            "https://aliyundrive-oauth.messense.me/oauth/authorize/qrcode"
+        } else {
+            "https://openapi.aliyundrive.com/oauth/authorize/qrcode"
+        };
+        let resp = self.client.post(url).json(&req).send().await?;
         let resp = resp.json::<QrCodeResponse>().await?;
         Ok(resp)
     }
@@ -57,12 +63,12 @@ impl QrCodeScanner {
             grant_type: "authorization_code".to_string(),
             code: code.to_string(),
         };
-        let resp = self
-            .client
-            .post("https://openapi.aliyundrive.com/oauth/access_token")
-            .json(&req)
-            .send()
-            .await?;
+        let url = if self.client_id.is_none() || self.client_secret.is_none() {
+            "https://aliyundrive-oauth.messense.me/oauth/access_token"
+        } else {
+            "https://openapi.aliyundrive.com/oauth/access_token"
+        };
+        let resp = self.client.post(url).json(&req).send().await?;
         let resp = resp.json::<AuthorizationCodeResponse>().await?;
         Ok(resp.refresh_token)
     }

@@ -162,21 +162,16 @@ async fn main() -> anyhow::Result<()> {
         Some(Commands::Qr(qr)) => {
             match qr {
                 QrCommand::Login => {
-                    let refresh_token =
-                        login(client_id.unwrap(), client_secret.unwrap(), 120).await?;
+                    let refresh_token = login(client_id, client_secret, 120).await?;
                     println!("refresh_token: {}", refresh_token)
                 }
                 QrCommand::Generate => {
-                    let scanner =
-                        login::QrCodeScanner::new(client_id.unwrap(), client_secret.unwrap())
-                            .await?;
+                    let scanner = login::QrCodeScanner::new(client_id, client_secret).await?;
                     let data = scanner.scan().await?;
                     println!("{}", serde_json::to_string_pretty(&data)?);
                 }
                 QrCommand::Query { sid } => {
-                    let scanner =
-                        login::QrCodeScanner::new(client_id.unwrap(), client_secret.unwrap())
-                            .await?;
+                    let scanner = login::QrCodeScanner::new(client_id, client_secret).await?;
                     let query_result = scanner.query(&sid).await?;
                     if query_result.is_success() {
                         let code = query_result.auth_code.unwrap();
@@ -226,14 +221,19 @@ async fn main() -> anyhow::Result<()> {
         && refresh_token_from_file.is_none()
         && atty::is(atty::Stream::Stdout)
     {
-        login(client_id.unwrap(), client_secret.unwrap(), 30).await?
+        login(client_id, client_secret, 30).await?
     } else {
         parse_refresh_token(&opt.refresh_token.unwrap_or_default())?
+    };
+    let refresh_token_url = if opt.client_id.is_none() || opt.client_secret.is_none() {
+        "https://aliyundrive-oauth.messense.me/oauth/access_token".to_string()
+    } else {
+        "https://openapi.aliyundrive.com/oauth/access_token".to_string()
     };
     let (drive_config, no_trash) = (
         DriveConfig {
             api_base_url: "https://openapi.aliyundrive.com".to_string(),
-            refresh_token_url: "https://openapi.aliyundrive.com/oauth/access_token".to_string(),
+            refresh_token_url,
             workdir,
             client_id: opt.client_id.clone(),
             client_secret: opt.client_secret.clone(),
@@ -473,7 +473,11 @@ fn private_keys(rd: &mut dyn io::BufRead) -> Result<Vec<Vec<u8>>, io::Error> {
     }
 }
 
-async fn login(client_id: String, client_secret: String, timeout: u64) -> anyhow::Result<String> {
+async fn login(
+    client_id: Option<String>,
+    client_secret: Option<String>,
+    timeout: u64,
+) -> anyhow::Result<String> {
     const SLEEP: u64 = 3;
 
     let scanner = login::QrCodeScanner::new(client_id, client_secret).await?;

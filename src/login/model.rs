@@ -4,10 +4,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct QrCodeRequest {
-    pub client_id: String,
-    pub client_secret: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_secret: Option<String>,
     pub scopes: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
 }
 
@@ -66,8 +70,10 @@ impl QrCodeStatusResponse {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct AuthorizationCodeRequest {
-    pub client_id: String,
-    pub client_secret: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_secret: Option<String>,
     pub grant_type: String,
     pub code: String,
 }
