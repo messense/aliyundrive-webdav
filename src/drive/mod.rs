@@ -35,7 +35,8 @@ pub struct DriveConfig {
     pub api_base_url: String,
     pub refresh_token_url: String,
     pub workdir: Option<PathBuf>,
-    pub app_id: Option<String>,
+    pub client_id: Option<String>,
+    pub client_secret: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -107,8 +108,8 @@ impl AliyunDrive {
                 Ok(res) => {
                     // token usually expires in 7200s, refresh earlier
                     delay_seconds = res.expires_in - 200;
-                    if tx.send(res.default_drive_id).is_err() {
-                        error!("send default drive id failed");
+                    if tx.send(res.access_token).is_err() {
+                        error!("send access_token failed");
                     }
                 }
                 Err(err) => {
@@ -124,10 +125,14 @@ impl AliyunDrive {
             }
         });
 
-        let drive_id = rx.await?;
-        if drive_id.is_empty() {
-            bail!("get default drive id failed");
+        let access_token = rx.await?;
+        if access_token.is_empty() {
+            bail!("get access_token failed");
         }
+        let drive_id = drive
+            .get_drive_id()
+            .await
+            .context("get default drive id failed")?;
         info!(drive_id = %drive_id, "found default drive");
         drive.drive_id = Some(drive_id);
 
@@ -147,8 +152,11 @@ impl AliyunDrive {
         let mut data = HashMap::new();
         data.insert("refresh_token", refresh_token);
         data.insert("grant_type", "refresh_token");
-        if let Some(app_id) = self.config.app_id.as_ref() {
-            data.insert("app_id", app_id);
+        if let Some(client_id) = self.config.client_id.as_ref() {
+            data.insert("client_id", client_id);
+        }
+        if let Some(client_secret) = self.config.client_secret.as_ref() {
+            data.insert("client_secret", client_secret);
         }
         let res = self
             .client
@@ -161,7 +169,6 @@ impl AliyunDrive {
                 let res = res.json::<RefreshTokenResponse>().await?;
                 info!(
                     refresh_token = %res.refresh_token,
-                    nick_name = %res.nick_name,
                     "refresh token succeed"
                 );
                 Ok(res)
@@ -307,6 +314,18 @@ impl AliyunDrive {
                 }
             }
         }
+    }
+
+    pub async fn get_drive_id(&self) -> Result<String> {
+        let req = HashMap::<String, String>::new();
+        let res: GetDriveInfoResponse = self
+            .request(
+                format!("{}/adrive/v1.0/user/getDriveInfo", self.config.api_base_url),
+                &req,
+            )
+            .await
+            .and_then(|res| res.context("expect response"))?;
+        Ok(res.default_drive_id)
     }
 
     pub async fn get_file(&self, file_id: &str) -> Result<Option<AliyunFile>> {

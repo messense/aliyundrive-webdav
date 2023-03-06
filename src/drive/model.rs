@@ -11,8 +11,10 @@ pub struct RefreshTokenResponse {
     pub refresh_token: String,
     pub expires_in: u64,
     pub token_type: String,
-    pub user_id: String,
-    pub nick_name: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GetDriveInfoResponse {
     pub default_drive_id: String,
 }
 
