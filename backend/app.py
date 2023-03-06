@@ -50,21 +50,11 @@ async def qrcode(request: QrCodeRequest) -> Response:
 
 @app.post("/oauth/access_token")
 async def access_token(request: AuthorizationRequest) -> Response:
-    async with httpx.AsyncClient() as client:
-        res = await client.post(
-            "https://openapi.aliyundrive.com/oauth/access_token",
-            json={
-                "client_id": CLIENT_ID,
-                "client_secret": CLIENT_SECRET,
-                "grant_type": request.grant_type,
-                "code": request.code,
-                "refresh_token": request.refresh_token,
-            },
-        )
+    if request.refresh_token and len(request.refresh_token.split('.')) < 3:
         return Response(
-            content=res.content,
-            status_code=res.status_code,
-            media_type=res.headers["Content-Type"],
+            content="invalid refresh token",
+            status_code=400,
+            media_type="text/plain",
         )
 
     res = await http.post(
