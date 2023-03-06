@@ -33,7 +33,7 @@ const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/53
 #[derive(Debug, Clone)]
 pub struct DriveConfig {
     pub api_base_url: String,
-    pub refresh_token_url: String,
+    pub refresh_token_host: String,
     pub workdir: Option<PathBuf>,
     pub client_id: Option<String>,
     pub client_secret: Option<String>,
@@ -160,7 +160,10 @@ impl AliyunDrive {
         }
         let res = self
             .client
-            .post(&self.config.refresh_token_url)
+            .post(format!(
+                "{}/oauth/access_token",
+                &self.config.refresh_token_host
+            ))
             .json(&data)
             .send()
             .await?;
@@ -528,7 +531,7 @@ impl AliyunDrive {
         };
         let _res: Option<serde::de::IgnoredAny> = self
             .request(
-                format!("{}/adrive/v1.0/openFile/update ", self.config.api_base_url),
+                format!("{}/adrive/v1.0/openFile/update", self.config.api_base_url),
                 &req,
             )
             .await?;
@@ -551,7 +554,7 @@ impl AliyunDrive {
         };
         let _res: Option<serde::de::IgnoredAny> = self
             .request(
-                format!("{}/adrive/v1.0/openFile/move ", self.config.api_base_url),
+                format!("{}/adrive/v1.0/openFile/move", self.config.api_base_url),
                 &req,
             )
             .await?;
@@ -569,7 +572,7 @@ impl AliyunDrive {
         };
         let _res: Option<serde::de::IgnoredAny> = self
             .request(
-                format!("{}/adrive/v1.0/openFile/copy ", self.config.api_base_url),
+                format!("{}/adrive/v1.0/openFile/copy", self.config.api_base_url),
                 &req,
             )
             .await?;

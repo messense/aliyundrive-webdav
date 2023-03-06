@@ -1,18 +1,15 @@
 pub mod model;
 
+use crate::drive::DriveConfig;
 use crate::login::model::*;
 
 pub struct QrCodeScanner {
     client: reqwest::Client,
-    client_id: Option<String>,
-    client_secret: Option<String>,
+    drive_config: DriveConfig,
 }
 
 impl QrCodeScanner {
-    pub async fn new(
-        client_id: Option<String>,
-        client_secret: Option<String>,
-    ) -> anyhow::Result<Self> {
+    pub async fn new(drive_config: DriveConfig) -> anyhow::Result<Self> {
         let client = reqwest::Client::builder()
             .pool_idle_timeout(std::time::Duration::from_secs(50))
             .connect_timeout(std::time::Duration::from_secs(10))
@@ -20,8 +17,7 @@ impl QrCodeScanner {
             .build()?;
         Ok(Self {
             client,
-            client_id,
-            client_secret,
+            drive_config,
         })
     }
 }
@@ -29,8 +25,8 @@ impl QrCodeScanner {
 impl QrCodeScanner {
     pub async fn scan(&self) -> anyhow::Result<QrCodeResponse> {
         let req = QrCodeRequest {
-            client_id: self.client_id.clone(),
-            client_secret: self.client_secret.clone(),
+            client_id: self.drive_config.client_id.clone(),
+            client_secret: self.drive_config.client_secret.clone(),
             scopes: vec![
                 "user:base".to_string(),
                 "file:all:read".to_string(),
@@ -39,11 +35,15 @@ impl QrCodeScanner {
             width: None,
             height: None,
         };
-        let url = if self.client_id.is_none() || self.client_secret.is_none() {
-            "https://aliyundrive-oauth.messense.me/oauth/authorize/qrcode"
-        } else {
-            "https://openapi.aliyundrive.com/oauth/authorize/qrcode"
-        };
+        let url =
+            if self.drive_config.client_id.is_none() || self.drive_config.client_secret.is_none() {
+                format!(
+                    "{}/oauth/authorize/qrcode",
+                    &self.drive_config.refresh_token_host
+                )
+            } else {
+                "https://openapi.aliyundrive.com/oauth/authorize/qrcode".to_string()
+            };
         let resp = self.client.post(url).json(&req).send().await?;
         let resp = resp.json::<QrCodeResponse>().await?;
         Ok(resp)
@@ -58,16 +58,20 @@ impl QrCodeScanner {
 
     pub async fn fetch_refresh_token(&self, code: &str) -> anyhow::Result<String> {
         let req = AuthorizationCodeRequest {
-            client_id: self.client_id.clone(),
-            client_secret: self.client_secret.clone(),
+            client_id: self.drive_config.client_id.clone(),
+            client_secret: self.drive_config.client_secret.clone(),
             grant_type: "authorization_code".to_string(),
             code: code.to_string(),
         };
-        let url = if self.client_id.is_none() || self.client_secret.is_none() {
-            "https://aliyundrive-oauth.messense.me/oauth/access_token"
-        } else {
-            "https://openapi.aliyundrive.com/oauth/access_token"
-        };
+        let url =
+            if self.drive_config.client_id.is_none() || self.drive_config.client_secret.is_none() {
+                format!(
+                    "{}/oauth/access_token",
+                    &self.drive_config.refresh_token_host
+                )
+            } else {
+                "https://openapi.aliyundrive.com/oauth/access_token".to_string()
+            };
         let resp = self.client.post(url).json(&req).send().await?;
         let resp = resp.json::<AuthorizationCodeResponse>().await?;
         Ok(resp.refresh_token)
