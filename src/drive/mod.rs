@@ -725,7 +725,7 @@ impl DavDirEntry for AliyunFile {
 pub async fn read_refresh_token(workdir: &Path) -> Result<String> {
     let file = workdir.join("refresh_token");
     let token = tokio::fs::read_to_string(&file).await?;
-    if token.starts_with("web:") || token.starts_with("app:") {
+    if token.split('.').count() < 3 {
         bail!(
             "Please remove outdated refresh_token cache for v1.x at {}",
             file.display(),
