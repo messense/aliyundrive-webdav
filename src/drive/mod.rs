@@ -355,39 +355,6 @@ impl AliyunDrive {
         }
     }
 
-    pub async fn get_by_path(&self, path: &str) -> Result<Option<AliyunFile>> {
-        let drive_id = self.drive_id()?;
-        debug!(drive_id = %drive_id, path = %path, "get file by path");
-        if path == "/" || path.is_empty() {
-            return Ok(Some(AliyunFile::new_root()));
-        }
-        let req = GetFileByPathRequest {
-            drive_id,
-            file_path: path,
-        };
-        let res: Result<AliyunFile> = self
-            .request(
-                format!("{}/v2/file/get_by_path", self.config.api_base_url),
-                &req,
-            )
-            .await
-            .and_then(|res| res.context("expect response"));
-        match res {
-            Ok(file) => Ok(Some(file)),
-            Err(err) => {
-                if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
-                    if matches!(req_err.status(), Some(StatusCode::NOT_FOUND)) {
-                        Ok(None)
-                    } else {
-                        Err(err)
-                    }
-                } else {
-                    Err(err)
-                }
-            }
-        }
-    }
-
     pub async fn list_all(&self, parent_file_id: &str) -> Result<Vec<AliyunFile>> {
         let mut files = Vec::new();
         let mut marker = None;
