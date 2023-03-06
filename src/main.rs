@@ -480,13 +480,9 @@ async fn login(client_id: String, client_secret: String, timeout: u64) -> anyhow
     // 返回二维码内容结果集
     let sid = scanner.scan().await?.sid;
     // 需要生成二维码的内容
-    let qrcode_content = scanner.qrcode(&sid).await?;
+    let qrcode_content = format!("https://www.aliyundrive.com/o/oauth/authorize?sid={sid}");
     // 打印二维码
-    let img = image::load_from_memory(&qrcode_content)?;
-    let config = viuer::Config {
-        ..viuer::Config::default()
-    };
-    viuer::print(&img, &config)?;
+    qr2term::print_qr(&qrcode_content)?;
     info!("Please scan the qrcode to login in {} seconds", timeout);
     let loop_count = timeout / SLEEP;
     for _i in 0..loop_count {

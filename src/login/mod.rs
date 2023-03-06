@@ -1,5 +1,3 @@
-use bytes::Bytes;
-
 pub mod model;
 
 use crate::login::model::*;
@@ -43,13 +41,6 @@ impl QrCodeScanner {
         let resp = self.client.post(QRCODE_API).json(&req).send().await?;
         let resp = resp.json::<QrCodeResponse>().await?;
         Ok(resp)
-    }
-
-    pub async fn qrcode(&self, sid: &str) -> anyhow::Result<Bytes> {
-        let url = format!("https://openapi.aliyundrive.com/oauth/qrcode/{sid}");
-        let resp = self.client.get(url).send().await?;
-        let content = resp.bytes().await?;
-        Ok(content)
     }
 
     pub async fn query(&self, sid: &str) -> anyhow::Result<QrCodeStatusResponse> {
