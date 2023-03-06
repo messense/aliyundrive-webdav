@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-use std::fmt;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
@@ -38,43 +36,6 @@ pub struct DriveConfig {
     pub refresh_token_url: String,
     pub workdir: Option<PathBuf>,
     pub app_id: Option<String>,
-    pub client_type: ClientType,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum ClientType {
-    Web,
-    App,
-}
-
-impl ClientType {
-    fn refresh_token_url(&self) -> &'static str {
-        match self {
-            ClientType::Web => "https://api.aliyundrive.com/token/refresh",
-            ClientType::App => "https://auth.aliyundrive.com/v2/account/token",
-        }
-    }
-}
-
-impl FromStr for ClientType {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_ascii_lowercase().as_str() {
-            "web" | "" => Ok(ClientType::Web),
-            "app" => Ok(ClientType::App),
-            _ => bail!("invalid client type '{}'", s),
-        }
-    }
-}
-
-impl fmt::Display for ClientType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ClientType::Web => write!(f, "web"),
-            ClientType::App => write!(f, "app"),
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -182,25 +143,16 @@ impl AliyunDrive {
         Ok(())
     }
 
-    async fn do_refresh_token(
-        &self,
-        refresh_token: &str,
-        client_type: ClientType,
-    ) -> Result<RefreshTokenResponse> {
+    async fn do_refresh_token(&self, refresh_token: &str) -> Result<RefreshTokenResponse> {
         let mut data = HashMap::new();
         data.insert("refresh_token", refresh_token);
         data.insert("grant_type", "refresh_token");
         if let Some(app_id) = self.config.app_id.as_ref() {
             data.insert("app_id", app_id);
         }
-        let refresh_token_url = if self.config.app_id.is_none() {
-            client_type.refresh_token_url()
-        } else {
-            &self.config.refresh_token_url
-        };
         let res = self
             .client
-            .post(refresh_token_url)
+            .post(&self.config.refresh_token_url)
             .json(&data)
             .send()
             .await?;
@@ -228,15 +180,13 @@ impl AliyunDrive {
     ) -> Result<RefreshTokenResponse> {
         let mut last_err = None;
         let mut refresh_token = self.refresh_token().await;
-        let mut client_type = self.config.client_type;
         for _ in 0..10 {
-            match self.do_refresh_token(&refresh_token, client_type).await {
+            match self.do_refresh_token(&refresh_token).await {
                 Ok(res) => {
                     let mut cred = self.credentials.write().await;
                     cred.refresh_token = res.refresh_token.clone();
                     cred.access_token = Some(res.access_token.clone());
-                    let save_content = format!("{}:{}", client_type, res.refresh_token);
-                    if let Err(err) = self.save_refresh_token(&save_content).await {
+                    if let Err(err) = self.save_refresh_token(&res.refresh_token).await {
                         error!(error = %err, "save refresh token failed");
                     }
                     return Ok(res);
@@ -255,8 +205,7 @@ impl AliyunDrive {
                     // refresh_token from file
                     if let Some(refresh_token_from_file) = refresh_token_from_file.as_ref() {
                         if !should_retry && &refresh_token != refresh_token_from_file {
-                            (refresh_token, client_type) =
-                                parse_refresh_token(refresh_token_from_file.trim())?;
+                            refresh_token = parse_refresh_token(refresh_token_from_file.trim())?;
                             should_retry = true;
                             // don't warn if we are gonna try refresh_token from file
                             should_warn = false;
@@ -765,10 +714,10 @@ pub async fn read_refresh_token(workdir: &Path) -> Result<String> {
     Ok(tokio::fs::read_to_string(workdir.join("refresh_token")).await?)
 }
 
-pub fn parse_refresh_token(content: &str) -> Result<(String, ClientType)> {
-    let (client, token) = content
+pub fn parse_refresh_token(content: &str) -> Result<String> {
+    let (_client, token) = content
         .trim()
         .split_once(':')
         .unwrap_or_else(|| ("app", content.trim()));
-    Ok((token.to_string(), client.parse()?))
+    Ok(token.to_string())
 }

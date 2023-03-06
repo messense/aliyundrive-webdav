@@ -31,7 +31,7 @@ use {
 };
 
 use cache::Cache;
-use drive::{parse_refresh_token, read_refresh_token, AliyunDrive, ClientType, DriveConfig};
+use drive::{parse_refresh_token, read_refresh_token, AliyunDrive, DriveConfig};
 use vfs::AliyunDriveFileSystem;
 
 mod cache;
@@ -61,9 +61,6 @@ struct Opt {
     /// Automatically generate index.html
     #[arg(short = 'I', long)]
     auto_index: bool,
-    /// Disable 302 redirect when using app refresh token
-    #[arg(long, hide = true)]
-    no_redirect: bool,
     /// Read/download buffer size in bytes, defaults to 10MB
     #[arg(short = 'S', long, default_value = "10485760")]
     read_buffer_size: usize,
@@ -223,21 +220,20 @@ async fn main() -> anyhow::Result<()> {
     } else {
         None
     };
-    let (refresh_token, client_type) = if opt.refresh_token.is_none()
+    let refresh_token = if opt.refresh_token.is_none()
         && refresh_token_from_file.is_none()
         && atty::is(atty::Stream::Stdout)
     {
-        (login(30).await?, ClientType::App)
+        login(30).await?
     } else {
         parse_refresh_token(&opt.refresh_token.unwrap_or_default())?
     };
     let (drive_config, no_trash) = (
         DriveConfig {
-            api_base_url: "https://api.aliyundrive.com".to_string(),
+            api_base_url: "https://openapi.aliyundrive.com".to_string(),
             refresh_token_url: String::new(),
             workdir,
             app_id: None,
-            client_type,
         },
         opt.no_trash,
     );
@@ -254,9 +250,6 @@ async fn main() -> anyhow::Result<()> {
     #[cfg(unix)]
     let dir_cache = fs.dir_cache.clone();
 
-    if !opt.no_redirect && matches!(client_type, ClientType::App) {
-        warn!("Using --no-redirect implicitly to unblock file downloading");
-    }
     let mut dav_server_builder = DavHandler::builder()
         .filesystem(Box::new(fs))
         .locksystem(MemLs::new())
