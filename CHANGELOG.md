@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.0
+
+* 切换到阿里云盘开放平台接口
+
 ## 1.11.0
 
 * 移除阿里云 PDS 服务支持

@@ -176,20 +176,6 @@ SUBCOMMANDS:
 > 
 > 注意：启用 `--skip-upload-same-size` 选项虽然能加速上传但可能会导致修改过的同样大小的文件不会被上传
 
-### 获取 refresh_token
-
-* 自动获取: 登录[阿里云盘](https://www.aliyundrive.com/drive/)后，控制台粘贴 `JSON.parse(localStorage.token).refresh_token`
-![](https://user-images.githubusercontent.com/12248888/150632769-ea6b7a0f-4170-44d6-bafb-92b2a7c1726b.png)
-
-* 手动获取: 登录[阿里云盘](https://www.aliyundrive.com/drive/)后，可以在开发者工具 ->
-Application -> Local Storage 中的 `token` 字段中找到。  
-注意：不是复制整段 JSON 值，而是 JSON 里 `refresh_token` 字段的值，如下图所示红色部分：
-![refresh token](./doc/refresh_token.png)
-
-* 命令行获取: `aliyundrive-webdav qr login`
-
-* 使用移动端 App refresh token: 需要在其前增加 `app:` 前缀,如 refresh token 为 `abcd` 则填入 `app:abcd`
-
 ## License
 
 This work is released under the MIT license. A copy of the license is provided in the [LICENSE](./LICENSE) file.
