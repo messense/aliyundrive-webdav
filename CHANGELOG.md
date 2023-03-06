@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## 2.0.0
 
 * 切换到阿里云盘开放平台接口
+* 移除 Koolshare 梅林固件路由器平台支持
 
 ## 1.11.0
 

@@ -486,57 +486,6 @@ jobs:
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
           generate_release_notes: true
 
-  merlin:
-    name: Merlin Package
-    runs-on: ubuntu-latest
-    needs: [ linux, linux-others ]
-    environment: Merlin
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - type: arm380
-            name: arm380-armv7
-            target: armv7-unknown-linux-musleabi
-          - type: arm380
-            name: arm380-armhf
-            target: armv7-unknown-linux-musleabihf
-          - type: arm384
-            name: arm384-armv5te
-            target: armv5te-unknown-linux-musleabi
-          - type: arm384
-            name: arm384-armv7
-            target: armv7-unknown-linux-musleabi
-          - type: arm384
-            name: arm384-armhf
-            target: armv7-unknown-linux-musleabihf
-          - type: arm384
-            name: arm384-aarch64
-            target: aarch64-unknown-linux-musl
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{ matrix.platform.target }}-bin
-      - name: Build package
-        run: |
-          mv aliyundrive-webdav merlin/${{ matrix.platform.type }}/bin/
-          cd merlin && python3 build.py ${{ matrix.platform.type }} && mv aliyundrivewebdav.tar.gz aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
-      - name: Archive package
-        uses: actions/upload-artifact@v3
-        with:
-          name: aliyundrive-webdav-merlin-${{ matrix.platform.name }}
-          path: merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
-          if-no-files-found: error
-      - name: Upload package to GitHub Release
-        uses: softprops/action-gh-release@v1
-        if: "startsWith(github.ref, 'refs/tags/')"
-        with:
-          files: |
-            merlin/aliyundrivewebdav-merlin-${{ matrix.platform.name }}.tar.gz
-          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
-          generate_release_notes: true
-
   docker:
     name: Build Docker Image
     runs-on: ubuntu-latest
