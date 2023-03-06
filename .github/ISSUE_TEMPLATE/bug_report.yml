@@ -45,13 +45,6 @@ body:
       description: 提示:Docker 请先确认是从官方镜像源安装
     validations:
       required: true
-  - type: input
-    id: refresh-token
-    attributes:
-      label: refresh token 获取方式
-      placeholder: 网页版/App
-    validations:
-      required: true
   - type: textarea
     id: log
     attributes:
