@@ -120,6 +120,12 @@ services:
 rclone --no-update-modtime copy abc.pdf aliyundrive-nc://docs/
 ```
 
+## 获取 refresh token
+
+命令行运行 `aliyundrive-webdav qr login` 扫码授权后会输出 refresh token
+
+![扫码获取 refresh token](./doc/refresh-token.png)
+
 ## 命令行用法
 
 ```bash

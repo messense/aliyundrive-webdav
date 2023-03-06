@@ -163,7 +163,7 @@ async fn main() -> anyhow::Result<()> {
             match qr {
                 QrCommand::Login => {
                     let refresh_token = login(client_id, client_secret, 120).await?;
-                    println!("refresh_token: {}", refresh_token)
+                    println!("\nrefresh_token:\n\n{}", refresh_token)
                 }
                 QrCommand::Generate => {
                     let scanner = login::QrCodeScanner::new(client_id, client_secret).await?;
