@@ -44,6 +44,10 @@ prefer_http_download = e:option(Flag, "prefer_http_download", translate("Prefer 
 prefer_http_download.description = translate("Prefer downloading files using HTTP instead of HTTPS protocol")
 prefer_http_download.rmempty = false
 
+redirect = e:option(Flag, "redirect", translate("Enable 302 Redirect"))
+redirect.description = translate("Enable 302 redirect when possible")
+redirect.rmempty = false
+
 upload_buffer_size = e:option(Value, "upload_buffer_size", translate("Upload Buffer Size"))
 upload_buffer_size.default = "16777216"
 upload_buffer_size.datatype = "uinteger"

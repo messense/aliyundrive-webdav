@@ -114,6 +114,9 @@ struct Opt {
     /// Prefer downloading using HTTP protocol
     #[arg(long)]
     prefer_http_download: bool,
+    /// Enable 302 redirect when possible
+    #[arg(long, hide = true)]
+    redirect: bool,
 
     #[command(subcommand)]
     subcommands: Option<Commands>,
@@ -257,7 +260,7 @@ async fn main() -> anyhow::Result<()> {
         .locksystem(MemLs::new())
         .read_buf_size(opt.read_buffer_size)
         .autoindex(opt.auto_index)
-        .redirect(false);
+        .redirect(opt.redirect);
     if let Some(prefix) = opt.strip_prefix {
         dav_server_builder = dav_server_builder.strip_prefix(prefix);
     }

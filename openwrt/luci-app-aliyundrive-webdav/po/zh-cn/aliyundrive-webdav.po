@@ -96,3 +96,9 @@ msgstr "使用 HTTP 下载"
 
 msgid "Prefer downloading files using HTTP instead of HTTPS protocol"
 msgstr "优先使用 HTTP 而不是 HTTPS 协议下载，低端设备上降低 CPU 占用"
+
+msgid "Enable 302 Redirect"
+msgstr "启用 302 重定向"
+
+msgid "Enable 302 redirect when possible"
+msgstr "在可能的情况下启用 302 重定向"
