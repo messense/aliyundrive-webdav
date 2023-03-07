@@ -194,9 +194,7 @@ jobs:
           sccache: 'true'
       - name: Install cargo packages
         if: matrix.platform.deb
-        run: |
-          which cargo-deb > /dev/null || cargo install --target `rustc -vV | grep host: | awk '{print $2}'` cargo-deb
-          which cargo-generate-rpm > /dev/null || cargo install --target `rustc -vV | grep host: | awk '{print $2}'` cargo-generate-rpm
+        run: pip install cargo-deb cargo-generate-rpm
       - name: Build Debian package
         if: matrix.platform.deb
         run: cargo deb --target=${{ matrix.platform.target }} --no-build --no-strip
