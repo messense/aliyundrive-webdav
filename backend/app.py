@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI, Response
@@ -8,7 +9,6 @@ from pydantic import BaseModel
 CLIENT_ID = os.getenv("ALIYUNDRIVE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("ALIYUNDRIVE_CLIENT_SECRET")
 
-app = FastAPI()
 http = httpx.AsyncClient()
 
 
@@ -24,9 +24,15 @@ class AuthorizationRequest(BaseModel):
     refresh_token: str | None = None
 
 
-@app.on_event("shutdown")
-async def shutdown_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup
+    yield
+    # shutdown
     await http.aclose()
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.post("/oauth/authorize/qrcode")
@@ -50,7 +56,7 @@ async def qrcode(request: QrCodeRequest) -> Response:
 
 @app.post("/oauth/access_token")
 async def access_token(request: AuthorizationRequest) -> Response:
-    if request.refresh_token and len(request.refresh_token.split('.')) < 3:
+    if request.refresh_token and len(request.refresh_token.split(".")) < 3:
         return Response(
             content="invalid refresh token",
             status_code=400,
@@ -72,3 +78,9 @@ async def access_token(request: AuthorizationRequest) -> Response:
         status_code=res.status_code,
         media_type=res.headers["Content-Type"],
     )
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", port=5000, log_level="info")
