@@ -694,7 +694,11 @@ impl AliyunDavFile {
                     FsError::GeneralFailure
                 })?;
             self.file.id = res.file_id.clone();
-            self.upload_state.upload_id = res.upload_id.clone();
+            let Some(upload_id) = res.upload_id else {
+                error!("create file with proof failed: missing upload_id");
+                return Err(FsError::GeneralFailure);
+            };
+            self.upload_state.upload_id = upload_id;
             let upload_urls: Vec<_> = res
                 .part_info_list
                 .into_iter()

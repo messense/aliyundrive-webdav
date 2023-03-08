@@ -202,7 +202,7 @@ pub struct CreateFileWithProofResponse {
     #[serde(default)]
     pub part_info_list: Vec<UploadPartInfo>,
     pub file_id: String,
-    pub upload_id: String,
+    pub upload_id: Option<String>,
     pub file_name: String,
 }
 
