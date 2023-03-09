@@ -7,6 +7,13 @@ import streamlit as st
 session = httpx.AsyncClient()
 
 
+async def get_qrcode_status(sid: str) -> dict:
+    res = await session.get(
+        f"https://openapi.aliyundrive.com/oauth/qrcode/{sid}/status"
+    )
+    return res.json()
+
+
 async def main():
     st.set_page_config(
         page_title="aliyundrive-webdav refresh token 获取工具",
@@ -31,10 +38,12 @@ async def main():
         refresh_token = None
         with st.spinner("等待扫码授权中..."):
             while True:
-                res = await session.get(
-                    f"https://openapi.aliyundrive.com/oauth/qrcode/{sid}/status"
-                )
-                data = res.json()
+                try:
+                    data = await get_qrcode_status(sid)
+                except httpx.ConnectTimeout:
+                    st.error("查询扫码结果超时, 可能是触发了阿里云盘接口限制, 请稍后再试", icon="🚨")
+                    break
+
                 status = data["status"]
                 if status == "LoginSuccess":
                     code = data["authCode"]
