@@ -41,7 +41,12 @@ async def main():
                 try:
                     data = await get_qrcode_status(sid)
                 except httpx.ConnectTimeout:
-                    st.error("查询扫码结果超时, 可能是触发了阿里云盘接口限制, 请稍后再试", icon="🚨")
+                    st.error(
+                        "查询扫码结果超时, 可能是触发了阿里云盘接口限制, 请稍后再试.\n"
+                        "或者自行尝试轮询此接口: "
+                        f"https://openapi.aliyundrive.com/oauth/qrcode/{sid}/status",
+                        icon="🚨",
+                    )
                     break
 
                 status = data["status"]
