@@ -170,9 +170,10 @@ impl AliyunDrive {
         match res.error_for_status_ref() {
             Ok(_) => {
                 let res = res.json::<RefreshTokenResponse>().await?;
-                info!(
+                info!("refresh token succeed");
+                debug!(
                     refresh_token = %res.refresh_token,
-                    "refresh token succeed"
+                    "new refresh token"
                 );
                 Ok(res)
             }
