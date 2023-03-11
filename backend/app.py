@@ -59,7 +59,7 @@ async def access_token(request: AuthorizationRequest) -> Response:
     if request.refresh_token and len(request.refresh_token.split(".")) < 3:
         return Response(
             content="invalid refresh token",
-            status_code=400,
+            status_code=422,
             media_type="text/plain",
         )
 
