@@ -174,31 +174,28 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // subcommands
-    match opt.subcommands.as_ref() {
-        Some(Commands::Qr(qr)) => {
-            match qr {
-                QrCommand::Login => {
-                    let refresh_token = login(drive_config.clone(), 120).await?;
-                    println!("\nrefresh_token:\n\n{}", refresh_token)
-                }
-                QrCommand::Generate => {
-                    let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
-                    let data = scanner.scan().await?;
-                    println!("{}", serde_json::to_string_pretty(&data)?);
-                }
-                QrCommand::Query { sid } => {
-                    let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
-                    let query_result = scanner.query(&sid).await?;
-                    if query_result.is_success() {
-                        let code = query_result.auth_code.unwrap();
-                        let refresh_token = scanner.fetch_refresh_token(&code).await?;
-                        println!("{}", refresh_token)
-                    }
+    if let Some(Commands::Qr(qr)) = opt.subcommands.as_ref() {
+        match qr {
+            QrCommand::Login => {
+                let refresh_token = login(drive_config.clone(), 120).await?;
+                println!("\nrefresh_token:\n\n{}", refresh_token)
+            }
+            QrCommand::Generate => {
+                let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
+                let data = scanner.scan().await?;
+                println!("{}", serde_json::to_string_pretty(&data)?);
+            }
+            QrCommand::Query { sid } => {
+                let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
+                let query_result = scanner.query(sid).await?;
+                if query_result.is_success() {
+                    let code = query_result.auth_code.unwrap();
+                    let refresh_token = scanner.fetch_refresh_token(&code).await?;
+                    println!("{}", refresh_token)
                 }
             }
-            return Ok(());
         }
-        None => {}
+        return Ok(());
     }
 
     if env::var("NO_SELF_UPGRADE").is_err() && !opt.no_self_upgrade {
@@ -306,7 +303,7 @@ async fn main() -> anyhow::Result<()> {
 
         #[cfg(unix)]
         {
-            let signals = Signals::new(&[SIGHUP])?;
+            let signals = Signals::new([SIGHUP])?;
             let handle = signals.handle();
             let signals_task = tokio::spawn(handle_signals(signals, dir_cache));
 
@@ -330,7 +327,7 @@ async fn main() -> anyhow::Result<()> {
 
     #[cfg(unix)]
     {
-        let signals = Signals::new(&[SIGHUP])?;
+        let signals = Signals::new([SIGHUP])?;
         let handle = signals.handle();
         let signals_task = tokio::spawn(handle_signals(signals, dir_cache));
 
