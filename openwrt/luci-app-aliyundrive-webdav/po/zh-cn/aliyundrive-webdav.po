@@ -68,7 +68,7 @@ msgid "Debug Mode"
 msgstr "调试模式"
 
 msgid "<a href=\"https://github.com/messense/aliyundrive-webdav\" target=\"_blank\">Project GitHub URL</a>"
-msgstr "<a href=\"https://github.com/messense/aliyundrive-webdav\" target=\"_blank\">GitHub 项目地址</a>"
+msgstr "<a href=\"https://github.com/messense/aliyundrive-webdav\" target=\"_blank\">GitHub 项目地址</a> | <a href=\"https://t.zsxq.com/0c9sq6Ca8\" target=\"_blank\">加入知识星球</a>"
 
 msgid "Double click the input box above to get refresh token by scanning qrcode"
 msgstr "鼠标双击上面的输入框扫码登录自动获取 refresh token"

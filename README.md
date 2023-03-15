@@ -14,6 +14,7 @@
 **请注意：V2 版本基于阿里云盘开放平台接口实现，不再支持阿里云盘 Web 和 App 版本获取的 refresh token.**
 
 如果项目对你有帮助，请考虑[捐赠支持](https://github.com/messense/aliyundrive-webdav/discussions/126)项目持续维护。
+也可以考虑加入[aliyundrive-webdav 知识星球](https://t.zsxq.com/0c9sq6Ca8)获取咨询和技术支持服务。
 
 > **Note**
 >
