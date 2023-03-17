@@ -59,6 +59,13 @@ start_service() {
         *) ;;
       esac
 
+      case "$(uci_get_by_type server redirect 0)" in
+        1|on|true|yes|enabled)
+          extra_options="$extra_options --redirect"
+          ;;
+        *) ;;
+      esac
+
       if [[ ! -z "$tls_cert" && ! -z "$tls_key" ]]; then
         extra_options="$extra_options --tls-cert $tls_cert --tls-key $tls_key"
       fi
