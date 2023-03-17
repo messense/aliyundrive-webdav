@@ -115,7 +115,7 @@ struct Opt {
     #[arg(long)]
     prefer_http_download: bool,
     /// Enable 302 redirect when possible
-    #[arg(long, hide = true)]
+    #[arg(long)]
     redirect: bool,
 
     #[command(subcommand)]
