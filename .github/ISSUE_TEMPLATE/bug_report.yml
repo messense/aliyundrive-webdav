@@ -15,7 +15,7 @@ body:
     id: description
     attributes:
       label: 问题描述
-      description: 请提供问题的简要描述
+      description: 请提供问题的简要描述和你已经尝试过的解决方案
       placeholder: The bug is...
     validations:
       required: true
@@ -23,7 +23,7 @@ body:
     id: reproduce
     attributes:
       label: 重现步骤
-      description: 请提供重现该问题的详细步骤
+      description: 请提供重现该问题的详细步骤, 否则直接关闭 issue.
       placeholder: |
         1.
         2.
