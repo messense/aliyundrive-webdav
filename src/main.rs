@@ -202,8 +202,8 @@ async fn main() -> anyhow::Result<()> {
     }
 
     #[cfg(feature = "rustls-tls")]
-    let tls_config = match (opt.tls_cert.as_ref(), opt.tls_key.as_ref()) {
-        (Some(cert), Some(key)) => Some((cert.to_owned(), key.to_owned())),
+    let tls_config = match (opt.tls_cert, opt.tls_key) {
+        (Some(cert), Some(key)) => Some((cert, key)),
         (None, None) => None,
         _ => bail!("tls-cert and tls-key must be specified together."),
     };
@@ -260,6 +260,7 @@ async fn main() -> anyhow::Result<()> {
         port: opt.port,
         auth_user,
         auth_password,
+        #[cfg(feature = "rustls-tls")]
         tls_config,
         handler: dav_server,
     };

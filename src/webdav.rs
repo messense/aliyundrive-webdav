@@ -1,26 +1,23 @@
 use std::future::Future;
-#[cfg(feature = "rustls-tls")]
 use std::io;
 use std::net::ToSocketAddrs;
-use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use anyhow::Result;
 use dav_server::{body::Body, DavConfig, DavHandler};
-#[cfg(any(unix, feature = "rustls-tls"))]
-use futures_util::stream::StreamExt;
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
 use hyper::{service::Service, Request, Response};
 use tracing::{error, info};
 
 #[cfg(feature = "rustls-tls")]
 use {
+    futures_util::stream::StreamExt,
     hyper::server::accept,
     hyper::server::conn::AddrIncoming,
     std::fs::File,
     std::future::ready,
-    std::path::Path,
+    std::path::{Path, PathBuf},
     std::sync::Arc,
     tls_listener::{SpawningHandshakes, TlsListener},
     tokio_rustls::rustls::{Certificate, PrivateKey, ServerConfig},
@@ -32,6 +29,7 @@ pub struct WebDavServer {
     pub port: u16,
     pub auth_user: Option<String>,
     pub auth_password: Option<String>,
+    #[cfg(feature = "rustls-tls")]
     pub tls_config: Option<(PathBuf, PathBuf)>,
     pub handler: DavHandler,
 }
@@ -43,6 +41,7 @@ impl WebDavServer {
             .unwrap()
             .next()
             .ok_or_else(|| io::Error::from(io::ErrorKind::AddrNotAvailable))?;
+        #[cfg(feature = "rustls-tls")]
         if let Some((tls_cert, tls_key)) = self.tls_config {
             let incoming = TlsListener::new(
                 SpawningHandshakes(tls_acceptor(&tls_key, &tls_cert)?),
@@ -63,15 +62,15 @@ impl WebDavServer {
             });
             info!("listening on https://{}", addr);
             let _ = server.await.map_err(|e| error!("server error: {}", e));
-        } else {
-            let server = hyper::Server::bind(&addr).serve(MakeSvc {
-                auth_user: self.auth_user,
-                auth_password: self.auth_password,
-                handler: self.handler,
-            });
-            info!("listening on http://{}", server.local_addr());
-            let _ = server.await.map_err(|e| error!("server error: {}", e));
+            return Ok(());
         }
+        let server = hyper::Server::bind(&addr).serve(MakeSvc {
+            auth_user: self.auth_user,
+            auth_password: self.auth_password,
+            handler: self.handler,
+        });
+        info!("listening on http://{}", server.local_addr());
+        let _ = server.await.map_err(|e| error!("server error: {}", e));
         Ok(())
     }
 }
