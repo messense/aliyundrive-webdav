@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
@@ -37,6 +38,20 @@ pub struct DriveConfig {
     pub workdir: Option<PathBuf>,
     pub client_id: Option<String>,
     pub client_secret: Option<String>,
+}
+
+impl Default for DriveConfig {
+    fn default() -> Self {
+        let refresh_token_host = env::var("ALIYUNDRIVE_OAUTH_SERVER")
+            .unwrap_or_else(|_| "https://aliyundrive-oauth.messense.me".to_string());
+        Self {
+            api_base_url: "https://openapi.aliyundrive.com".to_string(),
+            refresh_token_host,
+            workdir: dirs::cache_dir().map(|c| c.join("aliyundrive-webdav")),
+            client_id: None,
+            client_secret: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

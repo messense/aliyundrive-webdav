@@ -44,17 +44,23 @@ rustls-pemfile = { version = "1.0.0", optional = true }
 tls-listener = { version = "0.6.0", features = ["hyper-h1", "hyper-h2", "rt"], optional = true }
 tokio-rustls = { version = "0.23.2", optional = true }
 
+# GUI support
+egui = { version = "0.21.0", optional = true }
+eframe = { version = "0.21.3", default-features = false, features = ["glow", "default_fonts", "persistence"], optional = true }
+egui-notify = { version = "0.6.0", optional = true }
+
 # Unix signal support
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.3.14"
 signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"] }
 
 [features]
-default = ["rustls-tls", "atomic64"]
+default = ["rustls-tls", "atomic64", "gui"]
 rustls-tls = ["reqwest/rustls-tls", "rustls-pemfile", "tls-listener/rustls", "hyper/stream", "tokio-rustls", "self_update/rustls"]
 native-tls = ["reqwest/native-tls"]
 native-tls-vendored = ["reqwest/native-tls-vendored", "openssl-probe"]
 atomic64 = ["moka/atomic64"]
+gui = ["egui", "eframe", "egui-notify"]
 
 [profile.release]
 lto = true

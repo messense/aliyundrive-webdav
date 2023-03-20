@@ -1,3 +1,8 @@
+#![cfg_attr(
+    all(not(debug_assertions), feature = "gui"),
+    windows_subsystem = "windows"
+)]
+
 use std::env;
 use std::path::PathBuf;
 
@@ -18,6 +23,8 @@ use webdav::WebDavServer;
 
 mod cache;
 mod drive;
+#[cfg(feature = "gui")]
+mod gui;
 mod login;
 mod vfs;
 mod webdav;
@@ -108,6 +115,9 @@ enum Commands {
     /// Scan QRCode
     #[command(subcommand)]
     Qr(QrCommand),
+    /// Run in graphic UI mode
+    #[cfg(feature = "gui")]
+    Gui,
 }
 
 #[derive(Subcommand, Debug)]
@@ -150,34 +160,38 @@ async fn main() -> anyhow::Result<()> {
         "https://openapi.aliyundrive.com".to_string()
     };
     let drive_config = DriveConfig {
-        api_base_url: "https://openapi.aliyundrive.com".to_string(),
         refresh_token_host,
         workdir,
         client_id: opt.client_id.clone(),
         client_secret: opt.client_secret.clone(),
+        ..Default::default()
     };
 
     // subcommands
-    if let Some(Commands::Qr(qr)) = opt.subcommands.as_ref() {
-        match qr {
-            QrCommand::Login => {
-                let refresh_token = login(drive_config.clone(), 120).await?;
-                println!("\nrefresh_token:\n\n{}", refresh_token)
-            }
-            QrCommand::Generate => {
-                let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
-                let data = scanner.scan().await?;
-                println!("{}", serde_json::to_string_pretty(&data)?);
-            }
-            QrCommand::Query { sid } => {
-                let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
-                let query_result = scanner.query(sid).await?;
-                if query_result.is_success() {
-                    let code = query_result.auth_code.unwrap();
-                    let refresh_token = scanner.fetch_refresh_token(&code).await?;
-                    println!("{}", refresh_token)
+    if let Some(subcommand) = opt.subcommands.as_ref() {
+        match subcommand {
+            Commands::Qr(qr) => match qr {
+                QrCommand::Login => {
+                    let refresh_token = login(drive_config.clone(), 120).await?;
+                    println!("\nrefresh_token:\n\n{}", refresh_token)
                 }
-            }
+                QrCommand::Generate => {
+                    let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
+                    let data = scanner.scan().await?;
+                    println!("{}", serde_json::to_string_pretty(&data)?);
+                }
+                QrCommand::Query { sid } => {
+                    let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
+                    let query_result = scanner.query(sid).await?;
+                    if query_result.is_success() {
+                        let code = query_result.auth_code.unwrap();
+                        let refresh_token = scanner.fetch_refresh_token(&code).await?;
+                        println!("{}", refresh_token)
+                    }
+                }
+            },
+            #[cfg(feature = "gui")]
+            Commands::Gui => gui::run().unwrap(),
         }
         return Ok(());
     }
