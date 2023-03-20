@@ -1,21 +1,80 @@
 use std::future::Future;
 #[cfg(feature = "rustls-tls")]
 use std::io;
+use std::net::ToSocketAddrs;
+use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use anyhow::Result;
 use dav_server::{body::Body, DavConfig, DavHandler};
+#[cfg(any(unix, feature = "rustls-tls"))]
+use futures_util::stream::StreamExt;
 use headers::{authorization::Basic, Authorization, HeaderMapExt};
 use hyper::{service::Service, Request, Response};
+use tracing::{error, info};
 
 #[cfg(feature = "rustls-tls")]
 use {
+    hyper::server::accept,
+    hyper::server::conn::AddrIncoming,
     std::fs::File,
+    std::future::ready,
     std::path::Path,
     std::sync::Arc,
+    tls_listener::{SpawningHandshakes, TlsListener},
     tokio_rustls::rustls::{Certificate, PrivateKey, ServerConfig},
     tokio_rustls::TlsAcceptor,
 };
+
+pub struct WebDavServer {
+    pub host: String,
+    pub port: u16,
+    pub auth_user: Option<String>,
+    pub auth_password: Option<String>,
+    pub tls_config: Option<(PathBuf, PathBuf)>,
+    pub handler: DavHandler,
+}
+
+impl WebDavServer {
+    pub async fn serve(self) -> Result<()> {
+        let addr = (self.host, self.port)
+            .to_socket_addrs()
+            .unwrap()
+            .next()
+            .ok_or_else(|| io::Error::from(io::ErrorKind::AddrNotAvailable))?;
+        if let Some((tls_cert, tls_key)) = self.tls_config {
+            let incoming = TlsListener::new(
+                SpawningHandshakes(tls_acceptor(&tls_key, &tls_cert)?),
+                AddrIncoming::bind(&addr)?,
+            )
+            .filter(|conn| {
+                if let Err(err) = conn {
+                    error!("TLS error: {:?}", err);
+                    ready(false)
+                } else {
+                    ready(true)
+                }
+            });
+            let server = hyper::Server::builder(accept::from_stream(incoming)).serve(MakeSvc {
+                auth_user: self.auth_user,
+                auth_password: self.auth_password,
+                handler: self.handler,
+            });
+            info!("listening on https://{}", addr);
+            let _ = server.await.map_err(|e| error!("server error: {}", e));
+        } else {
+            let server = hyper::Server::bind(&addr).serve(MakeSvc {
+                auth_user: self.auth_user,
+                auth_password: self.auth_password,
+                handler: self.handler,
+            });
+            info!("listening on http://{}", server.local_addr());
+            let _ = server.await.map_err(|e| error!("server error: {}", e));
+        }
+        Ok(())
+    }
+}
 
 #[derive(Clone)]
 pub struct AliyunDriveWebDav {
@@ -100,7 +159,7 @@ impl<T> Service<T> for MakeSvc {
 }
 
 #[cfg(feature = "rustls-tls")]
-pub fn tls_acceptor(key: &Path, cert: &Path) -> anyhow::Result<TlsAcceptor> {
+fn tls_acceptor(key: &Path, cert: &Path) -> anyhow::Result<TlsAcceptor> {
     let mut key_reader = io::BufReader::new(File::open(key)?);
     let mut cert_reader = io::BufReader::new(File::open(cert)?);
 
@@ -121,7 +180,7 @@ pub fn tls_acceptor(key: &Path, cert: &Path) -> anyhow::Result<TlsAcceptor> {
 }
 
 #[cfg(feature = "rustls-tls")]
-pub fn private_keys(rd: &mut dyn io::BufRead) -> Result<Vec<Vec<u8>>, io::Error> {
+fn private_keys(rd: &mut dyn io::BufRead) -> Result<Vec<Vec<u8>>, io::Error> {
     use rustls_pemfile::{read_one, Item};
 
     let mut keys = Vec::<Vec<u8>>::new();

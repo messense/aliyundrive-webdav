@@ -1,31 +1,20 @@
-use std::net::ToSocketAddrs;
+use std::env;
 use std::path::PathBuf;
-use std::{env, io};
 
 use anyhow::bail;
 use clap::{Parser, Subcommand};
 use dav_server::{memls::MemLs, DavHandler};
-#[cfg(any(unix, feature = "rustls-tls"))]
+#[cfg(unix)]
 use futures_util::stream::StreamExt;
 use self_update::cargo_crate_version;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 #[cfg(unix)]
 use {signal_hook::consts::signal::*, signal_hook_tokio::Signals};
-
-#[cfg(feature = "rustls-tls")]
-use {
-    hyper::server::accept,
-    hyper::server::conn::AddrIncoming,
-    std::future::ready,
-    tls_listener::{SpawningHandshakes, TlsListener},
-};
 
 use cache::Cache;
 use drive::{read_refresh_token, AliyunDrive, DriveConfig};
 use vfs::AliyunDriveFileSystem;
-#[cfg(feature = "rustls-tls")]
-use webdav::tls_acceptor;
-use webdav::MakeSvc;
+use webdav::WebDavServer;
 
 mod cache;
 mod drive;
@@ -213,9 +202,9 @@ async fn main() -> anyhow::Result<()> {
     }
 
     #[cfg(feature = "rustls-tls")]
-    let use_tls = match (opt.tls_cert.as_ref(), opt.tls_key.as_ref()) {
-        (Some(_), Some(_)) => true,
-        (None, None) => false,
+    let tls_config = match (opt.tls_cert.as_ref(), opt.tls_key.as_ref()) {
+        (Some(cert), Some(key)) => Some((cert.to_owned(), key.to_owned())),
+        (None, None) => None,
         _ => bail!("tls-cert and tls-key must be specified together."),
     };
 
@@ -266,61 +255,17 @@ async fn main() -> anyhow::Result<()> {
         "webdav handler initialized"
     );
 
-    let addr = (opt.host, opt.port)
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .ok_or_else(|| io::Error::from(io::ErrorKind::AddrNotAvailable))?;
-
-    #[cfg(feature = "rustls-tls")]
-    if use_tls {
-        let tls_key = opt.tls_key.as_ref().unwrap();
-        let tls_cert = opt.tls_cert.as_ref().unwrap();
-        let incoming = TlsListener::new(
-            SpawningHandshakes(tls_acceptor(tls_key, tls_cert)?),
-            AddrIncoming::bind(&addr)?,
-        )
-        .filter(|conn| {
-            if let Err(err) = conn {
-                error!("TLS error: {:?}", err);
-                ready(false)
-            } else {
-                ready(true)
-            }
-        });
-        let server = hyper::Server::builder(accept::from_stream(incoming)).serve(MakeSvc {
-            auth_user: auth_user.clone(),
-            auth_password: auth_password.clone(),
-            handler: dav_server.clone(),
-        });
-        info!("listening on https://{}", addr);
-
-        #[cfg(not(unix))]
-        let _ = server.await.map_err(|e| error!("server error: {}", e));
-
-        #[cfg(unix)]
-        {
-            let signals = Signals::new([SIGHUP])?;
-            let handle = signals.handle();
-            let signals_task = tokio::spawn(handle_signals(signals, dir_cache));
-
-            let _ = server.await.map_err(|e| error!("server error: {}", e));
-
-            // Terminate the signal stream.
-            handle.close();
-            signals_task.await?;
-        }
-        return Ok(());
-    }
-    let server = hyper::Server::bind(&addr).serve(MakeSvc {
+    let server = WebDavServer {
+        host: opt.host,
+        port: opt.port,
         auth_user,
         auth_password,
+        tls_config,
         handler: dav_server,
-    });
-    info!("listening on http://{}", server.local_addr());
+    };
 
     #[cfg(not(unix))]
-    let _ = server.await.map_err(|e| error!("server error: {}", e));
+    server.serve().await?;
 
     #[cfg(unix)]
     {
@@ -328,7 +273,7 @@ async fn main() -> anyhow::Result<()> {
         let handle = signals.handle();
         let signals_task = tokio::spawn(handle_signals(signals, dir_cache));
 
-        let _ = server.await.map_err(|e| error!("server error: {}", e));
+        server.serve().await?;
 
         // Terminate the signal stream.
         handle.close();
