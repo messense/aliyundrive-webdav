@@ -1,0 +1,8 @@
+docker run -d --name=aliyundrive-webdav --restart=unless-stopped -p 8080:8080 \
+  -v /etc/aliyundrive-webdav/:/etc/aliyundrive-webdav/ \
+  -v /etc/localtime:/etc/localtime \
+  -e TZ=Asia/Shanghai \
+  -e REFRESH_TOKEN= 1f654f5043734598b76e5c5724cbb1a' \
+  -e WEBDAV_AUTH_USER=admin \
+  -e WEBDAV_AUTH_PASSWORD=admin \
+  messense/aliyundrive-webdav
