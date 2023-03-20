@@ -1,6 +1,7 @@
 use std::future::Future;
 use std::io;
 use std::net::ToSocketAddrs;
+use std::path::PathBuf;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -17,7 +18,7 @@ use {
     hyper::server::conn::AddrIncoming,
     std::fs::File,
     std::future::ready,
-    std::path::{Path, PathBuf},
+    std::path::Path,
     std::sync::Arc,
     tls_listener::{SpawningHandshakes, TlsListener},
     tokio_rustls::rustls::{Certificate, PrivateKey, ServerConfig},
@@ -29,7 +30,6 @@ pub struct WebDavServer {
     pub port: u16,
     pub auth_user: Option<String>,
     pub auth_password: Option<String>,
-    #[cfg(feature = "rustls-tls")]
     pub tls_config: Option<(PathBuf, PathBuf)>,
     pub handler: DavHandler,
 }
@@ -64,6 +64,11 @@ impl WebDavServer {
             let _ = server.await.map_err(|e| error!("server error: {}", e));
             return Ok(());
         }
+        #[cfg(not(feature = "rustls-tls"))]
+        if self.tls_config.is_some() {
+            anyhow::bail!("TLS is not supported in this build.");
+        }
+
         let server = hyper::Server::bind(&addr).serve(MakeSvc {
             auth_user: self.auth_user,
             auth_password: self.auth_password,

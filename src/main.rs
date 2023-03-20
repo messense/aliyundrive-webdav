@@ -75,11 +75,9 @@ struct Opt {
     #[arg(long)]
     read_only: bool,
     /// TLS certificate file path
-    #[cfg(feature = "rustls-tls")]
     #[arg(long, env = "TLS_CERT")]
     tls_cert: Option<PathBuf>,
     /// TLS private key file path
-    #[cfg(feature = "rustls-tls")]
     #[arg(long, env = "TLS_KEY")]
     tls_key: Option<PathBuf>,
     /// Prefix to be stripped off when handling request.
@@ -201,7 +199,6 @@ async fn main() -> anyhow::Result<()> {
         bail!("auth-user and auth-password must be specified together.");
     }
 
-    #[cfg(feature = "rustls-tls")]
     let tls_config = match (opt.tls_cert, opt.tls_key) {
         (Some(cert), Some(key)) => Some((cert, key)),
         (None, None) => None,
@@ -260,7 +257,6 @@ async fn main() -> anyhow::Result<()> {
         port: opt.port,
         auth_user,
         auth_password,
-        #[cfg(feature = "rustls-tls")]
         tls_config,
         handler: dav_server,
     };
