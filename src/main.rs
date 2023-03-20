@@ -16,10 +16,9 @@ use tracing::{debug, info, warn};
 #[cfg(unix)]
 use {signal_hook::consts::signal::*, signal_hook_tokio::Signals};
 
-use cache::Cache;
-use drive::{read_refresh_token, AliyunDrive, DriveConfig};
-use vfs::AliyunDriveFileSystem;
-use webdav::WebDavServer;
+use crate::drive::{read_refresh_token, AliyunDrive, DriveConfig};
+use crate::vfs::AliyunDriveFileSystem;
+use crate::webdav::WebDavServer;
 
 mod cache;
 mod drive;
@@ -294,7 +293,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[cfg(unix)]
-async fn handle_signals(mut signals: Signals, dir_cache: Cache) {
+async fn handle_signals(mut signals: Signals, dir_cache: crate::cache::Cache) {
     while let Some(signal) = signals.next().await {
         match signal {
             SIGHUP => {
@@ -382,7 +381,7 @@ fn check_for_update(show_output: bool) -> anyhow::Result<()> {
 
         #[cfg(windows)]
         {
-            let status = command.spawn().and_then(|mut c| c.wait())?;
+            let _status = command.spawn().and_then(|mut c| c.wait())?;
             bail!("aliyundrive-webdav upgraded");
         }
     }
