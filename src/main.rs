@@ -151,6 +151,7 @@ async fn main() -> anyhow::Result<()> {
 
     let workdir = opt
         .workdir
+        .clone()
         .or_else(|| dirs::cache_dir().map(|c| c.join("aliyundrive-webdav")));
     let refresh_token_host = if opt.client_id.is_none() || opt.client_secret.is_none() {
         env::var("ALIYUNDRIVE_OAUTH_SERVER")
@@ -202,6 +203,25 @@ async fn main() -> anyhow::Result<()> {
             }
         })
         .await?;
+    }
+
+    // Use GUI when no subcommand and no options are specified
+    #[cfg(feature = "gui")]
+    if opt.host == "0.0.0.0"
+        && opt.port == 8080
+        && opt.client_id.is_none()
+        && opt.client_secret.is_none()
+        && opt.refresh_token.is_none()
+        && opt.auth_user.is_none()
+        && opt.auth_password.is_none()
+        && opt.root == "/"
+        && opt.workdir.is_none()
+        && opt.tls_cert.is_none()
+        && opt.tls_key.is_none()
+        && opt.strip_prefix.is_none()
+    {
+        gui::run().unwrap();
+        return Ok(());
     }
 
     let auth_user = opt.auth_user;
