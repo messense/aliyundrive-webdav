@@ -11,7 +11,8 @@
 阿里云盘 WebDAV 服务，主要使用场景为配合支持 WebDAV 协议的客户端 App 如 [Infuse](https://firecore.com/infuse)、[nPlayer](https://nplayer.com)
 等实现在电视上直接观看云盘视频内容， 支持客户端 App 直接从阿里云盘获取文件播放而不经过运行本应用的服务器中转, 支持上传文件，但受限于 WebDAV 协议不支持文件秒传。
 
-**请注意：V2 版本基于阿里云盘开放平台接口实现，不再支持阿里云盘 Web 和 App 版本获取的 refresh token.**
+**请注意：V2 版本基于阿里云盘开放平台接口实现，不再支持阿里云盘 Web 和 App 版本获取的 refresh token。**
+**由于本项目作者不再使用梅林固件，V2 版本不再免费支持 Koolshare 梅林固件系统，如有需要请考虑[付费支持](https://github.com/messense/aliyundrive-webdav/discussions/778)。**
 
 如果项目对你有帮助，请考虑[捐赠支持](https://github.com/messense/aliyundrive-webdav/discussions/126)项目持续维护。
 也可以考虑加入[aliyundrive-webdav 知识星球](https://t.zsxq.com/0c9sq6Ca8)获取咨询和技术支持服务。
@@ -51,13 +52,13 @@ opkg install luci-i18n-aliyundrive-webdav-zh-cn_2.1.0-1_all.ipk
 其它 CPU 架构的路由器可在 [GitHub Releases](https://github.com/messense/aliyundrive-webdav/releases) 页面中查找对应的架构的主程序 ipk 文件下载安装， 常见
 OpenWrt 路由器 CPU 架构如下表（欢迎补充）：
 
-|      路由器     |        CPU 架构       |
-|----------------|----------------------|
-| nanopi r4s     | aarch64_generic      |
-| 小米 AX3600     | aarch64_cortex-a53  |
-| 斐讯 N1 盒子    | aarch64_cortex-a53   |
-| Newifi D2      | mipsel_24kc          |
-| Pogoplug       | arm_mpcore           |
+| 路由器       | CPU 架构           |
+| ------------ | ------------------ |
+| nanopi r4s   | aarch64_generic    |
+| 小米 AX3600  | aarch64_cortex-a53 |
+| 斐讯 N1 盒子 | aarch64_cortex-a53 |
+| Newifi D2    | mipsel_24kc        |
+| Pogoplug     | arm_mpcore         |
 
 > Tips: 不清楚 CPU 架构类型可通过运行 `opkg print-architecture` 命令查询。
 
