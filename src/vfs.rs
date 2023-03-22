@@ -117,6 +117,10 @@ impl AliyunDriveFileSystem {
             Ok(Some(file))
         } else {
             trace!(path = %path.display(), "file not found in cache");
+            if let Ok(Some(file)) = self.drive.get_by_path(&path_str).await {
+                return Ok(Some(file));
+            }
+
             // path may contain whitespaces which get_by_path can't handle
             // so we try to find it in directory
             let parts: Vec<&str> = path_str.split('/').collect();
@@ -141,7 +145,17 @@ impl AliyunDriveFileSystem {
         let parent_file_id = if path_str == "/" {
             "root".to_string()
         } else {
-            self.find_in_cache(&path)?.ok_or(FsError::NotFound)?.id
+            match self.find_in_cache(&path) {
+                Ok(Some(file)) => file.id,
+                _ => match self.drive.get_by_path(&path_str).await {
+                    Ok(Some(file)) => file.id,
+                    Ok(None) => return Err(FsError::NotFound),
+                    Err(err) => {
+                        error!(path = %path_str, error = %err, "get_by_path failed");
+                        return Err(FsError::GeneralFailure);
+                    }
+                },
+            }
         };
         let mut files = if let Some(files) = self.dir_cache.get(&path_str) {
             debug!(path = %path_str, "read_dir cache hit");

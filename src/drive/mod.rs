@@ -63,6 +63,10 @@ impl AliyunDrive {
         let mut headers = HeaderMap::new();
         headers.insert("Origin", HeaderValue::from_static(ORIGIN));
         headers.insert("Referer", HeaderValue::from_static(REFERER));
+        if let Ok(canary_env) = std::env::var("ALIYUNDRIVE_CANARY") {
+            // 灰度环境：gray
+            headers.insert("X-Canary", HeaderValue::from_str(&canary_env)?);
+        }
         let retry_policy = ExponentialBackoff::builder()
             .backoff_exponent(2)
             .retry_bounds(Duration::from_millis(100), Duration::from_secs(5))
@@ -348,6 +352,42 @@ impl AliyunDrive {
             .and_then(|res| res.context("expect response"));
         match res {
             Ok(file) => Ok(Some(file.into())),
+            Err(err) => {
+                if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
+                    if matches!(req_err.status(), Some(StatusCode::NOT_FOUND)) {
+                        Ok(None)
+                    } else {
+                        Err(err)
+                    }
+                } else {
+                    Err(err)
+                }
+            }
+        }
+    }
+
+    pub async fn get_by_path(&self, path: &str) -> Result<Option<AliyunFile>> {
+        let drive_id = self.drive_id()?;
+        debug!(drive_id = %drive_id, path = %path, "get file by path");
+        if path == "/" || path.is_empty() {
+            return Ok(Some(AliyunFile::new_root()));
+        }
+        let req = GetFileByPathRequest {
+            drive_id,
+            file_path: path,
+        };
+        let res: Result<AliyunFile> = self
+            .request(
+                format!(
+                    "{}/adrive/v1.0/openFile/get_by_path",
+                    self.config.api_base_url
+                ),
+                &req,
+            )
+            .await
+            .and_then(|res| res.context("expect response"));
+        match res {
+            Ok(file) => Ok(Some(file)),
             Err(err) => {
                 if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
                     if matches!(req_err.status(), Some(StatusCode::NOT_FOUND)) {
