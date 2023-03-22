@@ -1,3 +1,8 @@
+#![cfg_attr(
+    all(not(debug_assertions), feature = "gui"),
+    windows_subsystem = "windows"
+)]
+
 use std::env;
 use std::path::PathBuf;
 
@@ -11,13 +16,14 @@ use tracing::{debug, info, warn};
 #[cfg(unix)]
 use {signal_hook::consts::signal::*, signal_hook_tokio::Signals};
 
-use cache::Cache;
-use drive::{read_refresh_token, AliyunDrive, DriveConfig};
-use vfs::AliyunDriveFileSystem;
-use webdav::WebDavServer;
+use crate::drive::{read_refresh_token, AliyunDrive, DriveConfig};
+use crate::vfs::AliyunDriveFileSystem;
+use crate::webdav::WebDavServer;
 
 mod cache;
 mod drive;
+#[cfg(feature = "gui")]
+mod gui;
 mod login;
 mod vfs;
 mod webdav;
@@ -108,6 +114,9 @@ enum Commands {
     /// Scan QRCode
     #[command(subcommand)]
     Qr(QrCommand),
+    /// Run in graphic UI mode
+    #[cfg(feature = "gui")]
+    Gui,
 }
 
 #[derive(Subcommand, Debug)]
@@ -142,6 +151,7 @@ async fn main() -> anyhow::Result<()> {
 
     let workdir = opt
         .workdir
+        .clone()
         .or_else(|| dirs::cache_dir().map(|c| c.join("aliyundrive-webdav")));
     let refresh_token_host = if opt.client_id.is_none() || opt.client_secret.is_none() {
         env::var("ALIYUNDRIVE_OAUTH_SERVER")
@@ -150,34 +160,38 @@ async fn main() -> anyhow::Result<()> {
         "https://openapi.aliyundrive.com".to_string()
     };
     let drive_config = DriveConfig {
-        api_base_url: "https://openapi.aliyundrive.com".to_string(),
         refresh_token_host,
         workdir,
         client_id: opt.client_id.clone(),
         client_secret: opt.client_secret.clone(),
+        ..Default::default()
     };
 
     // subcommands
-    if let Some(Commands::Qr(qr)) = opt.subcommands.as_ref() {
-        match qr {
-            QrCommand::Login => {
-                let refresh_token = login(drive_config.clone(), 120).await?;
-                println!("\nrefresh_token:\n\n{}", refresh_token)
-            }
-            QrCommand::Generate => {
-                let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
-                let data = scanner.scan().await?;
-                println!("{}", serde_json::to_string_pretty(&data)?);
-            }
-            QrCommand::Query { sid } => {
-                let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
-                let query_result = scanner.query(sid).await?;
-                if query_result.is_success() {
-                    let code = query_result.auth_code.unwrap();
-                    let refresh_token = scanner.fetch_refresh_token(&code).await?;
-                    println!("{}", refresh_token)
+    if let Some(subcommand) = opt.subcommands.as_ref() {
+        match subcommand {
+            Commands::Qr(qr) => match qr {
+                QrCommand::Login => {
+                    let refresh_token = login(drive_config.clone(), 120).await?;
+                    println!("\nrefresh_token:\n\n{}", refresh_token)
                 }
-            }
+                QrCommand::Generate => {
+                    let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
+                    let data = scanner.scan().await?;
+                    println!("{}", serde_json::to_string_pretty(&data)?);
+                }
+                QrCommand::Query { sid } => {
+                    let scanner = login::QrCodeScanner::new(drive_config.clone()).await?;
+                    let query_result = scanner.query(sid).await?;
+                    if query_result.is_success() {
+                        let code = query_result.auth_code.unwrap();
+                        let refresh_token = scanner.fetch_refresh_token(&code).await?;
+                        println!("{}", refresh_token)
+                    }
+                }
+            },
+            #[cfg(feature = "gui")]
+            Commands::Gui => gui::run().unwrap(),
         }
         return Ok(());
     }
@@ -189,6 +203,25 @@ async fn main() -> anyhow::Result<()> {
             }
         })
         .await?;
+    }
+
+    // Use GUI when no subcommand and no options are specified
+    #[cfg(feature = "gui")]
+    if opt.host == "0.0.0.0"
+        && opt.port == 8080
+        && opt.client_id.is_none()
+        && opt.client_secret.is_none()
+        && opt.refresh_token.is_none()
+        && opt.auth_user.is_none()
+        && opt.auth_password.is_none()
+        && opt.root == "/"
+        && opt.workdir.is_none()
+        && opt.tls_cert.is_none()
+        && opt.tls_key.is_none()
+        && opt.strip_prefix.is_none()
+    {
+        gui::run().unwrap();
+        return Ok(());
     }
 
     let auth_user = opt.auth_user;
@@ -280,7 +313,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[cfg(unix)]
-async fn handle_signals(mut signals: Signals, dir_cache: Cache) {
+async fn handle_signals(mut signals: Signals, dir_cache: crate::cache::Cache) {
     while let Some(signal) = signals.next().await {
         match signal {
             SIGHUP => {
@@ -368,7 +401,7 @@ fn check_for_update(show_output: bool) -> anyhow::Result<()> {
 
         #[cfg(windows)]
         {
-            let status = command.spawn().and_then(|mut c| c.wait())?;
+            let _status = command.spawn().and_then(|mut c| c.wait())?;
             bail!("aliyundrive-webdav upgraded");
         }
     }

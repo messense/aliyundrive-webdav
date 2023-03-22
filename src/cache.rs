@@ -42,6 +42,7 @@ impl Cache {
         }
     }
 
+    #[cfg(unix)]
     pub fn invalidate_all(&self) {
         debug!("cache: invalidate all");
         self.inner.invalidate_all();

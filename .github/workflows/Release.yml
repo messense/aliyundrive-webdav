@@ -26,7 +26,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64-apple-darwin
-          args: --release --out dist --strip
+          args: --release --out dist --strip --features gui
           sccache: 'true'
       - name: Install built wheel - x86_64
         run: |
@@ -35,7 +35,8 @@ jobs:
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
-          args: --release --universal2 --out dist --strip
+          target: universal2-apple-darwin
+          args: --release --out dist --strip --features gui
           sccache: 'true'
       - name: Install built wheel - universal2
         run: |
@@ -98,13 +99,13 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --strip
+          args: --release --out dist --strip --features gui
       - name: Build wheels
         if: matrix.platform.arch == 'arm64'
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --strip --no-default-features --features atomic64,native-tls
+          args: --release --out dist --strip --no-default-features --features atomic64,native-tls,gui
           sccache: 'true'
       - name: Install built wheel
         if: matrix.platform.arch != 'arm64'
