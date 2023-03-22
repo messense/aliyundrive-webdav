@@ -113,8 +113,6 @@ services:
 
 ## rclone
 
-由于 rclone 请求时总是会以上一个请求 URL 作为 `Referer`, 使用 rclone 时请使用 Web 版 refresh token 或者启动 aliyundrive-webdav 时增加 `--no-redirect` 参数.
-
 为了避免重复上传文件，使用 rclone 时推荐使用 [Nextcloud WebDAV](https://rclone.org/webdav/#nextcloud) 模式，可以支持 sha1 checksums. 
 另外需要配合 `--no-update-modtime` 参数，否则 rclone 为了更新文件修改时间还是会强制重新上传。
 
