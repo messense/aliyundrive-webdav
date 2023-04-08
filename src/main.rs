@@ -138,7 +138,9 @@ async fn main() -> anyhow::Result<()> {
             env::set_var("RUST_LOG", "aliyundrive_webdav=info,reqwest=warn");
         }
     }
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_timer(tracing_subscriber::fmt::time::LocalTime::rfc_3339())
+        .init();
 
     let workdir = opt
         .workdir

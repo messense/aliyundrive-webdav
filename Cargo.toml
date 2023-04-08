@@ -30,7 +30,7 @@ serde = { version = "1.0.141", features = ["derive"] }
 time = { version = "0.3", features = ["formatting", "parsing"] }
 tokio = { version = "1.23.1", features = ["rt-multi-thread", "io-util", "net", "time", "sync", "macros", "parking_lot", "fs"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "local-time"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "time", "local-time"] }
 url = "2.2.2"
 zip = { version = "0.6.4", default-features = false }
 base64 = "0.21.0"
