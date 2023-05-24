@@ -35,7 +35,8 @@ jobs:
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
-          args: --release --universal2 --out dist --strip
+          target: universal2-apple-darwin
+          args: --release --out dist --strip
           sccache: 'true'
       - name: Install built wheel - universal2
         run: |
