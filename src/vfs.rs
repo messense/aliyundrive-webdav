@@ -961,7 +961,7 @@ impl DavFile for AliyunDavFile {
         async move {
             let new_pos = match pos {
                 SeekFrom::Start(pos) => pos,
-                SeekFrom::End(pos) => (self.file.size as i64 - pos) as u64,
+                SeekFrom::End(pos) => (self.file.size as i64 + pos) as u64,
                 SeekFrom::Current(size) => self.current_pos + size as u64,
             };
             self.current_pos = new_pos;
