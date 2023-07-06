@@ -390,7 +390,10 @@ impl AliyunDrive {
             Ok(file) => Ok(Some(file)),
             Err(err) => {
                 if let Some(req_err) = err.downcast_ref::<reqwest::Error>() {
-                    if matches!(req_err.status(), Some(StatusCode::NOT_FOUND)) {
+                    if matches!(
+                        req_err.status(),
+                        Some(StatusCode::NOT_FOUND | StatusCode::BAD_REQUEST)
+                    ) {
                         Ok(None)
                     } else {
                         Err(err)
