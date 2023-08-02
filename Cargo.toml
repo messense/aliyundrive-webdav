@@ -34,7 +34,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "time", "local
 url = "2.4.0"
 zip = { version = "0.6.4", default-features = false }
 base64 = "0.21.2"
-serde_json = "1.0.99"
+serde_json = "1.0.104"
 atty = "0.2.14"
 qr2term = "0.3.1"
 self_update = { version = "0.37.0", default-features = false, features = ["archive-zip", "archive-tar", "compression-flate2", "compression-zip-deflate"] }
