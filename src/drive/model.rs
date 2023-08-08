@@ -16,6 +16,8 @@ pub struct RefreshTokenResponse {
 #[derive(Debug, Clone, Deserialize)]
 pub struct GetDriveInfoResponse {
     pub default_drive_id: String,
+    pub resource_drive_id: Option<String>,
+    pub backup_drive_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]

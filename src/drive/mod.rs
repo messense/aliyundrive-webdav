@@ -5,6 +5,7 @@ use std::time::{Duration, SystemTime};
 
 use anyhow::{bail, Context, Result};
 use bytes::Bytes;
+use clap::ValueEnum;
 use dav_server::fs::{DavDirEntry, DavMetaData, FsFuture, FsResult};
 use futures_util::future::FutureExt;
 use reqwest::{
@@ -30,6 +31,15 @@ const ORIGIN: &str = "https://www.aliyundrive.com";
 const REFERER: &str = "https://www.aliyundrive.com/";
 const UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36";
 
+/// Aliyundrive drive type
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum DriveType {
+    /// Resource drive
+    Resource,
+    /// Backup drive
+    Backup,
+}
+
 #[derive(Debug, Clone)]
 pub struct DriveConfig {
     pub api_base_url: String,
@@ -37,6 +47,7 @@ pub struct DriveConfig {
     pub workdir: Option<PathBuf>,
     pub client_id: Option<String>,
     pub client_secret: Option<String>,
+    pub drive_type: Option<DriveType>,
 }
 
 #[derive(Debug, Clone)]
@@ -84,6 +95,7 @@ impl AliyunDrive {
         let client = ClientBuilder::new(client)
             .with(RetryTransientMiddleware::new_with_policy(retry_policy))
             .build();
+        let drive_type = config.drive_type.clone();
         let mut drive = Self {
             config,
             client,
@@ -133,11 +145,16 @@ impl AliyunDrive {
         if access_token.is_empty() {
             bail!("get access_token failed");
         }
+        let drive_type_str = match drive_type {
+            Some(DriveType::Resource) => "resource",
+            Some(DriveType::Backup) => "backup",
+            None => "default",
+        };
         let drive_id = drive
-            .get_drive_id()
+            .get_drive_id(drive_type)
             .await
-            .context("get default drive id failed")?;
-        info!(drive_id = %drive_id, "found default drive");
+            .context("get drive id failed")?;
+        info!(drive_id = %drive_id, "found {} drive", drive_type_str);
         drive.drive_id = Some(drive_id);
 
         Ok(drive)
@@ -327,7 +344,7 @@ impl AliyunDrive {
         }
     }
 
-    pub async fn get_drive_id(&self) -> Result<String> {
+    pub async fn get_drive_id(&self, drive_type: Option<DriveType>) -> Result<String> {
         let req = HashMap::<String, String>::new();
         let res: GetDriveInfoResponse = self
             .request(
@@ -336,7 +353,14 @@ impl AliyunDrive {
             )
             .await
             .and_then(|res| res.context("expect response"))?;
-        Ok(res.default_drive_id)
+        let drive_id = match drive_type {
+            Some(DriveType::Resource) => {
+                res.resource_drive_id.context("resource drive not found")?
+            }
+            Some(DriveType::Backup) => res.backup_drive_id.context("backup drive not found")?,
+            None => res.default_drive_id,
+        };
+        Ok(drive_id)
     }
 
     pub async fn get_file(&self, file_id: &str) -> Result<Option<AliyunFile>> {
