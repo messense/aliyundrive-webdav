@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.0
+
+* 增加资源库支持
+
 ## 2.1.0
 
 * 增加 `--redirect` 参数用于启用 302 重定向
