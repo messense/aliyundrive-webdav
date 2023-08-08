@@ -12,7 +12,7 @@ use tracing::{debug, info, warn};
 use {signal_hook::consts::signal::*, signal_hook_tokio::Signals};
 
 use cache::Cache;
-use drive::{read_refresh_token, AliyunDrive, DriveConfig};
+use drive::{read_refresh_token, AliyunDrive, DriveConfig, DriveType};
 use vfs::AliyunDriveFileSystem;
 use webdav::WebDavServer;
 
@@ -38,6 +38,9 @@ struct Opt {
     /// Aliyun drive client_secret
     #[arg(long, env = "CLIENT_SECRET")]
     client_secret: Option<String>,
+    /// Aliyun drive type
+    #[arg(long)]
+    drive_type: Option<DriveType>,
     /// Aliyun drive refresh token
     #[arg(short, long, env = "REFRESH_TOKEN")]
     refresh_token: Option<String>,
@@ -157,6 +160,7 @@ async fn main() -> anyhow::Result<()> {
         workdir,
         client_id: opt.client_id.clone(),
         client_secret: opt.client_secret.clone(),
+        drive_type: opt.drive_type.clone(),
     };
 
     // subcommands
