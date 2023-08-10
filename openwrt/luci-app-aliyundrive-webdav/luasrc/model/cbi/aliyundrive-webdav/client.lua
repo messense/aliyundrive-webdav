@@ -29,6 +29,8 @@ port = e:option(Value, "port", translate("Port"))
 port.default = "8080"
 port.datatype = "port"
 
+drive_type = e:option(Value, "drive_type", translate("Aliyun drive type"))
+
 tls_cert = e:option(Value, "tls_cert", translate("TLS certificate file path"))
 tls_key = e:option(Value, "tls_key", translate("TLS private key file path"))
 
