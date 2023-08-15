@@ -38,6 +38,8 @@ pub enum DriveType {
     Resource,
     /// Backup drive
     Backup,
+    /// Default drive
+    Default,
 }
 
 #[derive(Debug, Clone)]
@@ -148,7 +150,7 @@ impl AliyunDrive {
         let drive_type_str = match drive_type {
             Some(DriveType::Resource) => "resource",
             Some(DriveType::Backup) => "backup",
-            None => "default",
+            Some(DriveType::Default) | None => "default",
         };
         let drive_id = drive
             .get_drive_id(drive_type)
@@ -357,8 +359,11 @@ impl AliyunDrive {
             Some(DriveType::Resource) => {
                 res.resource_drive_id.context("resource drive not found")?
             }
-            Some(DriveType::Backup) => res.backup_drive_id.context("backup drive not found")?,
-            None => res.default_drive_id,
+            Some(DriveType::Backup) => res.backup_drive_id.unwrap_or_else(|| {
+                warn!("backup drive not found, use default drive instead");
+                res.default_drive_id
+            }),
+            Some(DriveType::Default) | None => res.default_drive_id,
         };
         Ok(drive_id)
     }

@@ -39,7 +39,7 @@ struct Opt {
     #[arg(long, env = "CLIENT_SECRET")]
     client_secret: Option<String>,
     /// Aliyun drive type
-    #[arg(long)]
+    #[arg(long, env = "DRIVE_TYPE")]
     drive_type: Option<DriveType>,
     /// Aliyun drive refresh token
     #[arg(short, long, env = "REFRESH_TOKEN")]

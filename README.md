@@ -168,9 +168,12 @@ Options:
       --drive-type <DRIVE_TYPE>
           Aliyun drive type
 
+          [env: DRIVE_TYPE=]
+
           Possible values:
           - resource: Resource drive
           - backup:   Backup drive
+          - default:  Default drive
 
   -r, --refresh-token <REFRESH_TOKEN>
           Aliyun drive refresh token
