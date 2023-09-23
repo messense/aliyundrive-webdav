@@ -356,9 +356,10 @@ impl AliyunDrive {
             .await
             .and_then(|res| res.context("expect response"))?;
         let drive_id = match drive_type {
-            Some(DriveType::Resource) => {
-                res.resource_drive_id.context("resource drive not found")?
-            }
+            Some(DriveType::Resource) => res.resource_drive_id.unwrap_or_else(|| {
+                warn!("resource drive not found, use default drive instead");
+                res.default_drive_id
+            }),
             Some(DriveType::Backup) => res.backup_drive_id.unwrap_or_else(|| {
                 warn!("backup drive not found, use default drive instead");
                 res.default_drive_id
