@@ -142,7 +142,7 @@ async fn main() -> anyhow::Result<()> {
         }
     }
     tracing_subscriber::fmt()
-        .with_timer(tracing_subscriber::fmt::time::OffsetTime::local_rfc_3339()?)
+        .with_timer(tracing_subscriber::fmt::time::time())
         .init();
 
     let workdir = opt
