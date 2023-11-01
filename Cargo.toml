@@ -41,7 +41,7 @@ self_update = { version = "0.37.0", default-features = false, features = ["archi
 
 # TLS server support
 rustls-pemfile = { version = "1.0.0", optional = true }
-tls-listener = { version = "0.7.0", features = ["hyper-h1", "hyper-h2", "rt"], optional = true }
+tls-listener = { version = "0.8.0", features = ["hyper-h1", "hyper-h2", "rt"], optional = true }
 tokio-rustls = { version = "0.24.0", optional = true }
 
 # Unix signal support
