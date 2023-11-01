@@ -23,7 +23,7 @@ hyper = { version = "0.14.27", features = ["server", "http2"] }
 moka = { version = "0.11.3", default-features = false, features = ["future"] }
 openssl-probe = { version = "0.1.4", optional = true }
 path-slash = "0.2.0"
-reqwest = { version = "0.11.20", default-features = false, features = ["json", "gzip", "cookies", "socks"] }
+reqwest = { version = "0.11.22", default-features = false, features = ["json", "gzip", "cookies", "socks"] }
 reqwest-middleware = "0.2.3"
 reqwest-retry = "0.2.0"
 serde = { version = "1.0.168", features = ["derive"] }
