@@ -33,7 +33,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "time", "local-time"] }
 url = "2.4.0"
 zip = { version = "0.6.4", default-features = false }
-base64 = "0.21.2"
+base64 = "0.21.5"
 serde_json = "1.0.107"
 atty = "0.2.14"
 qr2term = "0.3.1"
