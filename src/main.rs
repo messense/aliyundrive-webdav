@@ -66,7 +66,7 @@ struct Opt {
     #[arg(long, default_value = "600")]
     cache_ttl: u64,
     /// Root directory path
-    #[arg(long, default_value = "/")]
+    #[arg(long, env = "WEBDAV_ROOT", default_value = "/")]
     root: String,
     /// Working directory, refresh_token will be stored in there if specified
     #[arg(short = 'w', long)]
