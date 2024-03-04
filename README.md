@@ -216,6 +216,7 @@ Options:
       --root <ROOT>
           Root directory path
 
+          [env: WEBDAV_ROOT=]
           [default: /]
 
   -w, --workdir <WORKDIR>
