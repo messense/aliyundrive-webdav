@@ -8,6 +8,7 @@ use dav_server::{memls::MemLs, DavHandler};
 use futures_util::stream::StreamExt;
 use self_update::cargo_crate_version;
 use tracing::{debug, info, warn};
+use tracing_subscriber::EnvFilter;
 #[cfg(unix)]
 use {signal_hook::consts::signal::*, signal_hook_tokio::Signals};
 
@@ -142,6 +143,7 @@ async fn main() -> anyhow::Result<()> {
         }
     }
     tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
         .with_timer(tracing_subscriber::fmt::time::time())
         .init();
 
