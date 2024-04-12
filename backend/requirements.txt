@@ -1,4 +1,4 @@
 fastapi>=0.93.0
 httpx
-uvicorn[standard]
 streamlit_extras
+uvicorn[standard]
