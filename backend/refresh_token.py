@@ -2,6 +2,7 @@ import asyncio
 
 import httpx
 import streamlit as st
+from streamlit_extras.stylable_container import stylable_container
 
 
 session = httpx.AsyncClient()
@@ -81,7 +82,11 @@ async def main():
 
             if refresh_token:
                 st.success("refresh token 获取成功", icon="✅")
-                st.code(refresh_token, language=None)
+                with stylable_container(
+                    "codeblock",
+                    "code { white-space: normal !important; overflow-wrap: anywhere; }",
+                ):
+                    st.code(refresh_token, language=None)
 
     with authcode_tab:
         with st.form("authCode"):
@@ -91,7 +96,11 @@ async def main():
                 try:
                     refresh_token = await get_refresh_token(code)
                     st.success("refresh token 获取成功", icon="✅")
-                    st.code(refresh_token, language=None)
+                    with stylable_container(
+                        "codeblock",
+                        "code { white-space: normal !important; overflow-wrap: anywhere; }",
+                    ):
+                        st.code(refresh_token, language=None)
                 except KeyError:
                     st.error("无效的 authCode, 请重新获取", icon="🚨")
 
