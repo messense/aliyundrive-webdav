@@ -12,6 +12,7 @@ async def get_qrcode_status(sid: str) -> dict:
     res = await session.get(
         f"https://openapi.aliyundrive.com/oauth/qrcode/{sid}/status"
     )
+    res.raise_for_status()
     return res.json()
 
 
@@ -23,6 +24,7 @@ async def get_refresh_token(code: str) -> str:
             "code": code,
         },
     )
+    res.raise_for_status()
     data = res.json()
     refresh_token = data["refresh_token"]
     return refresh_token

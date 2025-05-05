@@ -1,15 +1,21 @@
 from __future__ import annotations
 import os
-from contextlib import asynccontextmanager
 
 import httpx
+import sentry_sdk
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
 
 CLIENT_ID = os.getenv("ALIYUNDRIVE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("ALIYUNDRIVE_CLIENT_SECRET")
 
-http = httpx.AsyncClient()
+if os.getenv("SENTRY_DSN"):
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        # Add data like request headers and IP for users, if applicable;
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+    )
 
 
 class QrCodeRequest(BaseModel):
@@ -24,19 +30,12 @@ class AuthorizationRequest(BaseModel):
     refresh_token: str | None = None
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # startup
-    yield
-    # shutdown
-    await http.aclose()
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 
 @app.post("/oauth/authorize/qrcode")
 async def qrcode(request: QrCodeRequest) -> Response:
+    http = httpx.AsyncClient()
     res = await http.post(
         "https://openapi.aliyundrive.com/oauth/authorize/qrcode",
         json={
@@ -56,13 +55,14 @@ async def qrcode(request: QrCodeRequest) -> Response:
 
 @app.post("/oauth/access_token")
 async def access_token(request: AuthorizationRequest) -> Response:
-    if request.refresh_token and len(request.refresh_token.split(".")) < 3:
+    if not request.refresh_token:
         return Response(
-            content="invalid refresh token",
-            status_code=422,
+            content="refresh token required",
+            status_code=400,
             media_type="text/plain",
         )
 
+    http = httpx.AsyncClient()
     res = await http.post(
         "https://openapi.aliyundrive.com/oauth/access_token",
         json={
