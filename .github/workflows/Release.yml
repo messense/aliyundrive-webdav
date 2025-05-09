@@ -489,31 +489,31 @@ jobs:
     environment: Docker Hub
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: x86_64-unknown-linux-musl-bin
       - run: |
           chmod a+x aliyundrive-webdav
           mv aliyundrive-webdav aliyundrive-webdav-amd64
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: i686-unknown-linux-musl-bin
       - run: |
           chmod a+x aliyundrive-webdav
           mv aliyundrive-webdav aliyundrive-webdav-386
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: aarch64-unknown-linux-musl-bin
       - run: |
           chmod a+x aliyundrive-webdav
           mv aliyundrive-webdav aliyundrive-webdav-arm64
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: armv7-unknown-linux-musleabihf-bin
       - run: |
           chmod a+x aliyundrive-webdav
           mv aliyundrive-webdav aliyundrive-webdav-armv7
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: arm-unknown-linux-musleabihf-bin
       - run: |
@@ -576,7 +576,7 @@ jobs:
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: [ linux, macos ]
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: wheels
       - uses: actions/setup-python@v4
