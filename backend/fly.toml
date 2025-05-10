@@ -14,6 +14,10 @@ kill_timeout = "5s"
 [build]
   image = "messense/aliyundrive-oauth:latest"
 
+[[vm]]
+  size = "shared-cpu-4x"
+  memory = "1gb"
+
 [[services]]
   protocol = "tcp"
   internal_port = 8080
@@ -29,8 +33,8 @@ kill_timeout = "5s"
     handlers = ["tls", "http"]
   [services.concurrency]
     type = "connections"
-    hard_limit = 5000
-    soft_limit = 4000
+    hard_limit = 1500
+    soft_limit = 1000
 
   [[services.tcp_checks]]
     interval = "15s"
