@@ -1,5 +1,4 @@
 fastapi>=0.93.0
 httpx
 sentry-sdk[fastapi]
-streamlit_extras
 uvicorn[standard]
