@@ -55,9 +55,9 @@ async def qrcode(request: QrCodeRequest) -> Response:
 
 @app.post("/oauth/access_token")
 async def access_token(request: AuthorizationRequest) -> Response:
-    if not request.refresh_token:
+    if not request.code:
         return Response(
-            content="refresh token required",
+            content="code required",
             status_code=400,
             media_type="text/plain",
         )

@@ -85,8 +85,8 @@ async def main():
             if refresh_token:
                 st.success("refresh token 获取成功", icon="✅")
                 with stylable_container(
-                    "codeblock",
-                    "code { white-space: normal !important; overflow-wrap: anywhere; }",
+                    key="codeblock",
+                    css_styles="code { white-space: normal !important; overflow-wrap: anywhere; }",
                 ):
                     st.code(refresh_token, language=None)
 

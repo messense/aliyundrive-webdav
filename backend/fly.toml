@@ -29,8 +29,8 @@ kill_timeout = "5s"
     handlers = ["tls", "http"]
   [services.concurrency]
     type = "connections"
-    hard_limit = 500
-    soft_limit = 400
+    hard_limit = 5000
+    soft_limit = 4000
 
   [[services.tcp_checks]]
     interval = "15s"
