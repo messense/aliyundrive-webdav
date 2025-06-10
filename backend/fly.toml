@@ -15,8 +15,8 @@ kill_timeout = "5s"
   image = "messense/aliyundrive-oauth:latest"
 
 [[vm]]
-  size = "shared-cpu-4x"
-  memory = "1gb"
+  size = "shared-cpu-1x"
+  memory = "256mb"
 
 [[services]]
   protocol = "tcp"
