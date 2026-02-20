@@ -349,7 +349,7 @@ jobs:
           - arch: "mipsel_24kc"
             sdk: "https://downloads.openwrt.org/releases/22.03.2/targets/ramips/mt7621/openwrt-sdk-22.03.2-ramips-mt7621_gcc-11.2.0_musl.Linux-x86_64.tar.xz"
           - arch: "mips_24kc"
-            sdk: "https://archive.openwrt.org/releases/19.07.7/targets/ar71xx/nand/openwrt-sdk-19.07.7-ar71xx-nand_gcc-7.5.0_musl.Linux-x86_64.tar.xz"
+            sdk: "https://downloads.openwrt.org/releases/22.03.2/targets/ath79/generic/openwrt-sdk-22.03.2-ath79-generic_gcc-11.2.0_musl.Linux-x86_64.tar.xz"
     steps:
       - uses: actions/checkout@v3
       - name: Install build requirements
@@ -380,7 +380,7 @@ jobs:
           sed -i 's|git.openwrt.org/feed/|github.com/openwrt/|' feeds.conf
           cat feeds.conf
 
-          for i in 1 2 3; do ./scripts/feeds update aliyundrive luci && break || sleep 5; done
+          for i in 1 2 3; do ./scripts/feeds update -a && break || sleep 5; done
           make defconfig FORCE=1
 
           ./scripts/feeds install -d y -f -a
