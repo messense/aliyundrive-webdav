@@ -267,7 +267,7 @@ jobs:
         platform:
           - target: "armv5te-unknown-linux-musleabi"
             cargo_extra_args: --no-default-features --features rustls-tls
-            rustflags: -C target-feature=+crt-static -C link-arg=-s -C lto=no
+            rustflags: -C target-feature=+crt-static -C link-arg=-s -C lto=no -C link-arg=-lgcc
           - target: "mips-unknown-linux-musl"
             cargo_extra_args: --no-default-features --features native-tls-vendored
             rustflags: -C target-feature=+crt-static -C link-arg=-s -C lto=no
