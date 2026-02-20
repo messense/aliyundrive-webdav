@@ -397,7 +397,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ matrix.target.arch == 'aarch64_generic' }}
         with:
-          name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}
+          name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}-luci
           path: openwrt-sdk/bin/packages/*/aliyundrive/luci-*.ipk
           if-no-files-found: error
       - name: Upload package to GitHub Release
