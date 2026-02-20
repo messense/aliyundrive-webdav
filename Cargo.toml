@@ -16,7 +16,7 @@ bytes = "1.5.0"
 clap = { version = "4.3.19", features = ["derive", "env", "wrap_help"] }
 dashmap = "5.5.3"
 dav-server = { version = "0.5.5", default-features = false, features = ["hyper"] }
-dirs = "5.0.1"
+dirs = "6.0.0"
 futures-util = "0.3"
 headers = "0.3.6"
 hyper = { version = "0.14.27", features = ["server", "http2"] }
@@ -35,7 +35,6 @@ url = "2.4.0"
 zip = { version = "0.6.4", default-features = false }
 base64 = "0.21.5"
 serde_json = "1.0.107"
-atty = "0.2.14"
 qr2term = { version = "0.3.1", optional = true }
 self_update = { version = "0.37.0", default-features = false, features = ["archive-zip", "archive-tar", "compression-flate2", "compression-zip-deflate"] }
 

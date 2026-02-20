@@ -1,4 +1,5 @@
 use std::env;
+use std::io::IsTerminal;
 use std::path::PathBuf;
 
 use anyhow::bail;
@@ -220,7 +221,7 @@ async fn main() -> anyhow::Result<()> {
     };
     let refresh_token = if opt.refresh_token.is_none()
         && refresh_token_from_file.is_none()
-        && atty::is(atty::Stream::Stdout)
+        && std::io::stdout().is_terminal()
     {
         login(drive_config.clone(), 30).await?
     } else {
