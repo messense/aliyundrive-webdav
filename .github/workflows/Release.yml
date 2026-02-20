@@ -43,13 +43,13 @@ jobs:
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
           aliyundrive-webdav --help
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: dist
           if-no-files-found: error
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: apple-darwin-bin
           path: target/release/aliyundrive-webdav
@@ -113,13 +113,13 @@ jobs:
           pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
           aliyundrive-webdav --help
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: dist
           if-no-files-found: error
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-${{ matrix.platform.arch }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav.exe
@@ -204,7 +204,7 @@ jobs:
         run: cargo generate-rpm --target=${{ matrix.platform.target }} --payload-compress none
       - name: Upload wheels
         if: matrix.platform.wheel
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels
           path: dist
@@ -223,21 +223,21 @@ jobs:
       - name: Upx compress binary
         run: upx target/${{ matrix.platform.target }}/release/aliyundrive-webdav
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
           if-no-files-found: error
       - name: Upload deb artifacts
         if: matrix.platform.deb
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}-deb
           path: target/${{ matrix.platform.target }}/debian/aliyundrive-webdav_*.deb
           if-no-files-found: error
       - name: Upload RPM artifacts
         if: matrix.platform.deb
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}-rpm
           path: target/${{ matrix.platform.target }}/generate-rpm/aliyundrive-webdav*.rpm
@@ -300,7 +300,7 @@ jobs:
           version: v3.95  # v3.96 breaks mipsel, https://github.com/upx/upx/issues/504
           files: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
       - name: Upload binary artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}-bin
           path: target/${{ matrix.platform.target }}/release/aliyundrive-webdav
@@ -392,13 +392,13 @@ jobs:
           make package/luci-app-aliyundrive-webdav/compile V=s
           tree bin/packages/
       - name: Archive package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}
           path: openwrt-sdk/bin/packages/*/aliyundrive/aliyundrive-webdav*.ipk
           if-no-files-found: error
       - name: Archive luci packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ matrix.target.arch == 'aarch64_generic' }}
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}
@@ -468,7 +468,7 @@ jobs:
           make package/aliyundrive-webdav/compile V=s
           tree bin/packages/
       - name: Archive package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: aliyundrive-webdav-openwrt-${{ matrix.target.arch }}
           path: openwrt-sdk/${{ matrix.target.path }}/bin/packages/*/base/aliyundrive-webdav*.ipk
