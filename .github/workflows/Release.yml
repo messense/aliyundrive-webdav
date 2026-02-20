@@ -381,11 +381,11 @@ jobs:
           cat feeds.conf
 
           for i in 1 2 3; do ./scripts/feeds update aliyundrive luci && break || sleep 5; done
-          make defconfig
+          make defconfig FORCE=1
 
           ./scripts/feeds install -d y -f -a
-          make package/aliyundrive-webdav/compile V=s
-          make package/luci-app-aliyundrive-webdav/compile V=s
+          make package/aliyundrive-webdav/compile V=s FORCE=1
+          make package/luci-app-aliyundrive-webdav/compile V=s FORCE=1
           tree bin/packages/
       - name: Archive package
         uses: actions/upload-artifact@v4
@@ -460,10 +460,10 @@ jobs:
           cat feeds.conf
 
           for i in 1 2 3; do ./scripts/feeds update -a && break || sleep 5; done
-          make defconfig
+          make defconfig FORCE=1
 
           ./scripts/feeds install -d y -f -a
-          make package/aliyundrive-webdav/compile V=s
+          make package/aliyundrive-webdav/compile V=s FORCE=1
           tree bin/packages/
       - name: Archive package
         uses: actions/upload-artifact@v4
