@@ -36,7 +36,7 @@ zip = { version = "0.6.4", default-features = false }
 base64 = "0.21.5"
 serde_json = "1.0.107"
 atty = "0.2.14"
-qr2term = "0.3.1"
+qr2term = { version = "0.3.1", optional = true }
 self_update = { version = "0.37.0", default-features = false, features = ["archive-zip", "archive-tar", "compression-flate2", "compression-zip-deflate"] }
 
 # TLS server support
@@ -50,11 +50,12 @@ signal-hook = "0.3.14"
 signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"] }
 
 [features]
-default = ["rustls-tls", "atomic64"]
+default = ["rustls-tls", "atomic64", "qrcode-display"]
 rustls-tls = ["reqwest/rustls", "rustls-pemfile", "tls-listener/rustls", "hyper/stream", "tokio-rustls", "self_update/rustls"]
 native-tls = ["reqwest/native-tls"]
 native-tls-vendored = ["reqwest/native-tls-vendored", "openssl-probe"]
 atomic64 = ["moka/atomic64"]
+qrcode-display = ["qr2term"]
 
 [profile.release]
 lto = true
