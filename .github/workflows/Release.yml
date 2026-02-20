@@ -21,31 +21,17 @@ jobs:
           python-version: 3.9
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-apple-darwin, aarch64-apple-darwin
-      - name: Build wheels - x86_64
-        uses: PyO3/maturin-action@v1
-        with:
-          target: x86_64-apple-darwin
-          args: --release --out dist-x86_64 --strip
-          sccache: 'true'
-      - name: Install built wheel - x86_64
-        run: |
-          arch -x86_64 /bin/bash -c 'pip install aliyundrive-webdav --no-index --find-links dist-x86_64 --force-reinstall && aliyundrive-webdav --help'
+          targets: aarch64-apple-darwin
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
           target: universal2-apple-darwin
-          args: --release --out dist-universal2 --strip
+          args: --release --out dist --strip
           sccache: 'true'
-      - name: Install built wheel - universal2
+      - name: Install built wheel
         run: |
-          pip install aliyundrive-webdav --no-index --find-links dist-universal2 --force-reinstall
+          pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
           aliyundrive-webdav --help
-      - name: Merge wheels
-        run: |
-          mkdir -p dist
-          cp dist-x86_64/* dist/ || true
-          cp dist-universal2/* dist/ || true
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
