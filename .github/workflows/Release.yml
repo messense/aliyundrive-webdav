@@ -277,10 +277,13 @@ jobs:
         platform:
           - target: "armv5te-unknown-linux-musleabi"
             cargo_extra_args: --no-default-features --features rustls-tls
+            rustflags: -C target-feature=+crt-static -C link-arg=-s -C lto=no
           - target: "mips-unknown-linux-musl"
             cargo_extra_args: --no-default-features --features native-tls-vendored
+            rustflags: -C target-feature=+crt-static -C link-arg=-s -C lto=no
           - target: "mipsel-unknown-linux-musl"
             cargo_extra_args: --no-default-features --features native-tls-vendored
+            rustflags: -C target-feature=+crt-static -C link-arg=-s -C lto=no
     container:
       image: docker://ghcr.io/rust-cross/rust-musl-cross:${{ matrix.platform.target }}
     steps:
@@ -291,7 +294,7 @@ jobs:
           key: ${{ matrix.platform.target }}
       - name: Build
         env:
-          RUSTFLAGS: -C target-feature=+crt-static -C link-arg=-s
+          RUSTFLAGS: ${{ matrix.platform.rustflags }}
         run: |
           cargo build --release --target ${{ matrix.platform.target }} ${{ matrix.platform.cargo_extra_args }}
       - name: Upx compress binary
