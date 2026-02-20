@@ -285,6 +285,7 @@ jobs:
       - name: Build
         env:
           RUSTFLAGS: ${{ matrix.platform.rustflags }}
+          CARGO_PROFILE_RELEASE_LTO: "off"
         run: |
           cargo build --release --target ${{ matrix.platform.target }} ${{ matrix.platform.cargo_extra_args }}
       - name: Upx compress binary
