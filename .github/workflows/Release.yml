@@ -376,9 +376,11 @@ jobs:
           ' >> openwrt-sdk/.config
           cd openwrt-sdk
           cat feeds.conf.default >> feeds.conf
+          sed -i 's|git.openwrt.org/project/luci.git|github.com/openwrt/luci.git|' feeds.conf
+          sed -i 's|git.openwrt.org/feed/|github.com/openwrt/|' feeds.conf
           cat feeds.conf
 
-          ./scripts/feeds update -a > /dev/null
+          for i in 1 2 3; do ./scripts/feeds update aliyundrive luci && break || sleep 5; done
           make defconfig
 
           ./scripts/feeds install -d y -f -a
@@ -453,9 +455,11 @@ jobs:
           CONFIG_PACKAGE_luci-app-aliyundrive-webdav=y
           ' >> .config
           cp feeds.conf.default feeds.conf
+          sed -i 's|git.openwrt.org/project/luci.git|github.com/openwrt/luci.git|' feeds.conf
+          sed -i 's|git.openwrt.org/feed/|github.com/openwrt/|' feeds.conf
           cat feeds.conf
 
-          ./scripts/feeds update -a > /dev/null
+          for i in 1 2 3; do ./scripts/feeds update -a && break || sleep 5; done
           make defconfig
 
           ./scripts/feeds install -d y -f -a
