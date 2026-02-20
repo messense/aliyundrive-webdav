@@ -81,23 +81,22 @@ impl AliyunDrive {
             headers.insert("X-Canary", HeaderValue::from_str(&canary_env)?);
         }
         let retry_policy = ExponentialBackoff::builder()
-            .backoff_exponent(2)
             .retry_bounds(Duration::from_millis(100), Duration::from_secs(5))
             .build_with_max_retries(3);
         let client = reqwest::Client::builder()
             .user_agent(UA)
             .default_headers(headers)
             // OSS closes idle connections after 60 seconds,
-            // so we can close idle connections ahead of time to prevent re-using them.
+            // so we can close idle connections ahead of time to prevent reusing them.
             // See also https://github.com/hyperium/hyper/issues/2136
             .pool_idle_timeout(Duration::from_secs(50))
             .connect_timeout(Duration::from_secs(10))
-            .timeout(Duration::from_secs(30))
+            .read_timeout(Duration::from_secs(30))
             .build()?;
         let client = ClientBuilder::new(client)
             .with(RetryTransientMiddleware::new_with_policy(retry_policy))
             .build();
-        let drive_type = config.drive_type.clone();
+        let drive_type = config.drive_type;
         let mut drive = Self {
             config,
             client,
@@ -187,7 +186,8 @@ impl AliyunDrive {
                 "{}/oauth/access_token",
                 &self.config.refresh_token_host
             ))
-            .json(&data)
+            .header(reqwest::header::CONTENT_TYPE, "application/json")
+            .body(serde_json::to_vec(&data)?)
             .send()
             .await?;
         match res.error_for_status_ref() {
@@ -287,7 +287,8 @@ impl AliyunDrive {
             .client
             .post(url.clone())
             .bearer_auth(&access_token)
-            .json(&req)
+            .header(reqwest::header::CONTENT_TYPE, "application/json")
+            .body(serde_json::to_vec(&req)?)
             .send()
             .await?;
         match res.error_for_status_ref() {
@@ -330,7 +331,8 @@ impl AliyunDrive {
                             .client
                             .post(url)
                             .bearer_auth(&access_token)
-                            .json(&req)
+                            .header(reqwest::header::CONTENT_TYPE, "application/json")
+                            .body(serde_json::to_vec(&req)?)
                             .send()
                             .await?
                             .error_for_status()?;
@@ -781,7 +783,7 @@ impl DavDirEntry for AliyunFile {
         self.name.as_bytes().to_vec()
     }
 
-    fn metadata(&self) -> FsFuture<Box<dyn DavMetaData>> {
+    fn metadata(&self) -> FsFuture<'_, Box<dyn DavMetaData>> {
         async move { Ok(Box::new(self.clone()) as Box<dyn DavMetaData>) }.boxed()
     }
 }

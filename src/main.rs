@@ -162,7 +162,7 @@ async fn main() -> anyhow::Result<()> {
         workdir,
         client_id: opt.client_id.clone(),
         client_secret: opt.client_secret.clone(),
-        drive_type: opt.drive_type.clone(),
+        drive_type: opt.drive_type,
     };
 
     // subcommands

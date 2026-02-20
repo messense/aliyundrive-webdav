@@ -23,9 +23,9 @@ hyper = { version = "0.14.27", features = ["server", "http2"] }
 moka = { version = "0.11.3", default-features = false, features = ["future"] }
 openssl-probe = { version = "0.1.4", optional = true }
 path-slash = "0.2.0"
-reqwest = { version = "0.11.24", default-features = false, features = ["json", "gzip", "cookies", "socks"] }
-reqwest-middleware = "0.2.4"
-reqwest-retry = "0.2.0"
+reqwest = { version = "0.13.2", default-features = false, features = ["json", "gzip", "cookies", "socks"] }
+reqwest-middleware = "0.5.1"
+reqwest-retry = "0.9.1"
 serde = { version = "1.0.168", features = ["derive"] }
 time = { version = "0.3", features = ["formatting", "parsing"] }
 tokio = { version = "1.28.2", features = ["rt-multi-thread", "io-util", "net", "time", "sync", "macros", "parking_lot", "fs"] }
@@ -51,7 +51,7 @@ signal-hook-tokio = { version = "0.3.1", features = ["futures-v0_3"] }
 
 [features]
 default = ["rustls-tls", "atomic64"]
-rustls-tls = ["reqwest/rustls-tls", "rustls-pemfile", "tls-listener/rustls", "hyper/stream", "tokio-rustls", "self_update/rustls"]
+rustls-tls = ["reqwest/rustls", "rustls-pemfile", "tls-listener/rustls", "hyper/stream", "tokio-rustls", "self_update/rustls"]
 native-tls = ["reqwest/native-tls"]
 native-tls-vendored = ["reqwest/native-tls-vendored", "openssl-probe"]
 atomic64 = ["moka/atomic64"]

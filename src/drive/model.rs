@@ -2,14 +2,15 @@ use std::collections::HashMap;
 use std::ops;
 use std::time::SystemTime;
 
-use ::time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use serde::{Deserialize, Deserializer, Serialize};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct RefreshTokenResponse {
     pub access_token: String,
     pub refresh_token: String,
     pub expires_in: u64,
+    #[allow(dead_code)]
     pub token_type: String,
 }
 
@@ -129,7 +130,9 @@ pub struct GetFileDownloadUrlResponse {
     pub url: String,
     #[serde(default)]
     pub streams_url: HashMap<String, String>,
+    #[allow(dead_code)]
     pub expiration: String,
+    #[allow(dead_code)]
     pub method: String,
 }
 
@@ -140,6 +143,7 @@ pub struct TrashRequest<'a> {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[allow(dead_code)]
 pub struct DeleteFileRequest<'a> {
     pub drive_id: &'a str,
     pub file_id: &'a str,
@@ -205,6 +209,7 @@ pub struct CreateFileWithProofResponse {
     pub part_info_list: Vec<UploadPartInfo>,
     pub file_id: String,
     pub upload_id: Option<String>,
+    #[allow(dead_code)]
     pub file_name: String,
 }
 

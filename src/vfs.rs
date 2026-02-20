@@ -241,7 +241,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         &'a self,
         dav_path: &'a DavPath,
         options: OpenOptions,
-    ) -> FsFuture<Box<dyn DavFile>> {
+    ) -> FsFuture<'a, Box<dyn DavFile>> {
         let path = self.normalize_dav_path(dav_path);
         let mode = if options.write { "write" } else { "read" };
         debug!(path = %path.display(), mode = %mode, "fs: open");
@@ -332,7 +332,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         &'a self,
         path: &'a DavPath,
         _meta: ReadDirMeta,
-    ) -> FsFuture<FsStream<Box<dyn DavDirEntry>>> {
+    ) -> FsFuture<'a, FsStream<Box<dyn DavDirEntry>>> {
         let path = self.normalize_dav_path(path);
         debug!(path = %path.display(), "fs: read_dir");
         async move {
@@ -347,7 +347,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn metadata<'a>(&'a self, path: &'a DavPath) -> FsFuture<Box<dyn DavMetaData>> {
+    fn metadata<'a>(&'a self, path: &'a DavPath) -> FsFuture<'a, Box<dyn DavMetaData>> {
         let path = self.normalize_dav_path(path);
         debug!(path = %path.display(), "fs: metadata");
         async move {
@@ -357,7 +357,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn create_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
+    fn create_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<'a, ()> {
         let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: create_dir");
         async move {
@@ -391,7 +391,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn remove_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
+    fn remove_dir<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<'a, ()> {
         let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: remove_dir");
         async move {
@@ -420,7 +420,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn remove_file<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<()> {
+    fn remove_file<'a>(&'a self, dav_path: &'a DavPath) -> FsFuture<'a, ()> {
         let path = self.normalize_dav_path(dav_path);
         debug!(path = %path.display(), "fs: remove_file");
         async move {
@@ -448,7 +448,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn copy<'a>(&'a self, from_dav: &'a DavPath, to_dav: &'a DavPath) -> FsFuture<()> {
+    fn copy<'a>(&'a self, from_dav: &'a DavPath, to_dav: &'a DavPath) -> FsFuture<'a, ()> {
         let from = self.normalize_dav_path(from_dav);
         let to = self.normalize_dav_path(to_dav);
         debug!(from = %from.display(), to = %to.display(), "fs: copy");
@@ -480,7 +480,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn rename<'a>(&'a self, from_dav: &'a DavPath, to_dav: &'a DavPath) -> FsFuture<()> {
+    fn rename<'a>(&'a self, from_dav: &'a DavPath, to_dav: &'a DavPath) -> FsFuture<'a, ()> {
         let from = self.normalize_dav_path(from_dav);
         let to = self.normalize_dav_path(to_dav);
         debug!(from = %from.display(), to = %to.display(), "fs: rename");
@@ -540,7 +540,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         .boxed()
     }
 
-    fn get_quota(&self) -> FsFuture<(u64, Option<u64>)> {
+    fn get_quota(&self) -> FsFuture<'_, (u64, Option<u64>)> {
         debug!("fs: get_quota");
         async move {
             let (used, total) = self.drive.get_quota().await.map_err(|err| {
@@ -559,7 +559,7 @@ impl DavFileSystem for AliyunDriveFileSystem {
         Box::pin(ready(true))
     }
 
-    fn get_prop(&self, dav_path: &DavPath, prop: dav_server::fs::DavProp) -> FsFuture<Vec<u8>> {
+    fn get_prop(&self, dav_path: &DavPath, prop: dav_server::fs::DavProp) -> FsFuture<'_, Vec<u8>> {
         let path = self.normalize_dav_path(dav_path);
         let prop_name = match prop.prefix.as_ref() {
             Some(prefix) => format!("{}:{}", prefix, prop.name),
@@ -695,8 +695,12 @@ impl AliyunDavFile {
             }
             // TODO: create parent folders?
             let upload_buffer_size = self.fs.upload_buffer_size as u64;
-            let chunk_count =
-                size / upload_buffer_size + if size % upload_buffer_size != 0 { 1 } else { 0 };
+            let chunk_count = size / upload_buffer_size
+                + if !size.is_multiple_of(upload_buffer_size) {
+                    1
+                } else {
+                    0
+                };
             self.upload_state.chunk_count = chunk_count;
             let res = self
                 .fs
@@ -823,7 +827,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn redirect_url(&mut self) -> FsFuture<Option<String>> {
+    fn redirect_url(&mut self) -> FsFuture<'_, Option<String>> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: redirect_url");
         async move {
             if self.file.id.is_empty() {
@@ -864,7 +868,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn write_bytes(&mut self, buf: Bytes) -> FsFuture<()> {
+    fn write_bytes(&mut self, buf: Bytes) -> FsFuture<'_, ()> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, size = buf.len(), "file: write_bytes");
         async move {
             if self.prepare_for_upload().await? {
@@ -876,7 +880,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn read_bytes(&mut self, count: usize) -> FsFuture<Bytes> {
+    fn read_bytes(&mut self, count: usize) -> FsFuture<'_, Bytes> {
         debug!(
             file_id = %self.file.id,
             file_name = %self.file.name,
@@ -951,7 +955,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn seek(&mut self, pos: SeekFrom) -> FsFuture<u64> {
+    fn seek(&mut self, pos: SeekFrom) -> FsFuture<'_, u64> {
         debug!(
             file_id = %self.file.id,
             file_name = %self.file.name,
@@ -970,7 +974,7 @@ impl DavFile for AliyunDavFile {
         .boxed()
     }
 
-    fn flush(&mut self) -> FsFuture<()> {
+    fn flush(&mut self) -> FsFuture<'_, ()> {
         debug!(file_id = %self.file.id, file_name = %self.file.name, "file: flush");
         async move {
             if self.prepare_for_upload().await? {
