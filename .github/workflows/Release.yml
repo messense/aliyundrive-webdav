@@ -21,31 +21,35 @@ jobs:
           python-version: 3.9
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin
+          targets: x86_64-apple-darwin, aarch64-apple-darwin
       - name: Build wheels - x86_64
         uses: PyO3/maturin-action@v1
         with:
           target: x86_64-apple-darwin
-          args: --release --out dist --strip
+          args: --release --out dist-x86_64 --strip
           sccache: 'true'
       - name: Install built wheel - x86_64
         run: |
-          pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
-          aliyundrive-webdav --help
+          arch -x86_64 /bin/bash -c 'pip install aliyundrive-webdav --no-index --find-links dist-x86_64 --force-reinstall && aliyundrive-webdav --help'
       - name: Build wheels - universal2
         uses: PyO3/maturin-action@v1
         with:
           target: universal2-apple-darwin
-          args: --release --out dist --strip
+          args: --release --out dist-universal2 --strip
           sccache: 'true'
       - name: Install built wheel - universal2
         run: |
-          pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
+          pip install aliyundrive-webdav --no-index --find-links dist-universal2 --force-reinstall
           aliyundrive-webdav --help
+      - name: Merge wheels
+        run: |
+          mkdir -p dist
+          cp dist-x86_64/* dist/ || true
+          cp dist-universal2/* dist/ || true
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: macos-wheels
           path: dist
           if-no-files-found: error
       - name: Upload binary artifacts
@@ -99,24 +103,24 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --strip
+          args: --release --out dist-${{ matrix.platform.arch }} --strip
       - name: Build wheels
         if: matrix.platform.arch == 'arm64'
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --strip --no-default-features --features atomic64,native-tls
+          args: --release --out dist-${{ matrix.platform.arch }} --strip --no-default-features --features atomic64,native-tls
           sccache: 'true'
       - name: Install built wheel
         if: matrix.platform.arch != 'arm64'
         run: |
-          pip install aliyundrive-webdav --no-index --find-links dist --force-reinstall
+          pip install aliyundrive-webdav --no-index --find-links dist-${{ matrix.platform.arch }} --force-reinstall
           aliyundrive-webdav --help
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
-          path: dist
+          name: windows-${{ matrix.platform.arch }}-wheels
+          path: dist-${{ matrix.platform.arch }}
           if-no-files-found: error
       - name: Upload binary artifacts
         uses: actions/upload-artifact@v4
@@ -206,7 +210,7 @@ jobs:
         if: matrix.platform.wheel
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: linux-${{ matrix.platform.target }}-wheels
           path: dist
           if-no-files-found: error
       - name: Install upx
@@ -577,11 +581,28 @@ jobs:
       name: PyPI
       url: https://pypi.org/project/aliyundrive-webdav/
     if: "startsWith(github.ref, 'refs/tags/')"
-    needs: [ linux, macos ]
+    needs: [ linux, macos, windows ]
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: wheels
+          name: macos-wheels
+      - uses: actions/download-artifact@v3
+        with:
+          name: linux-wheels
+        continue-on-error: true
+      - uses: actions/download-artifact@v3
+        with:
+          pattern: linux-*-wheels
+          merge-multiple: true
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows-x64-wheels
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows-x86-wheels
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows-arm64-wheels
       - uses: actions/setup-python@v4
         with:
           python-version: 3.9
